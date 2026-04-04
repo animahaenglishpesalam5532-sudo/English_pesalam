@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { FileText, MonitorPlay, Video, ArrowRight } from "lucide-react";
+import { FileText, Video, ArrowRight } from "lucide-react";
 
 export function LearningPaths() {
   const cards = [
