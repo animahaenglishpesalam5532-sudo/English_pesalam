@@ -10,8 +10,9 @@ export function LearningPaths() {
       icon: <FileText className="w-5 h-5 text-brand-blue" />,
       theme: "bg-transparent",
       bgImage: "url('/pdf-bg.png')",
+      gradient: "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.15) 50%, rgba(255,255,255,0.1) 100%)",
       iconBg: "bg-blue-100",
-      buttonText: "Get Started",
+      buttonText: "Coming Soon...",
       buttonClass: "bg-white text-[#111827]",
     },
     {
@@ -20,8 +21,9 @@ export function LearningPaths() {
       icon: null,
       theme: "bg-transparent",
       bgImage: "url('/ppt-bg.png')",
+      gradient: "linear-gradient(135deg, rgba(217,190,169,0.4) 0%, rgba(236,220,207,0.3) 50%, rgba(255,255,255,0.1) 100%)",
       iconBg: "bg-transparent",
-      buttonText: "Access Now",
+      buttonText: "Coming Soon...",
       buttonClass: "bg-white text-slate-800",
       customHeader: (
         <div className="flex justify-between items-start mb-4 relative z-10">
@@ -34,7 +36,7 @@ export function LearningPaths() {
             </span>
           </div>
           <Link
-            href="/coming-soon"
+            href=""
             className="flex items-center gap-1 text-xs font-semibold text-[#2962FF] whitespace-nowrap ml-2 absolute -top-1 -right-1"
           >
             <span>View All</span>
@@ -46,11 +48,12 @@ export function LearningPaths() {
     {
       title: "Full Video Course",
       description:
-        "15+ hours of step-by-step video instruction by experts in English Peasalam.",
+        "15+ hours of step-by-step video instruction by experts in English Pesalam.",
       icon: <Video className="w-5 h-5 text-white" />,
-      theme: "bg-[#5649E8]",
+      theme: "bg-transparent",
+      gradient: "linear-gradient(135deg, rgba(86,73,232,1) 0%, rgba(99,102,241,0.95) 50%, rgba(139,92,246,0.9) 100%)",
       iconBg: "bg-white/20",
-      buttonText: "Enroll Now",
+      buttonText: "Coming Soon...",
       buttonClass: "bg-white text-[#5649E8]",
       textDark: false,
     },
@@ -76,6 +79,13 @@ export function LearningPaths() {
                 : undefined
             }
           >
+            {/* Gradient overlay */}
+            {card.gradient && (
+              <div
+                className="absolute inset-0 z-[1] pointer-events-none"
+                style={{ background: card.gradient }}
+              />
+            )}
             <div className="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 bg-white/20 blur-2xl rounded-full z-0 pointer-events-none" />
 
             {card.customHeader ? (
@@ -88,7 +98,7 @@ export function LearningPaths() {
                   {card.icon}
                 </div>
                 <Link
-                  href="/coming-soon"
+                  href=""
                   className={`flex items-center gap-1 text-xs font-semibold ${card.textDark === false
                     ? "text-white/80"
                     : "text-brand-blue"
@@ -119,7 +129,7 @@ export function LearningPaths() {
             </p>
 
             <Link
-              href="/coming-soon"
+              href=""
               className={`block w-full text-center py-3 rounded-full font-bold text-sm shadow-sm transition-transform active:scale-95 relative z-10 mt-auto ${card.buttonClass}`}
             >
               {card.buttonText}

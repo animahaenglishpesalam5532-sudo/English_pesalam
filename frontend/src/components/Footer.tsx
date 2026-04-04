@@ -6,7 +6,7 @@ export function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col items-center md:items-start text-center md:text-left">
           <div className="text-2xl font-black bg-gradient-to-r from-brand-green to-brand-blue bg-clip-text text-transparent tracking-tight mb-2">
-            English Peasalam
+            English Pesalam
           </div>
           <p className="text-sm text-slate-500 max-w-sm">
             Empowering Tamil speakers to master the English language with ease and confidence.

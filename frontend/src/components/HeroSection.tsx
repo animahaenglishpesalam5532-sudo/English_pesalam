@@ -23,10 +23,10 @@ export function HeroSection() {
 
           {/* Title */}
           <h1
-            className="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-4 md:mb-6 text-transparent bg-clip-text pb-2"
+            className="text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight mb-4 md:mb-6 text-transparent bg-clip-text pb-2"
             style={{ backgroundImage: 'linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)' }}
           >
-            English Peasalam
+            English Pesalam
           </h1>
 
           {/* Description */}
