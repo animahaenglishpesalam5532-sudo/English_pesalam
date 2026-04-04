@@ -24,11 +24,19 @@ export function LearningPaths() {
       buttonText: "Access Now",
       buttonClass: "bg-white text-slate-800",
       customHeader: (
-        <div className="flex justify-between items-start mb-4 relative z-10 ">
+        <div className="flex justify-between items-start mb-4 relative z-10">
           <div className="text-[26px] sm:text-3xl font-light text-[#2962FF] flex items-center tracking-widest font-sans uppercase whitespace-nowrap">
-            <span className="material-symbols-outlined mx-[1px] text-[32px] sm:text-[38px]" style={{ fontVariationSettings: "'wght' 300" }}>presentation</span>
+            <span
+              className="material-symbols-outlined mx-[1px] text-[32px] sm:text-[38px]"
+              style={{ fontVariationSettings: "'wght' 300" }}
+            >
+              presentation
+            </span>
           </div>
-          <Link href="/coming-soon" className="flex items-center gap-1 text-xs font-semibold text-[#2962FF] whitespace-nowrap ml-2 absolute -top-1 -right-1">
+          <Link
+            href="/coming-soon"
+            className="flex items-center gap-1 text-xs font-semibold text-[#2962FF] whitespace-nowrap ml-2 absolute -top-1 -right-1"
+          >
             <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -37,7 +45,8 @@ export function LearningPaths() {
     },
     {
       title: "Full Video Course",
-      description: "15+ hours of step-by-step video instruction by experts in English Peasalam.",
+      description:
+        "15+ hours of step-by-step video instruction by experts in English Peasalam.",
       icon: <Video className="w-5 h-5 text-white" />,
       theme: "bg-[#5649E8]",
       iconBg: "bg-white/20",
@@ -48,7 +57,10 @@ export function LearningPaths() {
   ];
 
   return (
-    <section id="paths" className="px-4 w-full max-w-md md:max-w-6xl mx-auto mb-8">
+    <section
+      id="paths"
+      className="px-4 w-full max-w-md md:max-w-6xl mx-auto mb-8"
+    >
       <h2 className="text-xl md:text-3xl font-bold text-[#111827] mb-4 md:mb-8 tracking-tight">
         Choose Your Learning Path
       </h2>
@@ -58,30 +70,51 @@ export function LearningPaths() {
           <div
             key={index}
             className={`${card.theme} backdrop-blur-md rounded-3xl p-5 shadow-sm border border-white/50 relative overflow-hidden bg-cover bg-center flex flex-col h-full`}
-            style={card.bgImage ? { backgroundImage: card.bgImage } : undefined}
+            style={
+              card.bgImage
+                ? { backgroundImage: card.bgImage }
+                : undefined
+            }
           >
-            {/* Soft decorative background pattern */}
             <div className="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 bg-white/20 blur-2xl rounded-full z-0 pointer-events-none" />
 
             {card.customHeader ? (
               card.customHeader
             ) : (
               <div className="relative z-10 flex justify-between items-start mb-4">
-                <div className={`p-2.5 rounded-2xl ${card.iconBg} mb-2 flex items-center justify-center`}>
+                <div
+                  className={`p-2.5 rounded-2xl ${card.iconBg} mb-2 flex items-center justify-center`}
+                >
                   {card.icon}
                 </div>
-                <Link href="/coming-soon" className={`flex items-center gap-1 text-xs font-semibold ${card.textDark === false ? "text-white/80" : "text-brand-blue"}`}>
+                <Link
+                  href="/coming-soon"
+                  className={`flex items-center gap-1 text-xs font-semibold ${card.textDark === false
+                    ? "text-white/80"
+                    : "text-brand-blue"
+                    }`}
+                >
                   <span>View All</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             )}
 
-            <h3 className={`text-lg font-bold mb-1 relative z-10 ${card.textDark === false ? "text-white" : "text-[#111827]"}`}>
+            <h3
+              className={`text-lg font-bold mb-1 relative z-10 ${card.textDark === false
+                ? "text-white"
+                : "text-[#111827]"
+                }`}
+            >
               {card.title}
             </h3>
 
-            <p className={`text-sm leading-relaxed mb-6 relative z-10 ${card.textDark === false ? "text-white/80" : "text-slate-500"}`}>
+            <p
+              className={`text-sm leading-relaxed mb-6 relative z-10 ${card.textDark === false
+                ? "text-white/80"
+                : "text-slate-500"
+                }`}
+            >
               {card.description}
             </p>
 
