@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #EAF0F6; /* Pale blue-gray tint */
+  --foreground: #0A1128; /* Deep navy/slate */
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  background-attachment: fixed;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
