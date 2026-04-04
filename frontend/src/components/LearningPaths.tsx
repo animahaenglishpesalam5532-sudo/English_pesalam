@@ -24,7 +24,7 @@ export function LearningPaths() {
       buttonText: "Access Now",
       buttonClass: "bg-white text-slate-800",
       customHeader: (
-        <div className="flex justify-between items-start mb-4 relative z-10">
+        <div className="flex justify-between items-start mb-4 relative z-10 ">
           <div className="text-[26px] sm:text-3xl font-light text-[#2962FF] flex items-center tracking-widest font-sans uppercase whitespace-nowrap">
             <span className="material-symbols-outlined mx-[1px] text-[32px] sm:text-[38px]" style={{ fontVariationSettings: "'wght' 300" }}>presentation</span>
           </div>
