@@ -52,7 +52,7 @@ export function HeroSection() {
           {/* Pricing */}
           <div className="flex flex-col mb-6 md:mb-8">
             <div className="flex items-end gap-3">
-              <span className="text-3xl md:text-5xl font-black text-[#4F46E5] tracking-tighter">₹339</span>
+              <span className="text-3xl md:text-5xl font-black text-[#4F46E5] tracking-tighter ">₹339</span>
               <span className="text-sm md:text-lg font-medium text-slate-400 line-through mb-1 md:mb-2">₹399</span>
             </div>
             <div className="mt-2.5">
