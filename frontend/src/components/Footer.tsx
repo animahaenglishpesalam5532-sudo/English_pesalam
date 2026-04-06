@@ -15,8 +15,8 @@ export function Footer() {
 
         <div className="flex flex-col items-center md:items-end text-sm text-slate-500 space-y-2">
           <p>Questions? Reach out on WhatsApp:</p>
-          <a href="https://wa.me/917667268610" className="font-semibold text-brand-blue hover:text-brand-green transition-colors">
-            +91 76672 68610
+          <a href="https://wa.me/919345639627" className="font-semibold text-brand-blue hover:text-brand-green transition-colors">
+            +91 93456 39627
           </a>
           <p className="mt-4 pt-4 text-xs text-slate-400">
             &copy; {new Date().getFullYear()} English pesalam. All rights reserved.
