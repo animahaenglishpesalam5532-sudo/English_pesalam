@@ -57,8 +57,8 @@ export function HeroSection() {
             </div>
             <div className="mt-2.5">
               <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-emerald-700 bg-emerald-500/10 px-3 py-1 rounded-full shadow-sm border border-emerald-500/20">
-                <svg className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                <svg className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" fill="currentColor" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M195-195q-35-35-35-85H60l18-80h113q17-19 40-29.5t49-10.5q26 0 49 10.5t40 29.5h167l84-360H182l4-17q6-28 27.5-45.5T264-800h456l-37 160h117l120 160-40 200h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85H400q0 50-35 85t-85 35q-50 0-85-35Zm442-245h193l4-21-74-99h-95l-28 120Zm-19-273 2-7-84 360 2-7 34-146 46-200ZM20-427l20-80h220l-20 80H20Zm80-146 20-80h260l-20 80H100Zm180 333q17 0 28.5-11.5T320-280q0-17-11.5-28.5T280-320q-17 0-28.5 11.5T240-280q0 17 11.5 28.5T280-240Zm400 0q17 0 28.5-11.5T720-280q0-17-11.5-28.5T680-320q-17 0-28.5 11.5T640-280q0 17 11.5 28.5T680-240Z" />
                 </svg>
                 Including Shipping Charges
               </span>
@@ -76,11 +76,11 @@ export function HeroSection() {
 
         {/* Right Side Book Image (Stays on top in mobile via order-1) */}
         <div className="flex-1 w-full order-1 md:order-2">
-          <div className="w-full aspect-square md:aspect-[4/3] lg:aspect-square bg-[#7c1416] rounded-3xl overflow-hidden shadow-md relative group max-w-sm md:max-w-none mx-auto">
+          <div className="w-[90%] max-w-sm mx-auto rounded-3xl overflow-hidden shadow-md bg-[#7c1416]">
             <img
-              src="/new-book-image.jpeg"
+              src="/new-book-image1.jpeg"
               alt="English Pesalam Book"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-auto object-contain"
             />
           </div>
         </div>
