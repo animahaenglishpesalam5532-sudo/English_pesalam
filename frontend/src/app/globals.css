@@ -20,3 +20,23 @@ body {
     text-wrap: balance;
   }
 }
+
+@layer base {
+  /* Automatically center and responsive-scale all embedded media inside WYSIWYG editor and public blog view */
+  .prose img, .prose iframe,
+  .jodit-wysiwyg img, .jodit-wysiwyg iframe {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 100% !important;
+  }
+  
+  .prose img, .jodit-wysiwyg img {
+    height: auto !important;
+  }
+  
+  .prose iframe, .jodit-wysiwyg iframe {
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+  }
+}

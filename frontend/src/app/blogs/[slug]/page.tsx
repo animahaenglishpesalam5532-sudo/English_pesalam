@@ -1,0 +1,140 @@
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { User, ArrowLeft } from 'lucide-react'
+
+export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
+
+export async function generateStaticParams() {
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  
+  const { data: blogs } = await supabase
+    .from('blogs')
+    .select('slug')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(9)
+    
+  return blogs ? blogs.map((blog) => ({ slug: String(blog.slug) })) : []
+}
+
+// Generate metadata for SEO based on the blog data
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: blog } = await supabase
+    .from('blogs')
+    .select('title, content')
+    .eq('slug', params.slug)
+    .single()
+
+  if (!blog) {
+    return { title: 'Blog Not Found' }
+  }
+
+  // extract a simple description from content html
+  const description = blog.content.replace(/<[^>]+>/g, '').substring(0, 160) + '...'
+
+  return {
+    title: `${blog.title} | English Pesalam`,
+    description,
+  }
+}
+
+export default async function SingleBlogPage({ params }: { params: { slug: string } }) {
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  const { data: blog } = await supabase
+    .from('blogs')
+    .select('*, authors(*)')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single()
+
+  if (!blog) {
+    notFound()
+  }
+
+  return (
+      <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
+        {/* Article Header */}
+        <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
+          <div className="max-w-3xl mx-auto">
+            <div className="mb-6">
+              <Link href="/blogs" className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center text-sm transition-colors">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Blogs
+              </Link>
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
+              {blog.title}
+            </h1>
+
+            <div className="flex items-center space-x-6 text-gray-500">
+              <div className="flex items-center">
+                {blog.authors?.profile_image ? (
+                   <img src={blog.authors.profile_image} alt="" className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm bg-gray-100" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full mr-3 bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+                <span className="font-medium text-gray-900">{blog.authors?.name || 'Unknown'}</span>
+              </div>
+              <div className="flex items-center">
+                <time dateTime={blog.created_at}>
+                  {new Date(blog.created_at).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </time>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Content Area */}
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 overflow-hidden">
+          <article 
+            className="prose prose-lg prose-blue max-w-full text-gray-800 break-words [overflow-wrap:anywhere]"
+            dangerouslySetInnerHTML={{ __html: blog.content }}
+            suppressHydrationWarning={true}
+          />
+          
+          {/* Author Bio Section */}
+          {blog.authors && (
+            <div className="mt-16 pt-10 border-t border-gray-200">
+              <div className="bg-gray-50 rounded-2xl p-8 flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                {blog.authors.profile_image ? (
+                  <img src={blog.authors.profile_image} alt={blog.authors.name} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-sm">
+                    <User className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-xl font-bold text-gray-900">{blog.authors.name}</h3>
+                  {blog.authors.designation && (
+                    <p className="text-blue-600 font-medium text-sm mt-1">{blog.authors.designation}</p>
+                  )}
+                  {blog.authors.bio && (
+                    <p className="text-gray-600 mt-3">{blog.authors.bio}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+  )
+}
+
