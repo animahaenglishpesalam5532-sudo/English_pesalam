@@ -6,9 +6,14 @@ import { User, ArrowLeft } from 'lucide-react'
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
 
 export async function generateStaticParams() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn('⚠️ Supabase environment variables missing. Skipping static params generation.');
+    return [];
+  }
+  
   const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
   
   const { data: blogs } = await supabase
@@ -23,9 +28,13 @@ export async function generateStaticParams() {
 
 // Generate metadata for SEO based on the blog data
 export async function generateMetadata({ params }: { params: { slug: string } }) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return { title: 'English Pesalam' }
+  }
+
   const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
   const { data: blog } = await supabase
     .from('blogs')
