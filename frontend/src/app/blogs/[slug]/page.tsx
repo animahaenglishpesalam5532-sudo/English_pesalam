@@ -2,6 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { User, ArrowLeft } from 'lucide-react'
+import DOMPurify from 'isomorphic-dompurify'
 
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
 
@@ -74,7 +75,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   return (
       <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
         {/* Article Header */}
-        <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
+        <div className="bg-gray-50/50 pt-12 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
           <div className="max-w-3xl mx-auto">
             <div className="mb-6">
               <Link href="/blogs" className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center text-sm transition-colors">
@@ -112,11 +113,10 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
 
 
         {/* Content Area */}
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 overflow-hidden">
           <article 
-            className="prose prose-lg prose-blue max-w-full text-gray-800 break-words [overflow-wrap:anywhere]"
-            dangerouslySetInnerHTML={{ __html: blog.content }}
-            suppressHydrationWarning={true}
+            className="prose prose-lg prose-blue max-w-full text-gray-800 break-words [overflow-wrap:anywhere] font-jakarta prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md prose-img:border prose-img:border-gray-100 prose-img:mx-auto prose-img:my-[15px] [&_iframe]:my-[15px] [&_video]:my-[15px] [&_figure]:my-[15px]"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content, { ADD_TAGS: ['iframe'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'] }) }}
           />
           
           {/* Author Bio Section */}

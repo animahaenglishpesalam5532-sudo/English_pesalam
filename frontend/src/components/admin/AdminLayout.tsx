@@ -15,6 +15,7 @@ const sidebarLinks = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-900">
@@ -33,9 +34,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }`}
       >
         <div className="flex items-center justify-center h-16 border-b border-gray-200">
-          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-            Admin Panel
-          </span>
+          <Link
+            href="/admin/dashboard"
+            className="text-2xl font-black bg-gradient-to-r from-brand-green to-brand-blue bg-clip-text text-transparent hover:opacity-80 transition-opacity tracking-tight"
+          >
+            English Pesalam
+          </Link>
         </div>
 
         <nav className="p-4 space-y-1">
@@ -61,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
           <button
-            onClick={() => logout()}
+            onClick={() => setIsLogoutModalOpen(true)}
             className="flex items-center w-full px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
           >
             <LogOut className="w-5 h-5 mr-3" />
@@ -93,6 +97,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all border border-gray-100">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-50 rounded-full mb-4">
+                <LogOut className="w-6 h-6 text-red-500" />
+              </div>
+              
+              <h3 className="text-lg font-bold text-center text-gray-900 mb-2">Sign Out</h3>
+              
+              <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <p className="text-sm text-gray-500 mb-6">
+                  Are you sure you want to log out of the admin panel?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsLogoutModalOpen(false)}
+                    className="flex-1 inline-flex justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsLogoutModalOpen(false);
+                      logout();
+                    }}
+                    className="flex-1 inline-flex justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

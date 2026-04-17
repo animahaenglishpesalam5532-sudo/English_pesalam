@@ -12,8 +12,13 @@ export default function AuthorsListPage() {
   const [authors, setAuthors] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingAuthor, setEditingAuthor] = useState<any>(null)
+  
+  // Custom delete modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [authorToDelete, setAuthorToDelete] = useState<{id: string, name: string} | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     fetchAuthors()
@@ -53,16 +58,29 @@ export default function AuthorsListPage() {
     }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) return
+  const handleDeleteClick = (id: string, name: string) => {
+    setAuthorToDelete({ id, name })
+    setDeleteError(null)
+    setIsDeleteModalOpen(true)
+  }
 
-    const result = await deleteAuthor(id)
+  const executeDelete = async () => {
+    if (!authorToDelete) return;
+    setIsDeleting(true);
+    
+    const result = await deleteAuthor(authorToDelete.id);
     if (result.error) {
-      toast.error(result.error)
+      if (result.error.toLowerCase().includes('connected to')) {
+        setDeleteError('This author is connected to a blog and cannot be deleted.');
+      } else {
+        setDeleteError(result.error);
+      }
     } else {
-      toast.success('Author deleted successfully')
-      setAuthors(authors.filter(a => a.id !== id))
+      toast.success('Author deleted successfully');
+      setAuthors(authors.filter((a: any) => a.id !== authorToDelete.id));
+      setIsDeleteModalOpen(false);
     }
+    setIsDeleting(false);
   }
 
   return (
@@ -163,7 +181,7 @@ export default function AuthorsListPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(author.id, author.name)}
+                          onClick={() => handleDeleteClick(author.id, author.name)}
                           className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-md transition-colors"
                           title="Delete"
                         >
@@ -187,7 +205,59 @@ export default function AuthorsListPage() {
           initialData={editingAuthor}
         />
       )}
+      
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && authorToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden transform transition-all border border-gray-100">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-50 rounded-full mb-4">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              
+              <h3 className="text-lg font-bold text-center text-gray-900 mb-2">Delete Author</h3>
+              
+              {deleteError ? (
+                <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <p className="text-sm text-red-600 font-medium mb-6 bg-red-50 p-3 rounded-lg border border-red-100">
+                    {deleteError}
+                  </p>
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="w-full inline-flex justify-center rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200 transition-colors"
+                  >
+                    Okay, Understood
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <p className="text-sm text-gray-500 mb-6">
+                    Are you sure you want to delete <strong className="text-gray-900 font-semibold">{authorToDelete.name}</strong>? This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsDeleteModalOpen(false)}
+                      disabled={isDeleting}
+                      className="flex-1 inline-flex justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={executeDelete}
+                      disabled={isDeleting}
+                      className="flex-1 inline-flex justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 disabled:opacity-50 transition-colors"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </AdminLayout>
   )
 }
+
