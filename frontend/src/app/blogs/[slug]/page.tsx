@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
