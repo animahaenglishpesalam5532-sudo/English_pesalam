@@ -3,7 +3,6 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { User, ArrowLeft } from 'lucide-react'
-import DOMPurify from 'isomorphic-dompurify'
 
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
 
@@ -73,6 +72,10 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
     notFound()
   }
 
+  // Handle potential nested array mapping quirks on production query payloads
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
+
   return (
       <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
         {/* Article Header */}
@@ -90,14 +93,14 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
 
             <div className="flex items-center space-x-6 text-gray-500">
               <div className="flex items-center">
-                {blog.authors?.profile_image ? (
-                   <img src={blog.authors.profile_image} alt="" className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm bg-gray-100" />
+                {author?.profile_image ? (
+                   <img src={author.profile_image} alt="" className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm bg-gray-100" />
                 ) : (
                   <div className="w-8 h-8 rounded-full mr-3 bg-blue-100 text-blue-600 flex items-center justify-center">
                     <User className="w-4 h-4" />
                   </div>
                 )}
-                <span className="font-medium text-gray-900">{blog.authors?.name || 'Unknown'}</span>
+                <span className="font-medium text-gray-900">{author?.name || 'Unknown'}</span>
               </div>
               <div className="flex items-center">
                 <time dateTime={blog.created_at}>
@@ -117,27 +120,27 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 overflow-hidden">
           <article 
             className="prose prose-lg prose-blue max-w-full text-gray-800 break-words [overflow-wrap:anywhere] font-jakarta prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md prose-img:border prose-img:border-gray-100 prose-img:mx-auto prose-img:my-[15px] [&_iframe]:my-[15px] [&_video]:my-[15px] [&_figure]:my-[15px]"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content, { ADD_TAGS: ['iframe'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'] }) }}
+            dangerouslySetInnerHTML={{ __html: blog.content || '' }}
           />
           
           {/* Author Bio Section */}
-          {blog.authors && (
+          {author && (
             <div className="mt-16 pt-10 border-t border-gray-200">
               <div className="bg-gray-50 rounded-2xl p-8 flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                {blog.authors.profile_image ? (
-                  <img src={blog.authors.profile_image} alt={blog.authors.name} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm" />
+                {author.profile_image ? (
+                  <img src={author.profile_image} alt={author.name} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm" />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-sm">
                     <User className="w-8 h-8" />
                   </div>
                 )}
                 <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-xl font-bold text-gray-900">{blog.authors.name}</h3>
-                  {blog.authors.designation && (
-                    <p className="text-blue-600 font-medium text-sm mt-1">{blog.authors.designation}</p>
+                  <h3 className="text-xl font-bold text-gray-900">{author.name}</h3>
+                  {author.designation && (
+                    <p className="text-blue-600 font-medium text-sm mt-1">{author.designation}</p>
                   )}
-                  {blog.authors.bio && (
-                    <p className="text-gray-600 mt-3">{blog.authors.bio}</p>
+                  {author.bio && (
+                    <p className="text-gray-600 mt-3">{author.bio}</p>
                   )}
                 </div>
               </div>
