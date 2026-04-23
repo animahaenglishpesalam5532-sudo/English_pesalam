@@ -29,7 +29,17 @@ function BlogGridSkeleton() {
   )
 }
 
-function BlogCard({ blog }: { blog: any }) {
+type Blog = {
+  id: string
+  slug: string
+  title: string
+  content: string
+  featured_image: string | null
+  created_at: string
+  authors: { name: string; profile_image: string | null } | null
+}
+
+function BlogCard({ blog }: { blog: Blog }) {
   return (
     <Link href={`/blogs/${blog.slug}`} className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
       <div className="flex-shrink-0 relative w-full aspect-video bg-gray-200 overflow-hidden">

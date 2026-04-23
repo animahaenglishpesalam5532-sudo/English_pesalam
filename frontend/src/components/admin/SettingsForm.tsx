@@ -96,7 +96,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
             
             toast.success('Settings saved successfully!')
             window.location.reload()
-          } catch (error) {
+          } catch (_) {
             toast.error('Failed to save settings.')
           }
           setSubmitting(false)
