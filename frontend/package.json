@@ -11,7 +11,9 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
+    "cloudinary": "^2.9.0",
     "date-fns": "^4.1.0",
+    "formik": "^2.4.9",
     "framer-motion": "^12.38.0",
     "isomorphic-dompurify": "^3.9.0",
     "jodit-react": "^5.3.21",
@@ -21,7 +23,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.6.0",
-    "react-quill": "^2.0.0"
+    "react-quill": "^2.0.0",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

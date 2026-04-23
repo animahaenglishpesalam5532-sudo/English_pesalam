@@ -3,11 +3,32 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export function HeroSection() {
+interface HeroSectionProps {
+  bookTitle1?: string | null;
+  bookTitle2?: string | null;
+  bookDescription?: string | null;
+  bookPrice?: string | null;
+  bookStrikethroughPrice?: string | null;
+  bookImageUrl?: string | null;
+  whatsappNumber?: string | null;
+  whatsappMessage?: string | null;
+}
+
+export function HeroSection({
+  bookTitle1,
+  bookTitle2,
+  bookDescription,
+  bookPrice,
+  bookStrikethroughPrice,
+  bookImageUrl,
+  whatsappNumber,
+  whatsappMessage,
+}: HeroSectionProps) {
   const handleBuyClick = () => {
-    const phoneNumber = "919345639627";
-    const text = encodeURIComponent("I want to buy the English Pesalam book");
-    window.location.href = `https://wa.me/${phoneNumber}?text=${text}`;
+    const phone = (whatsappNumber || "919345639627").trim().replace(/\D/g, "");
+    const msg = (whatsappMessage || "I want to buy the English Pesalam book").trim();
+    const text = encodeURIComponent(msg);
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
   return (
@@ -30,7 +51,7 @@ export function HeroSection() {
                   "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)",
               }}
             >
-              1000 + English Words
+              {bookTitle1 || '1000 + English Words'}
             </span>
 
             <span
@@ -40,20 +61,24 @@ export function HeroSection() {
                   "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)",
               }}
             >
-              ( Book 1 - விதை ) Basic Level
+              {bookTitle2 || '( Book 1 - விதை ) Basic Level'}
             </span>
           </h1>
 
           {/* Description */}
           <p className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed mb-6 md:mb-8 max-w-lg">
-            ஆங்கிலத்தை பயமில்லாமல் கற்றுக்கொள்ள விரும்பும் தமிழ் மக்களுக்காக உருவாக்கப்பட்ட எளிய மற்றும் பயனுள்ள புத்தகம். தினசரி வாழ்க்கையில் அதிகம் பயன்படும் முக்கியமான ஆங்கில வார்த்தைகள், தமிழ் அர்த்தத்துடன் தெளிவாகவும் எளிமையாகவும் வழங்கப்பட்டுள்ளன.
+            {bookDescription || 'ஆங்கிலத்தை பயமில்லாமல் கற்றுக்கொள்ள விரும்பும் தமிழ் மக்களுக்காக உருவாக்கப்பட்ட எளிய மற்றும் பயனுள்ள புத்தகம். தினசரி வாழ்க்கையில் அதிகம் பயன்படும் முக்கியமான ஆங்கில வார்த்தைகள், தமிழ் அர்த்தத்துடன் தெளிவாகவும் எளிமையாகவும் வழங்கப்பட்டுள்ளன.'}
           </p>
 
           {/* Pricing */}
           <div className="flex flex-col mb-6 md:mb-8">
             <div className="flex items-end gap-3">
-              <span className="text-3xl md:text-5xl font-black text-[#4F46E5] tracking-tighter ">₹339</span>
-              <span className="text-sm md:text-lg font-medium text-slate-400 line-through mb-1 md:mb-2">₹399</span>
+              <span className="text-3xl md:text-5xl font-black text-[#4F46E5] tracking-tighter ">
+                {bookPrice || '₹339'}
+              </span>
+              <span className="text-sm md:text-lg font-medium text-slate-400 line-through mb-1 md:mb-2">
+                {bookStrikethroughPrice || '₹399'}
+              </span>
             </div>
             <div className="mt-2.5">
               <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-emerald-700 bg-emerald-500/10 px-3 py-1 rounded-full shadow-sm border border-emerald-500/20">
@@ -78,8 +103,8 @@ export function HeroSection() {
         <div className="flex-1 w-full order-1 md:order-2">
           <div className="w-[90%] max-w-sm mx-auto rounded-3xl overflow-hidden shadow-md bg-[#7c1416]">
             <img
-              src="/new-book-image1.jpeg"
-              alt="English Pesalam Book"
+              src={bookImageUrl || '/new-book-image1.jpeg'}
+              alt={bookTitle1 || "English Pesalam Book"}
               className="w-full h-auto object-contain"
             />
           </div>

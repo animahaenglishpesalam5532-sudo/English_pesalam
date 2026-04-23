@@ -82,21 +82,31 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       events: {
         afterInsertNode: function(this: any, node: any) {
           if (node && (node.tagName === 'IFRAME' || node.tagName === 'VIDEO' || node.nodeName === 'IFRAME' || node.nodeName === 'VIDEO')) {
-            node.style.display = 'block';
-            node.style.margin = '15px auto';
+            const doc = node.ownerDocument || document;
+            let targetBlock = node;
 
-            // Find the proper block Wrapper, as Jodit often wraps iframes in a P tag.
-            const targetNode = (node.parentNode && node.parentNode.tagName === 'P') ? node.parentNode : node;
+            // Instead of forcing display:block on an inline media tag (which breaks Selection offsets when inside a P tag),
+            // safely center the parent container block.
+            if (node.parentNode && node.parentNode.tagName === 'P') {
+              node.parentNode.style.textAlign = 'center';
+              targetBlock = node.parentNode;
+            } else {
+              const wrapper = doc.createElement('div');
+              wrapper.style.textAlign = 'center';
+              wrapper.style.margin = '15px 0';
+              if (node.parentNode) {
+                node.parentNode.insertBefore(wrapper, node);
+                wrapper.appendChild(node);
+                targetBlock = wrapper;
+              }
+            }
             
-            if (targetNode.parentNode) {
-               const doc = node.ownerDocument || document;
+            if (targetBlock.parentNode) {
                const p = doc.createElement('p');
                p.appendChild(doc.createElement('br'));
                
-               // Insert the new empty paragraph directly after the video block
-               targetNode.parentNode.insertBefore(p, targetNode.nextSibling);
+               targetBlock.parentNode.insertBefore(p, targetBlock.nextSibling);
                
-               // Move the cursor into the new line so the user can immediately type below the video
                if (this.s && typeof this.s.setCursorIn === 'function') {
                    setTimeout(() => {
                        this.s.setCursorIn(p);
@@ -111,7 +121,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   }, [])
 
   return (
-    <div className="relative bg-white font-jakarta prose prose-lg prose-blue max-w-full prose-img:my-[15px] [&_iframe]:my-[15px] [&_iframe]:mx-auto [&_iframe]:block [&_video]:my-[15px] [&_video]:mx-auto [&_video]:block [&_figure]:my-[15px]">
+    <div className="relative bg-white font-jakarta prose prose-lg prose-blue max-w-full prose-img:my-[15px] [&_iframe]:my-[15px] [&_video]:my-[15px] [&_figure]:my-[15px]">
       {isUploading && (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-md border border-gray-200">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />

@@ -50,13 +50,9 @@ export default function AuthorsListPage() {
     setIsModalOpen(true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleModalSuccess = (savedAuthor: any) => {
-    if (editingAuthor) {
-      setAuthors(authors.map(a => a.id === savedAuthor.id ? savedAuthor : a))
-    } else {
-      setAuthors([savedAuthor, ...authors])
-    }
+  const handleModalSuccess = () => {
+    // Re-fetch all authors to ensure is_default status is correctly updated across all records
+    fetchAuthors()
   }
 
   const handleDeleteClick = (id: string, name: string) => {

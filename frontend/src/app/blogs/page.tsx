@@ -29,17 +29,94 @@ function BlogGridSkeleton() {
   )
 }
 
+function BlogCard({ blog }: { blog: any }) {
+  return (
+    <Link href={`/blogs/${blog.slug}`} className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
+      <div className="flex-shrink-0 relative w-full aspect-video bg-gray-200 overflow-hidden">
+        <img
+          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+          src={blog.featured_image || '/placeholder-image.png'}
+          alt={blog.title || 'Blog cover image'}
+        />
+      </div>
+      <div className="flex-1 p-6 flex flex-col justify-between">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+            {blog.title}
+          </h3>
+          <p className="mt-3 text-base text-gray-500 line-clamp-3">
+            {blog.content.replace(/<[^>]*>?/gm, '').substring(0, 150)}...
+          </p>
+        </div>
+        <div className="mt-6 flex items-center">
+          <div className="flex-shrink-0">
+            <span className="sr-only">{blog.authors?.name}</span>
+            {blog.authors?.profile_image ? (
+              <img className="h-10 w-10 rounded-full object-cover" src={blog.authors.profile_image} alt="" />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <User className="h-5 w-5" />
+              </div>
+            )}
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-gray-900">
+              {blog.authors?.name || 'Unknown Author'}
+            </p>
+            <div className="flex space-x-1 text-sm text-gray-500">
+              <span>
+                {new Date(blog.created_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+async function FeaturedBlogs() {
+  const supabase = createClient()
+  const { data: blogs } = await supabase
+    .from('blogs')
+    .select('*, authors(name, profile_image)')
+    .eq('status', 'published')
+    .eq('is_featured', true)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  if (!blogs || blogs.length === 0) return null
+
+  return (
+    <div className="flex flex-col space-y-8 mb-4">
+      <div className="flex items-center justify-between border-b pb-4">
+        <h2 className="text-2xl font-bold text-gray-900">Featured Blogs</h2>
+      </div>
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {blogs.map((blog) => (
+          <BlogCard key={blog.id} blog={blog} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 async function BlogGrid({ page }: { page: number }) {
   const itemsPerPage = 9;
   const from = (page - 1) * itemsPerPage;
   const to = from + itemsPerPage - 1;
 
   const supabase = createClient()
-  
+
   const { data: blogs, count } = await supabase
     .from('blogs')
     .select('*, authors(name, profile_image)', { count: 'exact' })
     .eq('status', 'published')
+    .eq('is_featured', false)
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -47,53 +124,14 @@ async function BlogGrid({ page }: { page: number }) {
 
   return (
     <div className="flex flex-col space-y-12">
+      {page === 1 && (
+        <div className="flex items-center justify-between border-b pb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Latest Blogs</h2>
+        </div>
+      )}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {blogs?.map((blog) => (
-          <Link key={blog.id} href={`/blogs/${blog.slug}`} className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="flex-shrink-0 relative h-48 w-full bg-gray-200">
-              <img
-                className="h-full w-full object-cover"
-                src={blog.featured_image || '/blog-fallback.png'}
-                alt={blog.title || 'Blog cover image'}
-              />
-            </div>
-            <div className="flex-1 p-6 flex flex-col justify-between">
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                  {blog.title}
-                </h3>
-                <p className="mt-3 text-base text-gray-500 line-clamp-3">
-                  {blog.content.replace(/<[^>]*>?/gm, '').substring(0, 150)}...
-                </p>
-              </div>
-              <div className="mt-6 flex items-center">
-                <div className="flex-shrink-0">
-                  <span className="sr-only">{blog.authors?.name}</span>
-                  {blog.authors?.profile_image ? (
-                    <img className="h-10 w-10 rounded-full object-cover" src={blog.authors.profile_image} alt="" />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <User className="h-5 w-5" />
-                    </div>
-                  )}
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    {blog.authors?.name || 'Unknown Author'}
-                  </p>
-                  <div className="flex space-x-1 text-sm text-gray-500">
-                    <span>
-                      {new Date(blog.created_at).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <BlogCard key={blog.id} blog={blog} />
         ))}
         {(!blogs || blogs.length === 0) && (
           <div className="col-span-full py-12 text-center text-gray-500">
@@ -111,17 +149,16 @@ async function BlogGrid({ page }: { page: number }) {
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
-          
+
           <div className="flex space-x-1 flex-wrap justify-center">
             {[...Array(totalPages)].map((_, i) => (
               <Link
                 key={i + 1}
                 href={`/blogs?page=${i + 1}`}
-                className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
-                  page === i + 1 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
+                className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg border text-sm font-medium transition-colors ${page === i + 1
+                    ? 'bg-blue-600 border-blue-600 text-white'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50 bg-white'
-                }`}
+                  }`}
               >
                 {i + 1}
               </Link>
@@ -159,9 +196,17 @@ export default async function PublicBlogsPage({
           </p>
         </div>
 
-        <Suspense key={page} fallback={<BlogGridSkeleton />}>
-          <BlogGrid page={page} />
-        </Suspense>
+        <div className="flex flex-col space-y-4">
+          {page === 1 && (
+            <Suspense fallback={<BlogGridSkeleton />}>
+              <FeaturedBlogs />
+            </Suspense>
+          )}
+
+          <Suspense key={page} fallback={<BlogGridSkeleton />}>
+            <BlogGrid page={page} />
+          </Suspense>
+        </div>
       </div>
     </main>
   )

@@ -8,14 +8,21 @@ export async function saveAuthor(formData: FormData, id?: string) {
   const bio = formData.get('bio') as string
   const designation = formData.get('designation') as string
   const profile_image = formData.get('profile_image') as string
+  const is_default = formData.get('is_default') === 'true'
 
   const supabase = createClient()
+
+  // If setting this author as the default, reset all other authors' is_default to false
+  if (is_default) {
+    await supabase.from('authors').update({ is_default: false }).not('id', 'is', null)
+  }
 
   const payload = {
     name,
     bio,
     designation,
     profile_image,
+    is_default,
   }
 
   let dbAction;
