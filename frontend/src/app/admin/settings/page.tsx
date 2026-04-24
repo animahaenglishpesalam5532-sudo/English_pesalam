@@ -1,6 +1,7 @@
 import { getSetting } from '@/app/actions/settings'
 import AdminLayout from '@/components/admin/AdminLayout'
 import SettingsForm from '@/components/admin/SettingsForm'
+import BookManager from '@/components/admin/BookManager'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,38 +18,30 @@ export default async function SettingsPage() {
   const socialYoutube = await getSetting('social_youtube') || ''
   const socialInstagram = await getSetting('social_instagram') || ''
 
-  const bookTitle1 = await getSetting('book_title_1') || ''
-  const bookTitle2 = await getSetting('book_title_2') || ''
-  const bookDescription = await getSetting('book_description') || ''
-  const bookPrice = await getSetting('book_price') || ''
-  const bookStrikethroughPrice = await getSetting('book_strikethrough_price') || ''
-  const bookImageUrl = await getSetting('book_image_url') || ''
-  const whatsappNumber = await getSetting('whatsapp_number') || ''
-  const whatsappMessage = await getSetting('whatsapp_message') || ''
-
   return (
     <AdminLayout>
-      <SettingsForm 
-        initialValues={{
-          logo_type: logoType,
-          logo_text: logoText,
-          logo_image_url: logoImageUrl,
-          contact_email: contactEmail,
-          contact_phone: contactPhone,
-          social_facebook: socialFacebook,
-          social_twitter: socialTwitter,
-          social_youtube: socialYoutube,
-          social_instagram: socialInstagram,
-          book_title_1: bookTitle1,
-          book_title_2: bookTitle2,
-          book_description: bookDescription,
-          book_price: bookPrice,
-          book_strikethrough_price: bookStrikethroughPrice,
-          book_image_url: bookImageUrl,
-          whatsapp_number: whatsappNumber,
-          whatsapp_message: whatsappMessage,
-        }} 
-      />
+      <div className="max-w-4xl w-full space-y-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Global Settings</h1>
+          <p className="mt-1 text-sm text-gray-500">Manage site-wide configurations and branding.</p>
+        </div>
+
+        <SettingsForm 
+          initialValues={{
+            logo_type: logoType,
+            logo_text: logoText,
+            logo_image_url: logoImageUrl,
+            contact_email: contactEmail,
+            contact_phone: contactPhone,
+            social_facebook: socialFacebook,
+            social_twitter: socialTwitter,
+            social_youtube: socialYoutube,
+            social_instagram: socialInstagram,
+          }} 
+        />
+
+        <BookManager />
+      </div>
     </AdminLayout>
   )
 }

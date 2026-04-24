@@ -6,9 +6,9 @@ import dynamic from 'next/dynamic'
 import toast from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
 
-const JoditEditor = dynamic(() => import('jodit-react'), { 
-  ssr: false, 
-  loading: () => <div className="min-h-[400px] bg-gray-50 flex items-center justify-center text-sm text-gray-500 animate-pulse">Loading Rich Text Editor...</div> 
+const JoditEditor = dynamic(() => import('jodit-react'), {
+  ssr: false,
+  loading: () => <div className="min-h-[400px] bg-gray-50 flex items-center justify-center text-sm text-gray-500 animate-pulse">Loading Rich Text Editor...</div>
 })
 
 interface RichTextEditorProps {
@@ -22,14 +22,14 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   const config = useMemo(() => {
     return {
       readonly: false,
-      minHeight: 400,
-      maxHeight: 650,
+      minHeight: 653,
+      maxHeight: 653,
       uploader: {
         insertImageAsBase64URI: false,
         url: '/api/upload',
         format: 'json',
         isSuccess: (resp: any) => resp.success,
-        prepareData: function(this: any, data: FormData) {
+        prepareData: function (this: any, data: FormData) {
           setIsUploading(true);
           if (this.j && this.j.e) {
             this.j.e.fire('closeAllPopups');
@@ -48,14 +48,14 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
             msg: resp.msg || ''
           };
         },
-        defaultHandlerError: function(this: any, resp: any) {
+        defaultHandlerError: function (this: any, resp: any) {
           setIsUploading(false);
           toast.error(resp.msg || 'Upload failed');
           if (this.j && this.j.e) {
             this.j.e.fire('errorPopap', [this.j.i18n ? this.j.i18n(resp.msg || 'Upload failed') : (resp.msg || 'Upload failed')]);
           }
         },
-        error: function(this: any, e: any) {
+        error: function (this: any, e: any) {
           setIsUploading(false);
           toast.error('Upload failed');
           if (this.j && this.j.e) {
@@ -80,7 +80,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         }
       } as any,
       events: {
-        afterInsertNode: function(this: any, node: any) {
+        afterInsertNode: function (this: any, node: any) {
           if (node && (node.tagName === 'IFRAME' || node.tagName === 'VIDEO' || node.nodeName === 'IFRAME' || node.nodeName === 'VIDEO')) {
             const doc = node.ownerDocument || document;
             let targetBlock = node;
@@ -100,18 +100,18 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
                 targetBlock = wrapper;
               }
             }
-            
+
             if (targetBlock.parentNode) {
-               const p = doc.createElement('p');
-               p.appendChild(doc.createElement('br'));
-               
-               targetBlock.parentNode.insertBefore(p, targetBlock.nextSibling);
-               
-               if (this.s && typeof this.s.setCursorIn === 'function') {
-                   setTimeout(() => {
-                       this.s.setCursorIn(p);
-                   }, 50);
-               }
+              const p = doc.createElement('p');
+              p.appendChild(doc.createElement('br'));
+
+              targetBlock.parentNode.insertBefore(p, targetBlock.nextSibling);
+
+              if (this.s && typeof this.s.setCursorIn === 'function') {
+                setTimeout(() => {
+                  this.s.setCursorIn(p);
+                }, 50);
+              }
             }
           }
         }

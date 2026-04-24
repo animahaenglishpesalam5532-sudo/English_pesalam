@@ -33,7 +33,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute = request.nextUrl.pathname === '/admin'
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin') && !isAuthRoute
+  const isResetRoute = request.nextUrl.pathname === '/admin/reset-password'
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin') && !isAuthRoute && !isResetRoute
 
   // Protect admin routes
   if (isAdminRoute && !user) {

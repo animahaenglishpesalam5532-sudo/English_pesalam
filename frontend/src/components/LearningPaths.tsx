@@ -1,9 +1,23 @@
 import React from "react";
 import Link from "next/link";
-import { FileText, Video, ArrowRight } from "lucide-react";
+import { FileText, Video, ArrowRight, Presentation } from "lucide-react";
 
 export function LearningPaths() {
-  const cards = [
+  type CardConfig = {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    theme: string;
+    bgImage?: string;
+    gradient?: string;
+    iconBg: string;
+    buttonText: string;
+    buttonClass: string;
+    textDark?: boolean;
+    customHeader?: React.ReactNode;
+  };
+
+  const cards: CardConfig[] = [
     {
       title: "Digital PDF Guide",
       description: "Portable learning on any device. Instant access after purchase.",
@@ -13,37 +27,18 @@ export function LearningPaths() {
       gradient: "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.15) 50%, rgba(255,255,255,0.1) 100%)",
       iconBg: "bg-blue-100",
       buttonText: "Coming Soon...",
-      buttonClass: "bg-white text-[#111827]",
+      buttonClass: "bg-white/50 backdrop-blur-md text-[#111827] border border-white/50 hover:bg-white/60",
     },
     {
       title: "PPT Masterclass",
       description: "Visual summaries and presentation slides for visual learners.",
-      icon: null,
+      icon: <Presentation className="w-5 h-5 text-[#2962FF]" />,
       theme: "bg-transparent",
       bgImage: "url('/ppt-bg.png')",
       gradient: "linear-gradient(135deg, rgba(217,190,169,0.4) 0%, rgba(236,220,207,0.3) 50%, rgba(255,255,255,0.1) 100%)",
-      iconBg: "bg-transparent",
+      iconBg: "bg-white/50",
       buttonText: "Coming Soon...",
-      buttonClass: "bg-white text-slate-800",
-      customHeader: (
-        <div className="flex justify-between items-start mb-4 relative z-10">
-          <div className="text-[26px] sm:text-3xl font-light text-[#2962FF] flex items-center tracking-widest font-sans uppercase whitespace-nowrap">
-            <span
-              className="material-symbols-outlined mx-[1px] text-[32px] sm:text-[38px]"
-              style={{ fontVariationSettings: "'wght' 300" }}
-            >
-              presentation
-            </span>
-          </div>
-          <Link
-            href=""
-            className="flex items-center gap-1 text-xs font-semibold text-[#2962FF] whitespace-nowrap ml-2 absolute -top-1 -right-1"
-          >
-            <span>View All</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      ),
+      buttonClass: "bg-white/50 backdrop-blur-md text-slate-800 border border-white/50 hover:bg-white/60",
     },
     {
       title: "Full Video Course",
@@ -54,7 +49,7 @@ export function LearningPaths() {
       gradient: "linear-gradient(135deg, rgba(86,73,232,1) 0%, rgba(99,102,241,0.95) 50%, rgba(139,92,246,0.9) 100%)",
       iconBg: "bg-white/20",
       buttonText: "Coming Soon...",
-      buttonClass: "bg-white text-[#5649E8]",
+      buttonClass: "bg-white/80 backdrop-blur-md text-[#5649E8] border border-white/50 hover:bg-white",
       textDark: false,
     },
   ];
@@ -72,13 +67,15 @@ export function LearningPaths() {
         {cards.map((card, index) => (
           <div
             key={index}
-            className={`${card.theme} backdrop-blur-md rounded-3xl p-5 shadow-sm border border-white/50 relative overflow-hidden bg-cover bg-center flex flex-col h-full`}
+            className={`bg-white/30 backdrop-blur-2xl rounded-[2rem] p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] border border-white/50 relative overflow-hidden bg-cover bg-center flex flex-col h-full transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_16px_40px_0_rgba(31,38,135,0.1)]`}
             style={
               card.bgImage
                 ? { backgroundImage: card.bgImage }
                 : undefined
             }
           >
+            {/* Inner glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-50 pointer-events-none rounded-[2rem]" />
             {/* Gradient overlay */}
             {card.gradient && (
               <div

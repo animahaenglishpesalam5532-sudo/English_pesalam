@@ -19,4 +19,10 @@ export const blogSchema = Yup.object({
     .url('Must be a valid URL')
     .nullable(),
   is_featured: Yup.boolean().default(false),
+  meta_title: Yup.string()
+    .max(60, 'Meta title must be 60 characters or less')
+    .nullable(),
+  meta_description: Yup.string()
+    .max(200, 'Meta description must be 200 characters or less')
+    .nullable(),
 })

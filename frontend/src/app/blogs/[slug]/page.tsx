@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { User, ArrowLeft } from 'lucide-react'
 
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
+export const revalidate = 3600; // ISR fallback
 
 export async function generateStaticParams() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   )
   const { data: blog } = await supabase
     .from('blogs')
-    .select('title, content')
+    .select('title, content, meta_title, meta_description')
     .eq('slug', params.slug)
     .single()
 
@@ -47,13 +48,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Blog Not Found' }
   }
 
-  // extract a simple description from content html
-  const description = blog.content.replace(/<[^>]+>/g, '').substring(0, 160) + '...'
+  // Use custom meta if provided, otherwise auto-generate from content
+  const title = blog.meta_title?.trim()
+    ? blog.meta_title
+    : `${blog.title} | English Pesalam`
 
-  return {
-    title: `${blog.title} | English Pesalam`,
-    description,
-  }
+  const description = blog.meta_description?.trim()
+    ? blog.meta_description
+    : blog.content.replace(/<[^>]+>/g, '').substring(0, 160).trim() + '...'
+
+  return { title, description }
 }
 
 export default async function SingleBlogPage({ params }: { params: { slug: string } }) {

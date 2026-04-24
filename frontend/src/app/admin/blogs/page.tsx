@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { PlusCircle, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react'
+import { PlusCircle, Search, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Image as ImageIcon, Upload, Loader2, Link as LinkIcon, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { deleteBlog, uploadImage } from '@/app/actions/blog'
 import { getSetting, setSetting } from '@/app/actions/settings'
@@ -319,7 +319,7 @@ export default function BlogListPage() {
 
           <div className="space-y-3">
             {defaultImageUrlInput ? (
-              <div className="relative rounded-lg overflow-hidden border border-gray-200 group w-full h-40">
+              <div className="relative rounded-xl overflow-hidden border border-indigo-200 group w-full h-40">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={defaultImageUrlInput} alt="Default Featured" className="w-full h-full object-cover" />
                 <button
@@ -327,33 +327,33 @@ export default function BlogListPage() {
                   onClick={() => setDefaultImageUrlInput('')}
                   className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur rounded-full text-red-600 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors">
+              <label className="flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 cursor-pointer hover:border-indigo-500 hover:bg-indigo-100/60 transition-colors text-center">
                 {isUploadingDefault ? (
-                  <div className="w-8 h-8 rounded-full border-2 border-b-transparent border-blue-500 animate-spin mb-2" />
+                  <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
                 ) : (
-                  <PlusCircle className="w-8 h-8 text-gray-400 mb-2" />
+                  <Upload className="w-7 h-7 text-indigo-400" />
                 )}
-                <div className="text-sm text-gray-600">
-                  <label className="relative cursor-pointer bg-transparent font-medium text-blue-600 outline-none hover:text-blue-500">
-                    <span>Upload image</span>
-                    <input type="file" className="sr-only" onChange={handleDefaultImageUpload} accept="image/*" disabled={isUploadingDefault} />
-                  </label>
-                </div>
-              </div>
+                <span className="text-sm text-slate-500">
+                  {isUploadingDefault ? 'Uploading...' : 'Upload image'}
+                </span>
+                <input type="file" className="hidden" onChange={handleDefaultImageUpload} accept="image/*" disabled={isUploadingDefault} />
+              </label>
             )}
 
-            <div className="flex items-center text-xs text-gray-500">
-              <span className="mr-2">Or URL:</span>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LinkIcon className="w-4 h-4 text-slate-400" />
+              </div>
               <input
                 type="url"
                 value={defaultImageUrlInput}
                 onChange={(e) => setDefaultImageUrlInput(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://example.com/image.jpg"
+                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-indigo-400 focus:border-indigo-400 text-sm outline-none"
+                placeholder="Or enter image URL..."
               />
             </div>
           </div>

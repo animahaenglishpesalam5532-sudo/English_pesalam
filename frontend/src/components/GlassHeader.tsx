@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { getSetting } from '@/app/actions/settings';
 
 export async function GlassHeader() {
-  const logoType = await getSetting('logo_type') || 'text';
-  const logoText = await getSetting('logo_text') || 'English Pesalam';
-  const logoImageUrl = await getSetting('logo_image_url') || '';
+  const logoType = await getSetting('logo_type', true) || 'text';
+  const logoText = await getSetting('logo_text', true) || 'English Pesalam';
+  const logoImageUrl = await getSetting('logo_image_url', true) || '';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-lg border-b border-white/50 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
       <div className="w-full max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
 
         {/* Centered or left aligned Logo */}

@@ -78,6 +78,8 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
         author_id: initialData?.author_id || (initialDefaultAuthor ? initialDefaultAuthor.id : ''),
         status: initialData?.status || 'published',
         is_featured: initialData?.is_featured || false,
+        meta_title: initialData?.meta_title || '',
+        meta_description: initialData?.meta_description || '',
       }}
       validationSchema={blogSchema}
       onSubmit={async (values, { setSubmitting }) => {
@@ -89,6 +91,8 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
         formData.append('author_id', values.author_id)
         formData.append('status', values.status)
         formData.append('is_featured', String(values.is_featured))
+        formData.append('meta_title', values.meta_title || '')
+        formData.append('meta_description', values.meta_description || '')
 
         const result = await saveBlog(formData, initialData?.id)
 
@@ -363,60 +367,46 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
                   <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                     <h3 className="font-semibold text-gray-900 border-b pb-2">Featured Image</h3>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {values.featured_image ? (
-                        <div className="relative rounded-lg overflow-hidden border border-gray-200 group">
+                        <div className="relative rounded-xl overflow-hidden border border-indigo-200 group">
                           <img src={values.featured_image} alt="Featured" className="w-full h-40 object-cover" />
                           <button
                             type="button"
                             onClick={() => setFieldValue('featured_image', '')}
-                            className="absolute top-2 right-2 p-1 bg-white/80 backdrop-blur rounded-full text-red-600 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur rounded-full text-red-600 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors">
+                        <label className="flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 cursor-pointer hover:border-indigo-500 hover:bg-indigo-100/60 transition-colors text-center">
                           {isUploading ? (
-                            <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-2" />
+                            <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
                           ) : (
-                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                            <Upload className="w-7 h-7 text-indigo-400" />
                           )}
-                          <div className="text-sm text-gray-600">
-                            <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 outline-none hover:text-blue-500 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                              <span>Upload a file</span>
-                              <input name="file_upload" type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" disabled={isUploading} />
-                            </label>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-                        </div>
+                          <span className="text-sm text-slate-500">
+                            {isUploading ? 'Uploading...' : 'Upload a file'}
+                          </span>
+                          <input name="file_upload" type="file" className="hidden" onChange={handleImageUpload} accept="image/*" disabled={isUploading} />
+                        </label>
                       )}
 
                       <div className="relative">
-                        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                          <div className="w-full border-t border-gray-200" />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <LinkIcon className="h-4 w-4 text-slate-400" />
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-white text-gray-500">or link from URL</span>
-                        </div>
-                      </div>
-
-                      <div className="flex rounded-md shadow-sm">
-                        <div className="relative flex-grow focus-within:z-10">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <LinkIcon className="h-4 w-4 text-gray-400" />
-                          </div>
-                          <input
-                            type="url"
-                            value={values.featured_image}
-                            onChange={(e) => setFieldValue('featured_image', e.target.value)}
-                            onBlur={() => setFieldTouched('featured_image', true)}
-                            className={`focus:ring-blue-500 focus:border-blue-500 block w-full rounded-md pl-10 sm:text-sm py-2 border ${
-                              errors.featured_image && touched.featured_image ? 'border-red-300 text-red-900' : 'border-gray-300'
-                            }`}
-                            placeholder="https://example.com/image.jpg"
-                          />
-                        </div>
+                        <input
+                          type="url"
+                          value={values.featured_image}
+                          onChange={(e) => setFieldValue('featured_image', e.target.value)}
+                          onBlur={() => setFieldTouched('featured_image', true)}
+                          className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition ${
+                            errors.featured_image && touched.featured_image ? 'border-red-300 text-red-900' : 'border-slate-200'
+                          }`}
+                          placeholder="Or enter image URL..."
+                        />
                       </div>
                       {errors.featured_image && touched.featured_image && (
                         <div className="mt-1 text-sm text-red-600">{errors.featured_image as string}</div>
@@ -426,6 +416,60 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
 
                 </div>
               </div>
+
+              {/* SEO Meta Card — full width */}
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                <div>
+                  <h3 className="font-semibold text-gray-900 border-b pb-2">SEO Meta</h3>
+                  <p className="text-xs text-gray-400 mt-2">Leave blank to auto-generate from title &amp; content.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Meta Title */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Meta Title</label>
+                      <span className={`text-xs font-mono ${(values.meta_title?.length || 0) > 60 ? 'text-red-500' : 'text-gray-400'}`}>
+                        {values.meta_title?.length || 0}/60
+                      </span>
+                    </div>
+                    <input
+                      name="meta_title"
+                      value={values.meta_title || ''}
+                      onChange={(e) => setFieldValue('meta_title', e.target.value)}
+                      maxLength={60}
+                      placeholder={`${values.title?.substring(0, 60) || 'Auto-generated from title'}`}
+                      className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition ${errors.meta_title && touched.meta_title ? 'border-red-300' : 'border-slate-200'}`}
+                    />
+                    {errors.meta_title && touched.meta_title && (
+                      <p className="mt-1 text-xs text-red-500">{errors.meta_title as string}</p>
+                    )}
+                  </div>
+
+                  {/* Meta Description */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-medium text-gray-700">Meta Description</label>
+                      <span className={`text-xs font-mono ${(values.meta_description?.length || 0) > 200 ? 'text-red-500' : 'text-gray-400'}`}>
+                        {values.meta_description?.length || 0}/200
+                      </span>
+                    </div>
+                    <textarea
+                      name="meta_description"
+                      value={values.meta_description || ''}
+                      onChange={(e) => setFieldValue('meta_description', e.target.value)}
+                      maxLength={200}
+                      rows={3}
+                      placeholder="Auto-generated from content summary..."
+                      className={`w-full px-3.5 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition resize-none ${errors.meta_description && touched.meta_description ? 'border-red-300' : 'border-slate-200'}`}
+                    />
+                    {errors.meta_description && touched.meta_description && (
+                      <p className="mt-1 text-xs text-red-500">{errors.meta_description as string}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
             </Form>
 
             <AuthorModal

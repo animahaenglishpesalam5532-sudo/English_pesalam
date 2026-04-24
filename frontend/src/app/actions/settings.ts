@@ -1,12 +1,11 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
+import { createStaticClient } from '@/lib/supabase/static'
+import { revalidatePath } from 'next/cache'
 
-export async function getSetting(key: string) {
-  noStore()
-  
-  const supabase = createClient()
+export async function getSetting(key: string, useStatic: boolean = false) {
+  const supabase = useStatic ? createStaticClient() : createClient()
   const { data, error } = await supabase
     .from('settings')
     .select('value')

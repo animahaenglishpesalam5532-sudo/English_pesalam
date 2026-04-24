@@ -3,34 +3,20 @@ import { HeroSection } from "@/components/HeroSection";
 import { LearningPaths } from "@/components/LearningPaths";
 import { BlogNavigationCard } from "@/components/BlogNavigationCard";
 import { Footer } from "@/components/Footer";
-import { getSetting } from "@/app/actions/settings";
+import { getVisibleBooks } from "@/app/actions/books";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600;
 
 export default async function Home() {
-  const bookTitle1 = await getSetting('book_title_1');
-  const bookTitle2 = await getSetting('book_title_2');
-  const bookDescription = await getSetting('book_description');
-  const bookPrice = await getSetting('book_price');
-  const bookStrikethroughPrice = await getSetting('book_strikethrough_price');
-  const bookImageUrl = await getSetting('book_image_url');
-  const whatsappNumber = await getSetting('whatsapp_number');
-  const whatsappMessage = await getSetting('whatsapp_message');
+  const books = await getVisibleBooks(true);
 
   return (
-    <div className="bg-[#EAF0F6] min-h-screen">
+    <div className="relative min-h-screen">
+      <AmbientBackground />
       <GlassHeader />
-      <main className="flex flex-col gap-6 relative overflow-x-hidden pt-4 pb-10">
-        <HeroSection 
-          bookTitle1={bookTitle1}
-          bookTitle2={bookTitle2}
-          bookDescription={bookDescription}
-          bookPrice={bookPrice}
-          bookStrikethroughPrice={bookStrikethroughPrice}
-          bookImageUrl={bookImageUrl}
-          whatsappNumber={whatsappNumber}
-          whatsappMessage={whatsappMessage}
-        />
+      <main className="flex flex-col gap-6 relative overflow-x-hidden pt-4 pb-10 z-10">
+        <HeroSection books={books} />
         <LearningPaths />
         <BlogNavigationCard />
       </main>

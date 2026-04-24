@@ -2,6 +2,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
 import { revalidatePath } from 'next/cache'
 import { v2 as cloudinary } from 'cloudinary'
 
@@ -17,6 +18,7 @@ export async function deleteBlog(id: string) {
   revalidatePath('/admin/blogs')
   revalidatePath('/admin/dashboard')
   revalidatePath('/blogs')
+  revalidatePath('/', 'layout')
   return { success: true }
 }
 
@@ -30,7 +32,33 @@ export async function getFeaturedBlogsCount(excludeId?: string) {
   return count || 0
 }
 
-export async function uploadImage(formData: FormData) {
+export async function getPublicFeaturedBlogs() {
+  const supabase = createStaticClient()
+  const { data: blogs } = await supabase
+    .from('blogs')
+    .select('*, authors(name, profile_image)')
+    .eq('status', 'published')
+    .eq('is_featured', true)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  return blogs || []
+}
+
+export async function getPublicLatestBlogs(limit: number = 3) {
+  const supabase = createStaticClient()
+  const { data: blogs } = await supabase
+    .from('blogs')
+    .select('*, authors(name, profile_image)')
+    .eq('status', 'published')
+    .eq('is_featured', false)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  return blogs || []
+}
+
+export async function uploadImage(formData: FormData, folder: string = 'blog') {
   const file = formData.get('file') as File
   if (!file) {
     return { error: 'No file provided' }
@@ -42,7 +70,7 @@ export async function uploadImage(formData: FormData) {
 
     const result = await new Promise<any>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: 'blog' },
+        { folder },
         (error, result) => {
           if (error) reject(error)
           else resolve(result)
@@ -64,6 +92,8 @@ export async function saveBlog(formData: FormData, id?: string) {
   const author_id = formData.get('author_id') as string
   const status = formData.get('status') as string
   const is_featured = formData.get('is_featured') === 'true'
+  const meta_title = (formData.get('meta_title') as string) || null
+  const meta_description = (formData.get('meta_description') as string) || null
 
   if (!id && !featured_image) {
     const { getSetting } = await import('./settings')
@@ -94,6 +124,8 @@ export async function saveBlog(formData: FormData, id?: string) {
     author_id,
     status,
     is_featured,
+    meta_title,
+    meta_description,
     updated_at: new Date().toISOString()
   }
 
@@ -120,5 +152,6 @@ export async function saveBlog(formData: FormData, id?: string) {
   revalidatePath('/blogs')
   revalidatePath(`/blogs/${slug}`)
   revalidatePath(`/blogs/${slug}`, 'page')
+  revalidatePath('/', 'layout')
   return { success: true }
 }

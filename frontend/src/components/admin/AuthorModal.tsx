@@ -102,7 +102,7 @@ export default function AuthorModal({ isOpen, onClose, onSuccess, initialData }:
                 <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>
                 <div className="space-y-3">
                   {values.profile_image ? (
-                    <div className="relative rounded-lg overflow-hidden border border-gray-200 group w-24 h-24">
+                    <div className="relative rounded-xl overflow-hidden border border-indigo-200 group w-24 h-24">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={values.profile_image} alt="Profile" className="w-full h-full object-cover" />
                       <button
@@ -114,29 +114,29 @@ export default function AuthorModal({ isOpen, onClose, onSuccess, initialData }:
                       </button>
                     </div>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors">
+                    <label className="flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 cursor-pointer hover:border-indigo-500 hover:bg-indigo-100/60 transition-colors text-center">
                       {isUploading ? (
-                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin mb-1" />
+                        <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
                       ) : (
-                        <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                        <Upload className="w-7 h-7 text-indigo-400" />
                       )}
-                      <div className="text-sm text-gray-600">
-                        <label className="relative cursor-pointer bg-transparent font-medium text-blue-600 outline-none hover:text-blue-500">
-                          <span>Upload image</span>
-                          <input type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" disabled={isUploading} />
-                        </label>
-                      </div>
-                    </div>
+                      <span className="text-sm text-slate-500">
+                        {isUploading ? 'Uploading...' : 'Upload image'}
+                      </span>
+                      <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" disabled={isUploading} />
+                    </label>
                   )}
-                  
-                  <div className="flex items-center text-xs text-gray-500">
-                    <span className="mr-2">Or URL:</span>
+
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    </div>
                     <input
                       type="url"
                       value={values.profile_image}
                       onChange={(e) => setFieldValue('profile_image', e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="https://example.com/image.jpg"
+                      className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition"
+                      placeholder="Or enter image URL..."
                     />
                   </div>
                 </div>
