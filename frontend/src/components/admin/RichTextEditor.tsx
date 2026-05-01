@@ -79,21 +79,106 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           script: true
         }
       } as any,
+      video: {
+        parseUrlToVideoEmbed: function (url: string) {
+          url = (url || '').trim();
+          const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+          const match = url.match(regex);
+          if (match && match[1]) {
+            const videoId = match[1];
+            return `<div style="text-align: center; margin: 15px 0; padding: 0 20px; width: 100%; box-sizing: border-box;"><iframe src="https://www.youtube.com/embed/${videoId}" style="width: 100%; aspect-ratio: 16/9; border-radius: 8px; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
+          }
+          return url;
+        }
+      } as any,
       events: {
+        beforeInsertNode: function (this: any, node: any) {
+          if (!node) return;
+          let url = '';
+          if (node.nodeType === 3) { // TEXT_NODE
+            url = node.nodeValue || '';
+          } else if (node.tagName === 'A') {
+            url = node.getAttribute('href') || node.innerText || '';
+          } else if (node.tagName === 'IFRAME' || node.tagName === 'VIDEO') {
+            url = node.getAttribute('src') || '';
+          } else if (node.textContent) {
+            // Check if the entire node is just the URL (e.g. wrapped in a SPAN)
+            const text = node.textContent.trim();
+            if (/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/.+/.test(text)) {
+              url = text;
+            }
+          }
+
+          url = url.trim();
+          if (url && /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/.+/.test(url)) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+            const match = url.match(regex);
+            if (match && match[1]) {
+              const videoId = match[1];
+              const doc = node.ownerDocument || document;
+              
+              const wrapper = doc.createElement('div');
+              wrapper.style.textAlign = 'center';
+              wrapper.style.margin = '15px 0';
+              wrapper.style.padding = '0 20px';
+              wrapper.style.width = '100%';
+              wrapper.style.boxSizing = 'border-box';
+
+              const iframe = doc.createElement('iframe');
+              iframe.src = `https://www.youtube.com/embed/${videoId}`;
+              iframe.style.width = '100%';
+              iframe.style.aspectRatio = '16/9';
+              iframe.style.borderRadius = '8px';
+              iframe.style.border = 'none';
+              iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+              iframe.allowFullscreen = true;
+
+              wrapper.appendChild(iframe);
+              
+              this.s.insertNode(wrapper);
+              
+              const p = doc.createElement('p');
+              p.appendChild(doc.createElement('br'));
+              if (wrapper.parentNode) {
+                wrapper.parentNode.insertBefore(p, wrapper.nextSibling);
+                setTimeout(() => {
+                  if (this.s && typeof this.s.setCursorIn === 'function') {
+                    this.s.setCursorIn(p);
+                  }
+                }, 50);
+              }
+              
+              return false; // Prevent default Jodit insertion
+            }
+          }
+        },
         afterInsertNode: function (this: any, node: any) {
           if (node && (node.tagName === 'IFRAME' || node.tagName === 'VIDEO' || node.nodeName === 'IFRAME' || node.nodeName === 'VIDEO')) {
             const doc = node.ownerDocument || document;
             let targetBlock = node;
 
-            // Instead of forcing display:block on an inline media tag (which breaks Selection offsets when inside a P tag),
-            // safely center the parent container block.
             if (node.parentNode && node.parentNode.tagName === 'P') {
               node.parentNode.style.textAlign = 'center';
+              node.parentNode.style.padding = '0 20px';
+              node.parentNode.style.width = '100%';
+              node.parentNode.style.boxSizing = 'border-box';
               targetBlock = node.parentNode;
+              
+              node.style.width = '100%';
+              node.style.aspectRatio = '16/9';
+              node.style.borderRadius = '8px';
             } else {
               const wrapper = doc.createElement('div');
               wrapper.style.textAlign = 'center';
               wrapper.style.margin = '15px 0';
+              wrapper.style.padding = '0 20px';
+              wrapper.style.width = '100%';
+              wrapper.style.boxSizing = 'border-box';
+
+              node.style.width = '100%';
+              node.style.aspectRatio = '16/9';
+              node.style.borderRadius = '8px';
+
               if (node.parentNode) {
                 node.parentNode.insertBefore(wrapper, node);
                 wrapper.appendChild(node);

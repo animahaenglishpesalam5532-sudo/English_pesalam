@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="node_modules/jodit/build/jodit.min.css">
+  <script src="node_modules/jodit/build/jodit.min.js"></script>
+</head>
+<body>
+  <textarea id="editor"></textarea>
+  <script>
+    const editor = Jodit.make('#editor', {
+      events: {
+        beforeInsertNode: function (node) {
+          console.log('BEFORE_INSERT_NODE', node.nodeType, node.tagName, node.outerHTML, node.nodeValue);
+        }
+      }
+    });
+    // simulate what Video plugin might do if it fails
+    // or let's use the actual Video plugin
+    console.log("plugins:", Object.keys(editor.e.on));
+  </script>
+</body>
+</html>
