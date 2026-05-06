@@ -26,6 +26,9 @@ const settingsSchema = Yup.object().shape({
   social_twitter: Yup.string().nullable(),
   social_youtube: Yup.string().nullable(),
   social_instagram: Yup.string().nullable(),
+  ppt_whatsapp_text: Yup.string().nullable(),
+  pdf_whatsapp_text: Yup.string().nullable(),
+  video_course_whatsapp_text: Yup.string().nullable(),
 })
 
 interface SettingsFormProps {
@@ -39,6 +42,9 @@ interface SettingsFormProps {
     social_twitter: string
     social_youtube: string
     social_instagram: string
+    ppt_whatsapp_text: string
+    pdf_whatsapp_text: string
+    video_course_whatsapp_text: string
   }
 }
 
@@ -63,6 +69,9 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
               setSetting('social_twitter', values.social_twitter || ''),
               setSetting('social_youtube', values.social_youtube || ''),
               setSetting('social_instagram', values.social_instagram || ''),
+              setSetting('ppt_whatsapp_text', values.ppt_whatsapp_text || 'I want to buy '),
+              setSetting('pdf_whatsapp_text', values.pdf_whatsapp_text || 'I want to buy '),
+              setSetting('video_course_whatsapp_text', values.video_course_whatsapp_text || 'I want to buy '),
             ])
 
             toast.success('Settings saved successfully!')
@@ -77,6 +86,12 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
           const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
             const file = e.target.files?.[0]
             if (!file) return
+
+            if (file.size > 2 * 1024 * 1024) {
+              toast.error('File size must be less than 2MB')
+              e.target.value = ''
+              return
+            }
 
             setIsUploading(true)
             const formData = new FormData()
@@ -245,6 +260,43 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
                     )
                   })}
                 </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+                <h3 className="font-semibold text-gray-900 border-b pb-2">PPT & PDF Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Global PPT Buying Text</label>
+                    <input
+                      name="ppt_whatsapp_text"
+                      value={values.ppt_whatsapp_text}
+                      onChange={(e) => setFieldValue('ppt_whatsapp_text', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="I want to buy "
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Global PDF Buying Text</label>
+                    <input
+                      name="pdf_whatsapp_text"
+                      value={values.pdf_whatsapp_text}
+                      onChange={(e) => setFieldValue('pdf_whatsapp_text', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="I want to buy "
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Global Video Buying Text</label>
+                    <input
+                      name="video_course_whatsapp_text"
+                      value={values.video_course_whatsapp_text}
+                      onChange={(e) => setFieldValue('video_course_whatsapp_text', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="I want to buy "
+                    />
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">The product name will be appended automatically. Example: "I want to buy [Product Name]"</p>
               </div>
 
 

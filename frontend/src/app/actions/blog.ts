@@ -155,3 +155,14 @@ export async function saveBlog(formData: FormData, id?: string) {
   revalidatePath('/', 'layout')
   return { success: true }
 }
+
+export async function getAllPublishedSlugs() {
+  const supabase = createStaticClient()
+  const { data } = await supabase
+    .from('blogs')
+    .select('slug, updated_at')
+    .eq('status', 'published')
+    .order('updated_at', { ascending: false })
+
+  return data || []
+}

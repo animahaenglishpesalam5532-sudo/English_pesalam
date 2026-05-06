@@ -111,6 +111,12 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
           const file = e.target.files?.[0]
           if (!file) return
 
+          if (file.size > 2 * 1024 * 1024) {
+            toast.error('File size must be less than 2MB')
+            e.target.value = ''
+            return
+          }
+
           setIsUploading(true)
           const formData = new FormData()
           formData.append('file', file)

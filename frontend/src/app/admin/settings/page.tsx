@@ -17,6 +17,9 @@ export default async function SettingsPage() {
   const socialTwitter = await getSetting('social_twitter') || ''
   const socialYoutube = await getSetting('social_youtube') || ''
   const socialInstagram = await getSetting('social_instagram') || ''
+  const pptWhatsappText = await getSetting('ppt_whatsapp_text') || 'I want to buy '
+  const pdfWhatsappText = await getSetting('pdf_whatsapp_text') || 'I want to buy '
+  const videoCourseWhatsappText = await getSetting('video_course_whatsapp_text') || 'I want to buy '
 
   return (
     <AdminLayout>
@@ -37,6 +40,9 @@ export default async function SettingsPage() {
             social_twitter: socialTwitter,
             social_youtube: socialYoutube,
             social_instagram: socialInstagram,
+            ppt_whatsapp_text: pptWhatsappText,
+            pdf_whatsapp_text: pdfWhatsappText,
+            video_course_whatsapp_text: videoCourseWhatsappText,
           }} 
         />
 

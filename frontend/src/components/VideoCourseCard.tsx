@@ -1,0 +1,101 @@
+'use client'
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import { PlayCircle, MessageCircle } from "lucide-react"
+
+interface VideoCourseCardProps {
+  course: {
+    id: string
+    name: string
+    description: string
+    image_url: string
+    marked_price: string
+    selling_price: string
+    is_featured: boolean
+  }
+  whatsappUrl: string
+}
+
+export function VideoCourseCard({ course, whatsappUrl }: VideoCourseCardProps) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="group bg-white/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-xl overflow-hidden flex flex-col transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:bg-white/60"
+    >
+      {/* Thumbnail Area */}
+      <div className="relative h-56 overflow-hidden">
+        {course.image_url ? (
+          <img 
+            src={course.image_url} 
+            alt={course.name} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-red-100 to-orange-50 flex items-center justify-center">
+            <PlayCircle className="w-16 h-16 text-red-200" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+           <PlayCircle className="w-16 h-16 text-white drop-shadow-2xl scale-90 group-hover:scale-100 transition-transform duration-500" />
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="p-8 flex-1 flex flex-col">
+        <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-red-600 transition-colors">
+          {course.name}
+        </h3>
+        <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-1">
+          {course.description}
+        </p>
+
+        {/* Pricing Area */}
+        <div className="flex items-end justify-between mb-8">
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Lifetime Access</span>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-black text-slate-900">{course.selling_price}</span>
+              {course.marked_price && (
+                <span className="text-sm text-slate-400 line-through font-medium">{course.marked_price}</span>
+              )}
+            </div>
+          </div>
+          <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase tracking-tighter">
+            Video Course
+          </div>
+        </div>
+
+        {/* Premium CTA Button */}
+        <motion.a 
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="relative group w-full py-4 bg-gradient-to-r from-[#6366f1]/80 to-[#4F46E5]/90 backdrop-blur-md border border-white/30 hover:border-white/50 hover:to-[#4F46E5] text-white rounded-full font-bold text-base shadow-xl shadow-[#4F46E5]/30 flex items-center justify-center gap-3 z-10 transition-all overflow-hidden"
+        >
+          <div className="absolute inset-[1px] rounded-full bg-gradient-to-r from-white/30 to-transparent pointer-events-none" />
+
+          {/* Shine Effect */}
+          <motion.div
+            className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-12 z-0 pointer-events-none"
+            animate={{ left: ["-100%", "200%"] }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatDelay: 0.3,
+              ease: "easeIn",
+            }}
+          />
+
+          <MessageCircle className="w-5 h-5 fill-current relative z-10 drop-shadow-md" />
+          <span className="relative z-10 drop-shadow-md">Buy Now</span>
+        </motion.a>
+      </div>
+    </motion.div>
+  )
+}

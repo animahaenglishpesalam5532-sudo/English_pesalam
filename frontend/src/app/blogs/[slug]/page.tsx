@@ -80,7 +80,42 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
+  
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: blog.title,
+    image: blog.featured_image,
+    datePublished: blog.created_at,
+    dateModified: blog.updated_at || blog.created_at,
+    author: {
+      '@type': 'Person',
+      name: author?.name || 'English Pesalam',
+      jobTitle: author?.designation,
+      image: author?.profile_image,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'English Pesalam',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/icon.png`,
+      },
+    },
+    description: blog.meta_description || blog.content.replace(/<[^>]+>/g, '').substring(0, 160),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/blogs/${params.slug}`,
+    },
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
         {/* Article Header */}
         <div className="bg-gray-50/50 pt-12 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
@@ -152,6 +187,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
           )}
         </div>
       </main>
+    </>
   )
 }
 

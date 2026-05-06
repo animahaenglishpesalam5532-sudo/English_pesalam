@@ -26,8 +26,9 @@ export function LearningPaths() {
       bgImage: "url('/pdf-bg.png')",
       gradient: "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.15) 50%, rgba(255,255,255,0.1) 100%)",
       iconBg: "bg-blue-100",
-      buttonText: "Coming Soon...",
+      buttonText: "View PDFs",
       buttonClass: "bg-white/50 backdrop-blur-md text-[#111827] border border-white/50 hover:bg-white/60",
+      href: "/pdfs"
     },
     {
       title: "PPT Masterclass",
@@ -37,8 +38,9 @@ export function LearningPaths() {
       bgImage: "url('/ppt-bg.png')",
       gradient: "linear-gradient(135deg, rgba(217,190,169,0.4) 0%, rgba(236,220,207,0.3) 50%, rgba(255,255,255,0.1) 100%)",
       iconBg: "bg-white/50",
-      buttonText: "Coming Soon...",
+      buttonText: "View PPTs",
       buttonClass: "bg-white/50 backdrop-blur-md text-slate-800 border border-white/50 hover:bg-white/60",
+      href: "/ppts"
     },
     {
       title: "Full Video Course",
@@ -48,9 +50,10 @@ export function LearningPaths() {
       theme: "bg-transparent",
       gradient: "linear-gradient(135deg, rgba(86,73,232,1) 0%, rgba(99,102,241,0.95) 50%, rgba(139,92,246,0.9) 100%)",
       iconBg: "bg-white/20",
-      buttonText: "Coming Soon...",
+      buttonText: "Join Course",
       buttonClass: "bg-white/80 backdrop-blur-md text-[#5649E8] border border-white/50 hover:bg-white",
       textDark: false,
+      href: "/video-courses"
     },
   ];
 
@@ -126,7 +129,7 @@ export function LearningPaths() {
             </p>
 
             <Link
-              href=""
+              href={card.href || ""}
               className={`block w-full text-center py-3 rounded-full font-bold text-sm shadow-sm transition-transform active:scale-95 relative z-10 mt-auto ${card.buttonClass}`}
             >
               {card.buttonText}
