@@ -40,13 +40,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   )
   const { data: blog } = await supabase
     .from('blogs')
-    .select('title, content, meta_title, meta_description')
+    .select('title, content, meta_title, meta_description, authors(name)')
     .eq('slug', params.slug)
     .single()
 
   if (!blog) {
     return { title: 'Blog Not Found' }
   }
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
+  const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
 
   // Use custom meta if provided, otherwise auto-generate from content
   const title = blog.meta_title?.trim()
@@ -57,7 +60,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     ? blog.meta_description
     : blog.content.replace(/<[^>]+>/g, '').substring(0, 160).trim() + '...'
 
-  return { title, description }
+  return { 
+    title, 
+    description,
+    alternates: {
+      canonical: `${baseUrl}/blogs/${params.slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    authors: author?.name ? [{ name: author.name }] : undefined,
+  }
 }
 
 export default async function SingleBlogPage({ params }: { params: { slug: string } }) {
