@@ -15,6 +15,7 @@ export function LearningPaths() {
     buttonClass: string;
     textDark?: boolean;
     customHeader?: React.ReactNode;
+    href?: string;
   };
 
   const cards: CardConfig[] = [
