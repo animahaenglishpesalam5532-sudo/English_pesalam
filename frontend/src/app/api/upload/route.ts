@@ -11,11 +11,15 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json({ success: false, msg: 'No file provided' })
     }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ success: false, msg: 'File size must be less than 2MB' })
+    }
     
     const newFormData = new FormData()
     newFormData.append('file', file)
     
-    const result = await uploadImage(newFormData)
+    const result = await uploadImage(newFormData, 'blog-content')
     
     if (result.error) {
        return NextResponse.json({ success: false, msg: result.error })

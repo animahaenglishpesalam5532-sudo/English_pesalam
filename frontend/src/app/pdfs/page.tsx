@@ -6,6 +6,7 @@ import { getVisiblePDFs } from "@/app/actions/pdfs"
 import { getSetting } from "@/app/actions/settings"
 import { FileText } from "lucide-react"
 import { PDFList } from "@/components/PDFList"
+import { Breadcrumbs } from "@/components/Breadcrumbs"
 
 export const revalidate = 3600 // Revalidate every hour
 
@@ -21,6 +22,7 @@ export default async function PDFsPage() {
       
       <main className="relative z-10 pt-24 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
+          <Breadcrumbs items={[{ label: 'Digital PDF Guides' }]} />
           {/* Header Section */}
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50/50 backdrop-blur-md rounded-full text-indigo-600 border border-indigo-100 mb-2">

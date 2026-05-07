@@ -6,6 +6,7 @@ import { getVisiblePPTs } from "@/app/actions/ppts"
 import { getSetting } from "@/app/actions/settings"
 import { Presentation } from "lucide-react"
 import { PPTList } from "@/components/PPTList"
+import { Breadcrumbs } from "@/components/Breadcrumbs"
 
 export const revalidate = 3600 // Revalidate every hour
 
@@ -22,6 +23,7 @@ export default async function PPTsPage() {
       
       <main className="relative z-10 pt-24 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
+          <Breadcrumbs items={[{ label: 'PPT Masterclass' }]} />
           {/* Header Section */}
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50/50 backdrop-blur-md rounded-full text-blue-600 border border-blue-100 mb-2">

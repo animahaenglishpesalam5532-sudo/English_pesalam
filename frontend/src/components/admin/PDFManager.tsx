@@ -106,7 +106,7 @@ export default function PDFManager() {
     fd.append('file', file)
 
     try {
-      const result = await uploadImage(fd)
+      const result = await uploadImage(fd, 'pdfs')
       if (result.error) throw new Error(result.error)
       if (result.url) {
         setFormData(prev => ({ ...prev, image_url: result.url }))

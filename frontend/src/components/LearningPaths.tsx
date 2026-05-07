@@ -98,16 +98,6 @@ export function LearningPaths() {
                 >
                   {card.icon}
                 </div>
-                <Link
-                  href=""
-                  className={`flex items-center gap-1 text-xs font-semibold ${card.textDark === false
-                    ? "text-white/80"
-                    : "text-brand-blue"
-                    }`}
-                >
-                  <span>View All</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
               </div>
             )}
 

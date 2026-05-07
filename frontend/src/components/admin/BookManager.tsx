@@ -115,7 +115,7 @@ export default function BookManager() {
     setIsUploading(true)
     const fd = new FormData()
     fd.append('file', file)
-    const result = await uploadImage(fd)
+    const result = await uploadImage(fd, 'books')
     if (result.error) {
       toast.error(result.error)
     } else if (result.url) {

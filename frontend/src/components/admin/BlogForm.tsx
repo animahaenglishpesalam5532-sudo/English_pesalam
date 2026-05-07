@@ -121,7 +121,7 @@ export default function BlogForm({ initialData, authors: initialAuthors }: BlogF
           const formData = new FormData()
           formData.append('file', file)
 
-          const result = await uploadImage(formData)
+          const result = await uploadImage(formData, 'blog')
           if (result.error) {
             toast.error(result.error)
           } else if (result.url) {
