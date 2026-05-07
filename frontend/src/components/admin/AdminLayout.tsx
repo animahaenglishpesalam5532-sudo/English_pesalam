@@ -3,18 +3,19 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video } from 'lucide-react'
+import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3 } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Blogs', href: '/admin/blogs', icon: FileText },
   { name: 'Authors', href: '/admin/authors', icon: Users },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'QR Manager', href: '/admin/qr-manager', icon: QrCode },
   { name: 'PPT Manager', href: '/admin/ppts', icon: Presentation },
   { name: 'PDF Manager', href: '/admin/pdfs', icon: FileText },
   { name: 'Video Courses', href: '/admin/video-courses', icon: Video },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
