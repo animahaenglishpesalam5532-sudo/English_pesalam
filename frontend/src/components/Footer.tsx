@@ -66,6 +66,15 @@ export async function Footer() {
           </p>
         </div>
 
+        <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-4">
+          <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Quick Links</h4>
+          <nav className="flex flex-col space-y-2">
+            <a href="/" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors">Home</a>
+            <a href="/about" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors font-medium underline underline-offset-4 decoration-indigo-200">About Us</a>
+            <a href="/blogs" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors">Blogs</a>
+          </nav>
+        </div>
+
         <div className="flex flex-col items-center md:items-end text-sm text-slate-500 space-y-4">
           
           {hasContactInfo && (

@@ -29,6 +29,7 @@ const settingsSchema = Yup.object().shape({
   ppt_whatsapp_text: Yup.string().nullable(),
   pdf_whatsapp_text: Yup.string().nullable(),
   video_course_whatsapp_text: Yup.string().nullable(),
+  online_class_whatsapp_text: Yup.string().nullable(),
 })
 
 interface SettingsFormProps {
@@ -45,6 +46,7 @@ interface SettingsFormProps {
     ppt_whatsapp_text: string
     pdf_whatsapp_text: string
     video_course_whatsapp_text: string
+    online_class_whatsapp_text: string
   }
 }
 
@@ -72,6 +74,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
               setSetting('ppt_whatsapp_text', values.ppt_whatsapp_text || 'I want to buy '),
               setSetting('pdf_whatsapp_text', values.pdf_whatsapp_text || 'I want to buy '),
               setSetting('video_course_whatsapp_text', values.video_course_whatsapp_text || 'I want to buy '),
+              setSetting('online_class_whatsapp_text', values.online_class_whatsapp_text || 'I want to join online class'),
             ])
 
             toast.success('Settings saved successfully!')
@@ -297,6 +300,22 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">The product name will be appended automatically. Example: "I want to buy [Product Name]"</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+                <h3 className="font-semibold text-gray-900 border-b pb-2">Online Class Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Join Online Class WhatsApp Text</label>
+                    <input
+                      name="online_class_whatsapp_text"
+                      value={values.online_class_whatsapp_text}
+                      onChange={(e) => setFieldValue('online_class_whatsapp_text', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="I want to join online class"
+                    />
+                  </div>
+                </div>
               </div>
 
 

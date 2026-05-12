@@ -9,12 +9,12 @@ import { logout } from '@/app/actions/auth'
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Blogs', href: '/admin/blogs', icon: FileText },
-  { name: 'Authors', href: '/admin/authors', icon: Users },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'QR Manager', href: '/admin/qr-manager', icon: QrCode },
-  { name: 'PPT Manager', href: '/admin/ppts', icon: Presentation },
   { name: 'PDF Manager', href: '/admin/pdfs', icon: FileText },
+  { name: 'PPT Manager', href: '/admin/ppts', icon: Presentation },
   { name: 'Video Courses', href: '/admin/video-courses', icon: Video },
+  { name: 'Authors', href: '/admin/authors', icon: Users },
+  { name: 'QR Manager', href: '/admin/qr-manager', icon: QrCode },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

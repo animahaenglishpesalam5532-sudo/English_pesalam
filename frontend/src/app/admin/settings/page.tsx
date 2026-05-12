@@ -20,6 +20,7 @@ export default async function SettingsPage() {
   const pptWhatsappText = await getSetting('ppt_whatsapp_text') || 'I want to buy '
   const pdfWhatsappText = await getSetting('pdf_whatsapp_text') || 'I want to buy '
   const videoCourseWhatsappText = await getSetting('video_course_whatsapp_text') || 'I want to buy '
+  const onlineClassWhatsappText = await getSetting('online_class_whatsapp_text') || 'I want to join online class'
 
   return (
     <AdminLayout>
@@ -43,6 +44,7 @@ export default async function SettingsPage() {
             ppt_whatsapp_text: pptWhatsappText,
             pdf_whatsapp_text: pdfWhatsappText,
             video_course_whatsapp_text: videoCourseWhatsappText,
+            online_class_whatsapp_text: onlineClassWhatsappText,
           }} 
         />
 
