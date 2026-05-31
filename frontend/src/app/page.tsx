@@ -7,6 +7,8 @@ import { getVisibleBooks } from "@/app/actions/books";
 import { AmbientBackground } from "@/components/AmbientBackground";
 import { OnlineClassCard } from "@/components/OnlineClassCard";
 import { getSetting } from "@/app/actions/settings";
+import { getQuizzes } from "@/app/actions/quiz";
+import { HomeQuizzes } from "@/components/HomeQuizzes";
 
 export const revalidate = 3600;
 
@@ -14,6 +16,7 @@ export default async function Home() {
   const books = await getVisibleBooks(true);
   const whatsappNumber = await getSetting('contact_phone') || '919345639627';
   const onlineClassText = await getSetting('online_class_whatsapp_text') || 'I want to join online class';
+  const quizzes = await getQuizzes();
 
   return (
     <div className="relative min-h-screen">
@@ -23,6 +26,7 @@ export default async function Home() {
         <HeroSection books={books} />
         <OnlineClassCard whatsappNumber={whatsappNumber} whatsappMessage={onlineClassText} />
         <LearningPaths />
+        <HomeQuizzes quizzes={quizzes} />
         <BlogNavigationCard />
       </main>
       <Footer />
