@@ -17,6 +17,7 @@ interface OnlineClassCardProps {
   imageUrl?: string;
   price?: string;
   originalPrice?: string;
+  buttonText?: string;
 }
 
 function LaptopPlaceholder() {
@@ -123,7 +124,8 @@ export function OnlineClassCard({
   point4 = "Direct WhatsApp Support",
   imageUrl = "",
   price = "₹999",
-  originalPrice = "₹1999"
+  originalPrice = "₹1999",
+  buttonText = "WhatsApp-ல் Course Details வாங்குங்கள்"
 }: OnlineClassCardProps) {
   
   const handleJoinClick = () => {
@@ -261,7 +263,7 @@ export function OnlineClassCard({
               >
                 <div className="flex items-center gap-3">
                   <WhatsAppIcon className="text-slate-950" size={24} />
-                  <span className="tracking-wide">WhatsApp-ல் Course Details வாங்குங்கள்</span>
+                  <span className="tracking-wide">{buttonText}</span>
                 </div>
                 <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-950/10 transition-transform group-hover:translate-x-1">
                   <ChevronRight className="w-4 h-4 text-slate-950 stroke-[3]" />

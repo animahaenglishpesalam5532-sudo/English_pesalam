@@ -31,6 +31,7 @@ export default async function SettingsPage() {
   const onlineClassImageUrl = await getSetting('online_class_image_url') || ''
   const onlineClassPrice = await getSetting('online_class_price') || '₹999'
   const onlineClassOriginalPrice = await getSetting('online_class_original_price') || '₹1999'
+  const onlineClassButtonText = await getSetting('online_class_button_text') || 'WhatsApp-ல் Course Details வாங்குங்கள்'
 
   return (
     <AdminLayout>
@@ -64,6 +65,7 @@ export default async function SettingsPage() {
             online_class_image_url: onlineClassImageUrl,
             online_class_price: onlineClassPrice,
             online_class_original_price: onlineClassOriginalPrice,
+            online_class_button_text: onlineClassButtonText,
           }} 
         />
 

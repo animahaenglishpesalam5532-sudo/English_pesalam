@@ -26,6 +26,7 @@ export default async function Home() {
   const onlineClassImageUrl = await getSetting('online_class_image_url') || '';
   const onlineClassPrice = await getSetting('online_class_price') || '₹999';
   const onlineClassOriginalPrice = await getSetting('online_class_original_price') || '₹1999';
+  const onlineClassButtonText = await getSetting('online_class_button_text') || 'WhatsApp-ல் Course Details வாங்குங்கள்';
 
   const quizzes = await getQuizzes();
 
@@ -47,6 +48,7 @@ export default async function Home() {
           imageUrl={onlineClassImageUrl}
           price={onlineClassPrice}
           originalPrice={onlineClassOriginalPrice}
+          buttonText={onlineClassButtonText}
         />
         <LearningPaths />
         <HomeQuizzes quizzes={quizzes} />
