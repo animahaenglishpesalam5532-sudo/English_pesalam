@@ -23,7 +23,8 @@ export default function AdminQuizPage() {
       id: 'q-1',
       questionText: '',
       options: ['', '', '', ''],
-      correctOptionIndex: 0
+      correctOptionIndex: 0,
+      explanation: ''
     }
   ])
   
@@ -57,7 +58,8 @@ export default function AdminQuizPage() {
         id: 'q-' + Date.now(),
         questionText: '',
         options: ['', '', '', ''],
-        correctOptionIndex: 0
+        correctOptionIndex: 0,
+        explanation: ''
       }
     ])
   }
@@ -70,7 +72,8 @@ export default function AdminQuizPage() {
         id: 'q-' + Date.now(),
         questionText: '',
         options: ['', '', '', ''],
-        correctOptionIndex: 0
+        correctOptionIndex: 0,
+        explanation: ''
       }
     ])
     setView('create')
@@ -84,7 +87,8 @@ export default function AdminQuizPage() {
     setQuestions(
       quiz.questions.map(q => ({
         ...q,
-        options: [...q.options]
+        options: [...q.options],
+        explanation: q.explanation || ''
       }))
     )
     setView('edit')
@@ -98,7 +102,8 @@ export default function AdminQuizPage() {
         id: 'q-' + Date.now() + Math.random().toString(36).substr(2, 5),
         questionText: '',
         options: ['', '', '', ''],
-        correctOptionIndex: 0
+        correctOptionIndex: 0,
+        explanation: ''
       }
     ])
   }
@@ -132,6 +137,11 @@ export default function AdminQuizPage() {
   // Update Correct Option selection
   const handleCorrectOptionChange = (qIndex: number, oIndex: number) => {
     setQuestions(prev => prev.map((q, i) => i === qIndex ? { ...q, correctOptionIndex: oIndex } : q))
+  }
+
+  // Update Explanation text
+  const handleExplanationChange = (index: number, text: string) => {
+    setQuestions(prev => prev.map((q, i) => i === index ? { ...q, explanation: text } : q))
   }
 
   // Validate form and save
@@ -462,6 +472,19 @@ export default function AdminQuizPage() {
                       )
                     })}
                   </div>
+                </div>
+
+                {/* Explanation Builder */}
+                <div className="space-y-2 pl-0 sm:pl-10">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Answer Explanation (Optional)
+                  </label>
+                  <textarea
+                    value={question.explanation || ''}
+                    onChange={e => handleExplanationChange(qIndex, e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-h-[90px] resize-y"
+                    placeholder="Provide an explanation for the correct answer, which will be displayed after a user selects an option."
+                  />
                 </div>
               </div>
             ))}

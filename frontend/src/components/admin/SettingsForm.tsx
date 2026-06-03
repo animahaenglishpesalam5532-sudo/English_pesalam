@@ -30,6 +30,15 @@ const settingsSchema = Yup.object().shape({
   pdf_whatsapp_text: Yup.string().nullable(),
   video_course_whatsapp_text: Yup.string().nullable(),
   online_class_whatsapp_text: Yup.string().nullable(),
+  online_class_title: Yup.string().nullable(),
+  online_class_description: Yup.string().nullable(),
+  online_class_point_1: Yup.string().nullable(),
+  online_class_point_2: Yup.string().nullable(),
+  online_class_point_3: Yup.string().nullable(),
+  online_class_point_4: Yup.string().nullable(),
+  online_class_image_url: Yup.string().nullable(),
+  online_class_price: Yup.string().nullable(),
+  online_class_original_price: Yup.string().nullable(),
 })
 
 interface SettingsFormProps {
@@ -47,6 +56,15 @@ interface SettingsFormProps {
     pdf_whatsapp_text: string
     video_course_whatsapp_text: string
     online_class_whatsapp_text: string
+    online_class_title: string
+    online_class_description: string
+    online_class_point_1: string
+    online_class_point_2: string
+    online_class_point_3: string
+    online_class_point_4: string
+    online_class_image_url: string
+    online_class_price: string
+    online_class_original_price: string
   }
 }
 
@@ -75,6 +93,15 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
               setSetting('pdf_whatsapp_text', values.pdf_whatsapp_text || 'I want to buy '),
               setSetting('video_course_whatsapp_text', values.video_course_whatsapp_text || 'I want to buy '),
               setSetting('online_class_whatsapp_text', values.online_class_whatsapp_text || 'I want to join online class'),
+              setSetting('online_class_title', values.online_class_title || ''),
+              setSetting('online_class_description', values.online_class_description || ''),
+              setSetting('online_class_point_1', values.online_class_point_1 || ''),
+              setSetting('online_class_point_2', values.online_class_point_2 || ''),
+              setSetting('online_class_point_3', values.online_class_point_3 || ''),
+              setSetting('online_class_point_4', values.online_class_point_4 || ''),
+              setSetting('online_class_image_url', values.online_class_image_url || ''),
+              setSetting('online_class_price', values.online_class_price || ''),
+              setSetting('online_class_original_price', values.online_class_original_price || ''),
             ])
 
             toast.success('Settings saved successfully!')
@@ -304,7 +331,19 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
 
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <h3 className="font-semibold text-gray-900 border-b pb-2">Online Class Settings</h3>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Online Class Title</label>
+                    <input
+                      name="online_class_title"
+                      value={values.online_class_title}
+                      onChange={(e) => setFieldValue('online_class_title', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="1 Month Spoken English Online Course"
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Join Online Class WhatsApp Text</label>
                     <input
@@ -314,6 +353,134 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="I want to join online class"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (e.g., ₹999)</label>
+                    <input
+                      name="online_class_price"
+                      value={values.online_class_price}
+                      onChange={(e) => setFieldValue('online_class_price', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="₹999"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Original Price (Strike-through, e.g., ₹1999)</label>
+                    <input
+                      name="online_class_original_price"
+                      value={values.online_class_original_price}
+                      onChange={(e) => setFieldValue('online_class_original_price', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="₹1999"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Online Class Description</label>
+                  <textarea
+                    name="online_class_description"
+                    value={values.online_class_description}
+                    onChange={(e) => setFieldValue('online_class_description', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                    placeholder="Enter Tamil & English description..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Point 1</label>
+                    <input
+                      name="online_class_point_1"
+                      value={values.online_class_point_1}
+                      onChange={(e) => setFieldValue('online_class_point_1', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="1 Month Training"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Point 2</label>
+                    <input
+                      name="online_class_point_2"
+                      value={values.online_class_point_2}
+                      onChange={(e) => setFieldValue('online_class_point_2', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="Free PDF Materials"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Point 3</label>
+                    <input
+                      name="online_class_point_3"
+                      value={values.online_class_point_3}
+                      onChange={(e) => setFieldValue('online_class_point_3', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="குறைந்த மாணவர்கள் மட்டும்"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Point 4</label>
+                    <input
+                      name="online_class_point_4"
+                      value={values.online_class_point_4}
+                      onChange={(e) => setFieldValue('online_class_point_4', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                      placeholder="Direct WhatsApp Support"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Online Class Image (Right Side)</label>
+                  <div className="flex items-start gap-4">
+                    {values.online_class_image_url ? (
+                      <div className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2">
+                        <img src={values.online_class_image_url} alt="Online Class visual preview" className="w-full h-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setFieldValue('online_class_image_url', '')}
+                          className="absolute top-1 right-1 p-1 bg-red-100 rounded-full text-red-600 hover:bg-red-200 transition-colors shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : null}
+                    <div className="flex-1 space-y-3">
+                      <label className="flex flex-col items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 cursor-pointer hover:border-indigo-500 hover:bg-indigo-100/60 transition-colors text-center">
+                        {isUploading ? (
+                          <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
+                        ) : (
+                          <Upload className="w-7 h-7 text-indigo-400" />
+                        )}
+                        <span className="text-sm text-slate-500">
+                          {isUploading ? 'Uploading...' : values.online_class_image_url ? 'Replace image via upload' : 'Upload section image'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={isUploading}
+                          onChange={(e) => handleImageUpload(e, 'online_class_image_url')}
+                        />
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <LinkIcon className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={values.online_class_image_url}
+                          onChange={e => setFieldValue('online_class_image_url', e.target.value)}
+                          placeholder="Or enter image URL..."
+                          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

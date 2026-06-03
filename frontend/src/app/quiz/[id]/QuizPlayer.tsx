@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react'
 import { Quiz, Question } from '@/app/actions/quiz'
-import { Check, X, Trophy, RefreshCw, ChevronLeft, AlertTriangle } from 'lucide-react'
+import { Check, X, Trophy, RefreshCw, ChevronLeft, AlertTriangle, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import toast from 'react-hot-toast'
 
 interface QuizPlayerProps {
   quiz: Quiz
@@ -16,61 +15,38 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
   const [answers, setAnswers] = useState<{ [key: string]: number }>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  
-  // Validation tracking to highlight unanswered questions
-  const [unansweredQuestions, setUnansweredQuestions] = useState<string[]>([])
+
+  const totalQuestions = quiz.questions.length
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     if (isSubmitted) return // Prevent editing after submission
-    setAnswers(prev => ({
-      ...prev,
+    if (answers[questionId] !== undefined) return // Prevent changing answer once selected
+    
+    const newAnswers = {
+      ...answers,
       [questionId]: optionIndex
-    }))
-    
-    // Remove from unanswered list if selected
-    if (unansweredQuestions.includes(questionId)) {
-      setUnansweredQuestions(prev => prev.filter(id => id !== questionId))
     }
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
     
-    // Check if all questions are answered
-    const unanswered: string[] = []
-    quiz.questions.forEach(q => {
-      if (answers[q.id] === undefined) {
-        unanswered.push(q.id)
-      }
-    })
-
-    if (unanswered.length > 0) {
-      setUnansweredQuestions(unanswered)
-      toast.error(`Please answer all ${unanswered.length} remaining question(s) before saving!`)
-      // Scroll to the first unanswered question
-      const firstUnansweredEl = document.getElementById(`q-container-${unanswered[0]}`)
-      if (firstUnansweredEl) {
-        firstUnansweredEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-      return
+    setAnswers(newAnswers)
+    
+    // Auto-trigger completion when all questions are answered
+    if (Object.keys(newAnswers).length === totalQuestions) {
+      setIsSubmitted(true)
+      // Open results modal after a brief delay so they can see the feedback of the last question first
+      setTimeout(() => {
+        setShowModal(true)
+      }, 1200)
     }
-
-    // All answered, compute score and open modal
-    setIsSubmitted(true)
-    setShowModal(true)
-    toast.success('Quiz submitted successfully!')
   }
 
   const handleReset = () => {
     setAnswers({})
     setIsSubmitted(false)
     setShowModal(false)
-    setUnansweredQuestions([])
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Calculate score
-  const totalQuestions = quiz.questions.length
   let score = 0
   quiz.questions.forEach(q => {
     if (answers[q.id] === q.correctOptionIndex) {
@@ -123,19 +99,16 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
         </div>
       </div>
 
-      {/* Questions Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Questions Container */}
+      <div className="space-y-6">
         {quiz.questions.map((question, index) => {
-          const isUnanswered = unansweredQuestions.includes(question.id)
+          const hasAnswered = answers[question.id] !== undefined
+
           return (
             <div 
               key={question.id}
               id={`q-container-${question.id}`}
-              className={`bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-3xl border transition-all duration-300 ${
-                isUnanswered 
-                  ? 'border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.1)]' 
-                  : 'border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)]'
-              }`}
+              className="bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
             >
               {/* Question Text */}
               <div className="flex items-start gap-4 mb-6">
@@ -147,41 +120,70 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
                 </h3>
               </div>
 
-              {isUnanswered && (
-                <div className="flex items-center gap-1.5 text-red-500 text-xs font-semibold mb-4 bg-red-50/50 px-3 py-1.5 rounded-lg border border-red-100 max-w-max">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  Please select an option for this question
-                </div>
-              )}
-
               {/* Options list */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4">
                 {question.options.map((option, oIndex) => {
                   const isSelected = answers[question.id] === oIndex
+                  const isCorrectOption = question.correctOptionIndex === oIndex
                   const optionLetter = String.fromCharCode(65 + oIndex)
 
+                  let btnClass = ""
+                  let circleClass = ""
+                  let circleContent: React.ReactNode = optionLetter
+
+                  if (hasAnswered) {
+                    if (isCorrectOption) {
+                      btnClass = "bg-emerald-50/70 border-emerald-500 text-emerald-955 cursor-default"
+                      circleClass = "bg-emerald-500 border-emerald-500 text-white"
+                      circleContent = <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    } else if (isSelected) {
+                      btnClass = "bg-red-50/70 border-red-500 text-red-955 cursor-default"
+                      circleClass = "bg-red-500 border-red-500 text-white"
+                      circleContent = <X className="w-3.5 h-3.5 stroke-[3]" />
+                    } else {
+                      btnClass = "bg-slate-50/40 border-slate-100 text-slate-400 opacity-60 cursor-default"
+                      circleClass = "bg-slate-100 border-slate-200 text-slate-400"
+                    }
+                  } else {
+                    btnClass = isSelected 
+                      ? 'bg-indigo-50/60 border-indigo-500 shadow-sm text-indigo-900' 
+                      : 'bg-white hover:bg-slate-50 border-slate-100 hover:border-slate-300 text-slate-700'
+                    circleClass = isSelected
+                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                      : 'bg-slate-100 border-slate-200 text-slate-500'
+                  }
+
                   return (
-                    <button
-                      key={`play-o-${question.id}-${oIndex}`}
-                      type="button"
-                      onClick={() => handleSelectOption(question.id, oIndex)}
-                      className={`flex items-center text-left p-4 rounded-2xl border-2 transition-all duration-200 ${
-                        isSelected 
-                          ? 'bg-indigo-50/60 border-indigo-500 shadow-sm text-indigo-900' 
-                          : 'bg-white hover:bg-slate-50 border-slate-100 hover:border-slate-300 text-slate-700'
-                      }`}
-                    >
-                      <div 
-                        className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 transition-all ${
-                          isSelected 
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm' 
-                            : 'bg-slate-100 border-slate-200 text-slate-500'
-                        }`}
+                    <div key={`play-o-wrapper-${question.id}-${oIndex}`} className="flex flex-col gap-3">
+                      <button
+                        type="button"
+                        disabled={hasAnswered}
+                        onClick={() => handleSelectOption(question.id, oIndex)}
+                        className={`flex items-center text-left p-4 rounded-2xl border-2 transition-all duration-200 ${btnClass}`}
                       >
-                        {optionLetter}
-                      </div>
-                      <span className="text-sm font-semibold">{option}</span>
-                    </button>
+                        <div 
+                          className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 transition-all ${circleClass}`}
+                        >
+                          {circleContent}
+                        </div>
+                        <span className="text-sm font-semibold">{option}</span>
+                      </button>
+
+                      {/* Explanation displayed directly below correct answer */}
+                      {hasAnswered && isCorrectOption && question.explanation && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="ml-0 sm:ml-9 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100/60 text-slate-700 text-sm leading-relaxed"
+                        >
+                          <div className="font-extrabold text-indigo-900 mb-1.5 flex items-center gap-1.5 uppercase tracking-wider text-xs">
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Answer Explanation</span>
+                          </div>
+                          <p className="font-medium text-slate-600">{question.explanation}</p>
+                        </motion.div>
+                      )}
+                    </div>
                   )
                 })}
               </div>
@@ -190,7 +192,7 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
         })}
 
         {/* Form Action Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
+        <div className="flex justify-between items-center bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
           <Link 
             href="/quiz" 
             className="flex items-center text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
@@ -198,26 +200,30 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Quizzes
           </Link>
-          <div className="flex gap-3 w-full sm:w-auto">
+          <div className="flex gap-3">
             {isSubmitted && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Retry Quiz
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-50 border border-indigo-100 px-5 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-100/50 transition-colors shadow-sm"
+                >
+                  <Trophy className="w-4 h-4" />
+                  View Results
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Retry Quiz
+                </button>
+              </>
             )}
-            <button
-              type="submit"
-              className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-brand-blue to-indigo-600 px-8 py-4 text-sm font-black text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all hover:scale-[1.01]"
-            >
-              {isSubmitted ? 'Show Results' : 'Submit & Save Answers'}
-            </button>
           </div>
         </div>
-      </form>
+      </div>
 
       {/* RESULTS MODAL */}
       <AnimatePresence>
@@ -304,11 +310,11 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
                           <div className="flex items-start gap-2.5 mb-3">
                             {isCorrect ? (
                               <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white flex-shrink-0 mt-0.5 shadow-sm">
-                                <Check className="w-3 h-3 stroke-[3]" />
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
                               </div>
                             ) : (
                               <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white flex-shrink-0 mt-0.5 shadow-sm">
-                                <X className="w-3 h-3 stroke-[3]" />
+                                <X className="w-3.5 h-3.5 stroke-[3]" />
                               </div>
                             )}
                             <span className="text-sm font-bold text-slate-800 leading-snug">

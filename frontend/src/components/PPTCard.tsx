@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Presentation, MessageCircle } from "lucide-react"
+import { MessageCircle } from "lucide-react"
 
 interface PPTCardProps {
   ppt: {
@@ -26,22 +26,6 @@ export function PPTCard({ ppt, whatsappUrl }: PPTCardProps) {
       transition={{ duration: 0.5 }}
       className="group bg-white/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 shadow-xl overflow-hidden flex flex-col transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:bg-white/60"
     >
-      {/* Image Area */}
-      <div className="relative h-56 overflow-hidden">
-        {ppt.image_url ? (
-          <img 
-            src={ppt.image_url} 
-            alt={ppt.name} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center">
-            <Presentation className="w-16 h-16 text-blue-200" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-      </div>
-
       {/* Content Area */}
       <div className="p-8 flex-1 flex flex-col">
         <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">
@@ -67,7 +51,7 @@ export function PPTCard({ ppt, whatsappUrl }: PPTCardProps) {
           </div>
         </div>
 
-        {/* Premium CTA Button (Replicating Home Page Style) */}
+        {/* Premium CTA Button */}
         <motion.a 
           href={whatsappUrl}
           target="_blank"
