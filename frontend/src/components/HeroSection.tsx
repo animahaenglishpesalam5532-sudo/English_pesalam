@@ -2,161 +2,173 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Book } from '@/app/actions/books';
+import Link from 'next/link';
 
 interface HeroSectionProps {
-  books?: Book[];
+  heroSubtitle?: string;
+  heroTitle?: string;
+  heroDescription?: string;
+  trainerName?: string;
+  trainerTitle?: string;
+  trainerImageUrl?: string;
+  trainerStat1Value?: string;
+  trainerStat1Label?: string;
+  trainerStat2Value?: string;
+  trainerStat2Label?: string;
 }
 
-function BookCard({ book, index }: { book: Book; index: number }) {
-  const handleBuyClick = () => {
-    const phone = (book.whatsapp_number || "919345639627").trim().replace(/\D/g, "");
-    const msg = (book.whatsapp_message || "I want to buy the English Pesalam book").trim();
-    const text = encodeURIComponent(msg);
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+export function HeroSection({
+  heroSubtitle = "1M+ YOUTUBE FAMILY • TAMIL TO ENGLISH FOCUS",
+  heroTitle = "தமிழ் பேசும் மக்களுக்கான Practical Spoken English Platform",
+  heroDescription = "English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா? Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.",
+  trainerName = "Maha JC",
+  trainerTitle = "Founder & Spoken English Trainer",
+  trainerImageUrl = "",
+  trainerStat1Value = "1M+",
+  trainerStat1Label = "Subscribers",
+  trainerStat2Value = "500+",
+  trainerStat2Label = "Lessons",
+}: HeroSectionProps) {
+
+  // Split title if it has spaces, or render it directly.
+  // To match the screenshot, we want clean lines.
+  const renderTitle = (titleText: string) => {
+    // If it's the default title, let's render it exactly like the screenshot.
+    if (titleText === "தமிழ் பேசும் மக்களுக்கான Practical Spoken English Platform") {
+      return (
+        <>
+          <span className="block text-slate-900 pb-1">தமிழ் பேசும்</span>
+          <span className="block text-slate-900 mt-1 pb-1">மக்களுக்கான</span>
+          <span className="block text-[#0B256B] mt-2 pb-2">Practical Spoken</span>
+          <span className="block text-[#0B256B] mt-1 pb-2">English Platform</span>
+        </>
+      );
+    }
+    
+    // Otherwise, split words into beautiful blocks
+    return <span className="block text-slate-900 leading-tight pb-2">{titleText}</span>;
+  };
+
+  const handleScrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.55, delay: index * 0.12 }}
-      className="bg-white/30 backdrop-blur-2xl border border-white/50 rounded-[2.5rem] p-6 md:p-10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] flex flex-col md:flex-row items-center gap-8 lg:gap-16 relative overflow-hidden"
-    >
-      {/* Inner subtle glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-50 pointer-events-none rounded-[2.5rem]" />
+    <section id="home" className="pt-28 pb-12 px-4 w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      
+      {/* Left Column - Content */}
+      <motion.div 
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7 }}
+        className="flex-1 flex flex-col items-start w-full text-left"
+      >
+        {/* Tagline / Subtitle */}
+        <div className="inline-block text-[11px] md:text-xs font-black tracking-widest text-[#FF5722] mb-4 uppercase">
+          {heroSubtitle}
+        </div>
 
-      {/* Left Side Content */}
-      <div className="flex-1 flex flex-col items-start w-full order-2 md:order-1 relative z-10">
-        {/* Title */}
-        <h1 className="mb-4 md:mb-6 pb-2 leading-tight tracking-tight">
-          <span
-            className="block text-2xl md:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text"
-            style={{ backgroundImage: "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)" }}
-          >
-            {book.title_1 || '1000 + English Words'}
-          </span>
-          {book.title_2 && (
-            <span
-              className="block text-lg md:text-xl lg:text-2xl font-semibold text-transparent bg-clip-text mt-1"
-              style={{ backgroundImage: "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)" }}
-            >
-              {book.title_2}
-            </span>
-          )}
+        {/* Main Title */}
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 font-jakarta leading-tight">
+          {renderTitle(heroTitle)}
         </h1>
 
         {/* Description */}
-        {book.description && (
-          <p className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed mb-6 md:mb-8 max-w-lg">
-            {book.description}
-          </p>
-        )}
+        <p className="text-slate-600 text-sm md:text-base lg:text-lg leading-relaxed mb-8 max-w-xl">
+          {heroDescription}
+        </p>
 
-        {/* Pricing */}
-        <div className="flex flex-col mb-6 md:mb-8">
-          <div className="flex items-end gap-3">
-            <span className="text-3xl md:text-5xl font-black text-[#4F46E5] tracking-tighter">
-              {book.price || '₹339'}
-            </span>
-            {book.strikethrough_price && (
-              <span className="text-sm md:text-lg font-medium text-slate-400 line-through mb-1 md:mb-2">
-                {book.strikethrough_price}
-              </span>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 w-full sm:w-auto mb-6">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => handleScrollTo('paths')}
+            className="px-8 py-4 bg-[#FF5722] hover:bg-[#E64A19] text-white font-extrabold rounded-full shadow-lg shadow-[#FF5722]/20 hover:shadow-xl transition-all text-center text-sm md:text-base"
+          >
+            Start Learning Free
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => handleScrollTo('online-class')}
+            className="px-8 py-4 bg-[#0B256B] hover:bg-[#081B4E] text-white font-extrabold rounded-full shadow-lg shadow-[#0B256B]/20 hover:shadow-xl transition-all text-center text-sm md:text-base"
+          >
+            Join Online Class
+          </motion.button>
+
+          <Link
+            href="/pdfs"
+            className="px-8 py-4 bg-white hover:bg-slate-50 text-[#0B256B] border border-slate-200/80 font-extrabold rounded-full shadow-md hover:shadow-lg transition-all text-center text-sm md:text-base flex items-center justify-center"
+          >
+            Buy PDF Materials
+          </Link>
+        </div>
+
+        {/* Pill Badge */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-100 rounded-full shadow-sm hover:shadow-md transition-shadow cursor-default"
+        >
+          <span className="text-xs md:text-sm font-extrabold text-[#0B256B]">English நாமும் பேசலாம்!</span>
+        </motion.div>
+      </motion.div>
+
+      {/* Right Column - Trainer Card */}
+      <motion.div 
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.7, delay: 0.2 }}
+        className="w-full lg:w-auto flex justify-center items-center"
+      >
+        <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-100 flex flex-col gap-6 relative group">
+          
+          {/* Trainer Image Box */}
+          <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden flex items-center justify-center p-4 bg-gradient-to-tr from-[#FF5722]/5 via-[#FFFDFC] to-[#0B256B]/5 border border-slate-100 shadow-inner">
+            {trainerImageUrl ? (
+              <img
+                src={trainerImageUrl}
+                alt={trainerName}
+                className="w-full h-full object-cover rounded-[1.5rem] transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 text-center w-full h-full border-2 border-dashed border-slate-200 rounded-[1.5rem] bg-white/50">
+                <div className="w-16 h-16 rounded-full border border-dashed border-[#0B256B]/30 flex items-center justify-center bg-white">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#0B256B] border-dashed animate-spin duration-1000 opacity-20" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[#0B256B] text-sm font-extrabold">Add Your Photo</span>
+                </div>
+              </div>
             )}
           </div>
-          <div className="mt-2.5">
-            <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-emerald-700 bg-emerald-500/10 px-3 py-1 rounded-full shadow-sm border border-emerald-500/20">
-              <svg className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" fill="currentColor" viewBox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg">
-                <path d="M195-195q-35-35-35-85H60l18-80h113q17-19 40-29.5t49-10.5q26 0 49 10.5t40 29.5h167l84-360H182l4-17q6-28 27.5-45.5T264-800h456l-37 160h117l120 160-40 200h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85H400q0 50-35 85t-85 35q-50 0-85-35Zm442-245h193l4-21-74-99h-95l-28 120Zm-19-273 2-7-84 360 2-7 34-146 46-200ZM20-427l20-80h220l-20 80H20Zm80-146 20-80h260l-20 80H100Zm180 333q17 0 28.5-11.5T320-280q0-17-11.5-28.5T280-320q-17 0-28.5 11.5T240-280q0 17 11.5 28.5T280-240Zm400 0q17 0 28.5-11.5T720-280q0-17-11.5-28.5T680-320q-17 0-28.5 11.5T640-280q0 17 11.5 28.5T680-240Z" />
-              </svg>
-              Including Shipping Charges
-            </span>
+
+          {/* Trainer Info */}
+          <div className="text-left px-2">
+            <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight mb-1">{trainerName}</h2>
+            <p className="text-xs md:text-sm text-slate-500 font-bold tracking-wide uppercase">{trainerTitle}</p>
+          </div>
+
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-2 gap-4 bg-[#F6F9FD] rounded-[1.5rem] p-4 border border-slate-100/50">
+            <div className="flex flex-col items-start px-2">
+              <span className="text-xl md:text-2xl font-black text-[#0B256B] tracking-tight">{trainerStat1Value}</span>
+              <span className="text-[10px] md:text-xs text-slate-500 font-bold tracking-wider uppercase mt-0.5">{trainerStat1Label}</span>
+            </div>
+            <div className="flex flex-col items-start px-2 border-l border-slate-200">
+              <span className="text-xl md:text-2xl font-black text-[#0B256B] tracking-tight">{trainerStat2Value}</span>
+              <span className="text-[10px] md:text-xs text-slate-500 font-bold tracking-wider uppercase mt-0.5">{trainerStat2Label}</span>
+            </div>
           </div>
         </div>
-
-        {/* CTA Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleBuyClick}
-          className="relative group w-full md:w-auto md:px-12 py-4 bg-gradient-to-r from-[#6366f1]/80 to-[#4F46E5]/90 backdrop-blur-md border border-white/30 hover:border-white/50 hover:to-[#4F46E5] text-white rounded-full font-bold text-base md:text-lg shadow-xl shadow-[#4F46E5]/30 flex items-center justify-center gap-3 z-10 transition-all overflow-hidden"
-        >
-          <div className="absolute inset-[1px] rounded-full bg-gradient-to-r from-white/30 to-transparent pointer-events-none" />
-
-          {/* Shine Effect */}
-          <motion.div
-            className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-12 z-0 pointer-events-none"
-            animate={{ left: ["-100%", "200%"] }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatDelay: 0.3,
-              ease: "easeIn",
-            }}
-          />
-
-          <span className="relative z-10 drop-shadow-md">Buy Now</span>
-        </motion.button>
-      </div>
-
-      {/* Right Side Book Image */}
-      <div className="flex-1 w-full order-1 md:order-2 relative z-10 flex justify-center items-center">
-        <div className="relative w-[90%] max-w-sm mx-auto group perspective-1000">
-          
-          {/* Dynamic Color Shadow */}
-          <div className="absolute inset-0 translate-y-8 scale-[0.85] opacity-60 blur-[40px] -z-10 transition-all duration-700 group-hover:scale-[0.9] group-hover:opacity-80 rounded-3xl bg-[#7c1416]">
-            <img
-              src={book.image_url || '/new-book-image1.jpeg'}
-              alt=""
-              className="w-full h-full object-contain mix-blend-overlay"
-              aria-hidden="true"
-            />
-          </div>
-
-          {/* Main Image Container */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#7c1416] border border-white/20 shadow-2xl transition-transform duration-700 group-hover:-translate-y-2 group-hover:rotate-1">
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/20 pointer-events-none" />
-            <img
-              src={book.image_url || '/new-book-image1.jpeg'}
-              alt={book.title_1 || "English Pesalam Book"}
-              className="w-full h-auto object-contain relative z-10"
-            />
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// Fallback book shown when DB has no entries
-const fallbackBook: Book = {
-  id: 'fallback',
-  title_1: '1000 + English Words',
-  title_2: '( Book 1 - விதை ) Basic Level',
-  description: 'ஆங்கிலத்தை பயமில்லாமல் கற்றுக்கொள்ள விரும்பும் தமிழ் மக்களுக்காக உருவாக்கப்பட்ட எளிய மற்றும் பயனுள்ள புத்தகம். தினசரி வாழ்க்கையில் அதிகம் பயன்படும் முக்கியமான ஆங்கில வார்த்தைகள், தமிழ் அர்த்தத்துடன் தெளிவாகவும் எளிமையாகவும் வழங்கப்பட்டுள்ளன.',
-  price: '₹339',
-  strikethrough_price: '₹399',
-  image_url: '/new-book-image1.jpeg',
-  whatsapp_number: '919345639627',
-  whatsapp_message: 'I want to buy the English Pesalam book',
-  sort_order: 0,
-  is_visible: true,
-  created_at: '',
-  updated_at: '',
-};
-
-export function HeroSection({ books = [] }: HeroSectionProps) {
-  const displayBooks = books.length > 0 ? books.slice(0, 2) : [fallbackBook];
-
-  return (
-    <section id="home" className="pt-24 pb-8 px-4 w-full max-w-md md:max-w-6xl mx-auto">
-      <div className="flex flex-col gap-6">
-        {displayBooks.map((book, i) => (
-          <BookCard key={book.id} book={book} index={i} />
-        ))}
-      </div>
+      </motion.div>
+      
     </section>
   );
 }

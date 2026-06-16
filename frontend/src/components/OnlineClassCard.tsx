@@ -72,7 +72,7 @@ function LaptopPlaceholder() {
 
           {/* Let's Speak English Badge */}
           <rect x="160" y="95" width="105" height="60" rx="8" fill="#1E1B4B" fillOpacity="0.7" stroke="#4338CA" strokeWidth="1.5" />
-          <text x="170" y="115" fill="#FBBF24" fontSize="12" fontWeight="900">Let's</text>
+          <text x="170" y="115" fill="#FBBF24" fontSize="12" fontWeight="900">Let&apos;s</text>
           <text x="170" y="132" fill="#FFFFFF" fontSize="14" fontWeight="900">Speak</text>
           <text x="170" y="148" fill="#FFFFFF" fontSize="12" fontWeight="900">English!</text>
 
@@ -141,7 +141,7 @@ export function OnlineClassCard({
       return (
         <>
           {parts[0]}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
             {highlightWord}
           </span>
           {parts[1]}
@@ -156,7 +156,7 @@ export function OnlineClassCard({
       return (
         <>
           {firstPart}{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
             {lastPart}
           </span>
         </>
@@ -166,70 +166,70 @@ export function OnlineClassCard({
   };
 
   return (
-    <section className="px-4 w-full max-w-md md:max-w-6xl mx-auto mb-8">
+    <section id="online-class" className="px-4 w-full max-w-md md:max-w-6xl mx-auto mb-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#2D1B69] via-[#1E1145] to-[#120A31] p-[1px] shadow-2xl shadow-indigo-950/40"
+        className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#E0E9FE] via-white to-[#C7DBFD] p-[1px] shadow-xl shadow-blue-900/5"
       >
-        <div className="relative bg-[#09051E]/95 backdrop-blur-3xl rounded-[2.5rem] p-6 md:p-10 lg:p-12 overflow-hidden border border-white/5">
+        <div className="relative bg-white/90 backdrop-blur-3xl rounded-[2.5rem] p-6 md:p-10 lg:p-12 overflow-hidden border border-white/50">
           {/* Decorative Background Glows */}
-          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-indigo-500/15 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-blue-500/5 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-emerald-500/5 blur-[80px] rounded-full pointer-events-none" />
           
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
             {/* Left Content */}
             <div className="flex-1 text-left">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white text-xs md:text-sm font-medium mb-5 backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50/70 border border-blue-100 text-blue-700 text-xs md:text-sm font-semibold mb-5 backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                 <span>Live Interactive Sessions</span>
               </div>
               
               {/* Title */}
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight leading-tight">
+              <h2 className="text-3xl md:text-5xl font-black text-[#0B256B] mb-4 tracking-tight leading-tight">
                 {renderHighlightedTitle(title)}
               </h2>
               
               {/* Description */}
-              <p className="text-sm md:text-base text-indigo-100/80 leading-relaxed mb-6 max-w-2xl font-normal">
+              <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-6 max-w-2xl font-normal">
                 {description}
               </p>
               
               {/* Grid of Points */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {/* Point 1 */}
-                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
-                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-blue-50/40 hover:border-blue-100/50 transition-colors duration-200">
+                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-purple-50 border border-purple-100 text-purple-600">
                     <Calendar className="w-5 h-5" />
                   </div>
-                  <span className="text-white/90 text-sm font-semibold tracking-wide">{point1}</span>
+                  <span className="text-slate-700 text-sm font-semibold tracking-wide">{point1}</span>
                 </div>
 
                 {/* Point 2 */}
-                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
-                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-blue-50/40 hover:border-blue-100/50 transition-colors duration-200">
+                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-600">
                     <FileText className="w-5 h-5" />
                   </div>
-                  <span className="text-white/90 text-sm font-semibold tracking-wide">{point2}</span>
+                  <span className="text-slate-700 text-sm font-semibold tracking-wide">{point2}</span>
                 </div>
 
                 {/* Point 3 */}
-                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
-                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-blue-50/40 hover:border-blue-100/50 transition-colors duration-200">
+                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-blue-50 border border-blue-100 text-blue-600">
                     <Users className="w-5 h-5" />
                   </div>
-                  <span className="text-white/90 text-sm font-semibold tracking-wide">{point3}</span>
+                  <span className="text-slate-700 text-sm font-semibold tracking-wide">{point3}</span>
                 </div>
 
                 {/* Point 4 */}
-                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
-                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-blue-50/40 hover:border-blue-100/50 transition-colors duration-200">
+                  <div className="flex-shrink-0 p-2.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
                     <MessageCircle className="w-5 h-5" />
                   </div>
-                  <span className="text-white/90 text-sm font-semibold tracking-wide">{point4}</span>
+                  <span className="text-slate-700 text-sm font-semibold tracking-wide">{point4}</span>
                 </div>
               </div>
 
@@ -237,17 +237,17 @@ export function OnlineClassCard({
               {(price || originalPrice) && (
                 <div className="flex items-baseline gap-3 mb-6">
                   {price && (
-                    <span className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                    <span className="text-3xl md:text-4xl font-black text-[#0B256B] tracking-tight">
                       {price}
                     </span>
                   )}
                   {originalPrice && (
-                    <span className="text-lg md:text-xl text-white/40 line-through font-medium">
+                    <span className="text-lg md:text-xl text-slate-400 line-through font-medium">
                       {originalPrice}
                     </span>
                   )}
                   {price && originalPrice && (
-                    <span className="px-2 py-0.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 rounded-md border border-emerald-500/20">
+                    <span className="px-2 py-0.5 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-md border border-emerald-200/50">
                       Offer Price
                     </span>
                   )}
@@ -259,7 +259,7 @@ export function OnlineClassCard({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleJoinClick}
-                className="group relative inline-flex items-center justify-between gap-8 px-6 py-4 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 rounded-full font-black text-sm md:text-base shadow-xl shadow-yellow-500/10 transition-all hover:brightness-105 active:brightness-95 w-full sm:w-auto"
+                className="group relative inline-flex items-center justify-between gap-8 px-6 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-slate-950 rounded-full font-black text-sm md:text-base shadow-lg shadow-amber-500/20 transition-all hover:brightness-105 active:brightness-95 w-full sm:w-auto"
               >
                 <div className="flex items-center gap-3">
                   <WhatsAppIcon className="text-slate-950" size={24} />
@@ -275,14 +275,14 @@ export function OnlineClassCard({
             <div className="w-full lg:w-auto flex-shrink-0">
               {imageUrl ? (
                 <div className="relative w-full max-w-[450px] mx-auto flex items-center justify-center">
-                  <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
+                  <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full" />
                   <motion.img
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
                     src={imageUrl}
                     alt="Online Course Presentation"
-                    className="relative z-10 w-full h-auto object-contain rounded-3xl shadow-2xl border border-white/10 max-h-[300px] lg:max-h-[340px]"
+                    className="relative z-10 w-full h-auto object-contain rounded-3xl shadow-2xl border border-blue-100 max-h-[300px] lg:max-h-[340px]"
                   />
                 </div>
               ) : (

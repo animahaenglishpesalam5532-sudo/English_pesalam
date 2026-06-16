@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Formik, Form, Field } from 'formik'
+import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { setSetting } from '@/app/actions/settings'
 import { uploadImage } from '@/app/actions/blog'
@@ -109,7 +109,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
 
             toast.success('Settings saved successfully!')
             window.location.reload()
-          } catch (_) {
+          } catch {
             toast.error('Failed to save settings.')
           }
           setSubmitting(false)
@@ -325,7 +325,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
                     />
                   </div>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">The product name will be appended automatically. Example: "I want to buy [Product Name]"</p>
+                <p className="mt-1 text-xs text-gray-500">The product name will be appended automatically. Example: &quot;I want to buy [Product Name]&quot;</p>
               </div>
 
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">

@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { FileText, Video, ArrowRight, Presentation } from "lucide-react";
+import { FileText, Video, Presentation } from "lucide-react";
 
 export function LearningPaths() {
   type CardConfig = {

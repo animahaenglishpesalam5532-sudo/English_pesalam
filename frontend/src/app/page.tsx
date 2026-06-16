@@ -1,5 +1,6 @@
 import { GlassHeader } from "@/components/GlassHeader";
 import { HeroSection } from "@/components/HeroSection";
+import { BookSection } from "@/components/BookSection";
 import { LearningPaths } from "@/components/LearningPaths";
 import { BlogNavigationCard } from "@/components/BlogNavigationCard";
 import { Footer } from "@/components/Footer";
@@ -28,6 +29,19 @@ export default async function Home() {
   const onlineClassOriginalPrice = await getSetting('online_class_original_price') || '₹1999';
   const onlineClassButtonText = await getSetting('online_class_button_text') || 'WhatsApp-ல் Course Details வாங்குங்கள்';
 
+  // Fetch Hero and Trainer Settings
+  const heroSubtitle = await getSetting('hero_subtitle') || '1M+ YOUTUBE FAMILY • TAMIL TO ENGLISH FOCUS';
+  const heroTitle = await getSetting('hero_title') || 'தமிழ் பேசும் மக்களுக்கான Practical Spoken English Platform';
+  const heroDescription = await getSetting('hero_description') || 'English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா? Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.';
+  
+  const trainerName = await getSetting('trainer_name') || 'Maha JC';
+  const trainerTitle = await getSetting('trainer_title') || 'Founder & Spoken English Trainer';
+  const trainerImageUrl = await getSetting('trainer_image_url') || '';
+  const trainerStat1Value = await getSetting('trainer_stat_1_value') || '1M+';
+  const trainerStat1Label = await getSetting('trainer_stat_1_label') || 'Subscribers';
+  const trainerStat2Value = await getSetting('trainer_stat_2_value') || '500+';
+  const trainerStat2Label = await getSetting('trainer_stat_2_label') || 'Lessons';
+
   const quizzes = await getQuizzes();
 
   return (
@@ -35,7 +49,19 @@ export default async function Home() {
       <AmbientBackground />
       <GlassHeader />
       <main className="flex flex-col gap-6 relative overflow-x-hidden pt-4 pb-10 z-10">
-        <HeroSection books={books} />
+        <HeroSection 
+          heroSubtitle={heroSubtitle}
+          heroTitle={heroTitle}
+          heroDescription={heroDescription}
+          trainerName={trainerName}
+          trainerTitle={trainerTitle}
+          trainerImageUrl={trainerImageUrl}
+          trainerStat1Value={trainerStat1Value}
+          trainerStat1Label={trainerStat1Label}
+          trainerStat2Value={trainerStat2Value}
+          trainerStat2Label={trainerStat2Label}
+        />
+        <BookSection books={books} />
         <OnlineClassCard 
           whatsappNumber={whatsappNumber} 
           whatsappMessage={onlineClassText}
