@@ -20,7 +20,9 @@ export default async function SettingsPage() {
   const pptWhatsappText = await getSetting('ppt_whatsapp_text') || 'I want to buy '
   const pdfWhatsappText = await getSetting('pdf_whatsapp_text') || 'I want to buy '
   const videoCourseWhatsappText = await getSetting('video_course_whatsapp_text') || 'I want to buy '
+  const pptPdfWhatsappNumber = await getSetting('ppt_pdf_whatsapp_number') || ''
   const onlineClassWhatsappText = await getSetting('online_class_whatsapp_text') || 'I want to join online class'
+  const onlineClassWhatsappNumber = await getSetting('online_class_whatsapp_number') || ''
 
   const onlineClassTitle = await getSetting('online_class_title') || '1 Month Spoken English Online Course'
   const onlineClassDescription = await getSetting('online_class_description') || 'ஆங்கிலத்தில் பேச ஆரம்பிக்க இந்த 1 Month Spoken English Online Course உங்களுக்கு மிகவும் உதவியாக இருக்கும். இந்த ஒரு மாதத்தில் கற்றுக்கொடுக்கும் அனைத்து lessons-க்கும் PDF materials இலவசமாக வழங்கப்படும்.'
@@ -55,7 +57,9 @@ export default async function SettingsPage() {
             ppt_whatsapp_text: pptWhatsappText,
             pdf_whatsapp_text: pdfWhatsappText,
             video_course_whatsapp_text: videoCourseWhatsappText,
+            ppt_pdf_whatsapp_number: pptPdfWhatsappNumber,
             online_class_whatsapp_text: onlineClassWhatsappText,
+            online_class_whatsapp_number: onlineClassWhatsappNumber,
             online_class_title: onlineClassTitle,
             online_class_description: onlineClassDescription,
             online_class_point_1: onlineClassPoint1,

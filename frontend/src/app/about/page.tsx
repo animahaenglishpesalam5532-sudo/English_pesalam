@@ -16,7 +16,7 @@ export default async function AboutPage() {
   // Fetch About page settings with default fallbacks
   const tagline = await getSetting('about_tagline') || 'Learn Easy • Speak Confidently • Grow Successfully';
   const title = await getSetting('about_title') || 'About English Pesalam';
-  
+
   const description1 = await getSetting('about_description_1') || 'English தெரிந்தும் பேச முடியாமல் தவிக்கும் தமிழ் பேசும் மக்களுக்காக உருவாக்கப்பட்ட practical Spoken English learning platform தான் English Pesalam.';
   const description2 = await getSetting('about_description_2') || 'நிறைய பேருக்கு English words தெரியும். Grammar-ம் கொஞ்சம் தெரியும். ஆனாலும் யாரிடமாவது English பேச வேண்டிய நேரம் வந்தால் பயம், hesitation, confidence இல்லாமை காரணமாக பேச முடியாமல் நின்றுவிடுகிறார்கள்.';
   const description3 = await getSetting('about_description_3') || 'அந்த பயத்தை remove பண்ணி, simple Tamil explanation மூலமாக daily life English-ஐ step-by-step கற்றுக்கொடுக்க English Pesalam உருவாக்கப்பட்டது.';
@@ -24,7 +24,7 @@ export default async function AboutPage() {
 
   const trainerName = await getSetting('about_trainer_name') || 'Maha JC';
   const trainerTitle = await getSetting('about_trainer_title') || 'Founder & Spoken English Trainer';
-  
+
   const trainerBio1 = await getSetting('about_trainer_bio_1') || 'நான் Maha JC, English Pesalam மூலம் தமிழ் பேசும் மக்களுக்கு Spoken English-ஐ simple-ஆவும் practical-ஆவும் கற்றுக்கொடுத்து வருகிறேன்.';
   const trainerBio2 = await getSetting('about_trainer_bio_2') || 'என்னுடைய teaching style என்னவென்றால், கஷ்டமான grammar rules-ஐ மட்டும் சொல்லாமல், real life-ல் எப்படி English பேச வேண்டும் என்பதை Tamil explanation மூலமாக step-by-step கற்றுக்கொடுப்பது.';
   const trainerBio3 = await getSetting('about_trainer_bio_3') || 'School students, college students, job seekers, working people, homemakers — யாராக இருந்தாலும், “நானும் English பேச முடியும்” என்ற confidence உருவாக்குவதே English Pesalam-ன் முக்கிய நோக்கம்.';
@@ -82,9 +82,9 @@ export default async function AboutPage() {
     <div className="relative min-h-screen">
       <AmbientBackground />
       <GlassHeader />
-      
+
       <main className="relative pt-24 md:pt-32 pb-10 z-10 overflow-x-hidden">
-        <AboutContent 
+        <AboutContent
           tagline={tagline}
           title={title}
           description1={description1}

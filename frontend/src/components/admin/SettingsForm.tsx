@@ -29,7 +29,9 @@ const settingsSchema = Yup.object().shape({
   ppt_whatsapp_text: Yup.string().nullable(),
   pdf_whatsapp_text: Yup.string().nullable(),
   video_course_whatsapp_text: Yup.string().nullable(),
+  ppt_pdf_whatsapp_number: Yup.string().nullable(),
   online_class_whatsapp_text: Yup.string().nullable(),
+  online_class_whatsapp_number: Yup.string().nullable(),
   online_class_title: Yup.string().nullable(),
   online_class_description: Yup.string().nullable(),
   online_class_point_1: Yup.string().nullable(),
@@ -56,7 +58,9 @@ interface SettingsFormProps {
     ppt_whatsapp_text: string
     pdf_whatsapp_text: string
     video_course_whatsapp_text: string
+    ppt_pdf_whatsapp_number: string
     online_class_whatsapp_text: string
+    online_class_whatsapp_number: string
     online_class_title: string
     online_class_description: string
     online_class_point_1: string
@@ -94,7 +98,9 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
               setSetting('ppt_whatsapp_text', values.ppt_whatsapp_text || 'I want to buy '),
               setSetting('pdf_whatsapp_text', values.pdf_whatsapp_text || 'I want to buy '),
               setSetting('video_course_whatsapp_text', values.video_course_whatsapp_text || 'I want to buy '),
+              setSetting('ppt_pdf_whatsapp_number', values.ppt_pdf_whatsapp_number || ''),
               setSetting('online_class_whatsapp_text', values.online_class_whatsapp_text || 'I want to join online class'),
+              setSetting('online_class_whatsapp_number', values.online_class_whatsapp_number || ''),
               setSetting('online_class_title', values.online_class_title || ''),
               setSetting('online_class_description', values.online_class_description || ''),
               setSetting('online_class_point_1', values.online_class_point_1 || ''),
@@ -293,7 +299,17 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
 
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <h3 className="font-semibold text-gray-900 border-b pb-2">PPT & PDF Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PPT & PDF WhatsApp Number</label>
+                    <input
+                      name="ppt_pdf_whatsapp_number"
+                      value={values.ppt_pdf_whatsapp_number}
+                      onChange={(e) => setFieldValue('ppt_pdf_whatsapp_number', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="6380513228"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Global PPT Buying Text</label>
                     <input
@@ -331,7 +347,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <h3 className="font-semibold text-gray-900 border-b pb-2">Online Class Settings</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Online Class Title</label>
                     <input
@@ -340,6 +356,17 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
                       onChange={(e) => setFieldValue('online_class_title', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="1 Month Spoken English Online Course"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Online Class WhatsApp Number</label>
+                    <input
+                      name="online_class_whatsapp_number"
+                      value={values.online_class_whatsapp_number}
+                      onChange={(e) => setFieldValue('online_class_whatsapp_number', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      placeholder="6380513228"
                     />
                   </div>
 

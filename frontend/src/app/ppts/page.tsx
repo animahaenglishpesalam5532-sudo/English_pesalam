@@ -13,7 +13,7 @@ export const revalidate = 3600 // Revalidate every hour
 export default async function PPTsPage() {
   // Load 30 items initially as requested
   const initialPPTs = await getVisiblePPTs(true, 0, 30)
-  const whatsappNumber = await getSetting('contact_phone', true)
+  const whatsappNumber = await getSetting('ppt_pdf_whatsapp_number', true) || '6380513228'
   const globalWhatsappText = await getSetting('ppt_whatsapp_text', true) || 'I want to buy '
 
   return (

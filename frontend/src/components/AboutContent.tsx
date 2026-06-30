@@ -368,7 +368,7 @@ export function AboutContent({
                 <span>Our Impact</span>
               </div>
 
-              <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-10 tracking-tight leading-tight">
+              <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-10 tracking-wide leading-tight">
                 10 லட்சம் பேரின் நம்பிக்கையை வென்ற <br className="hidden md:block" />
                 <span className="text-blue-400">தமிழகத்தின் மாபெரும் ஆங்கிலக் கற்றல் தளம்!</span>
               </h3>

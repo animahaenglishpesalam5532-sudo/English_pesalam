@@ -79,7 +79,7 @@ export function PDFList({ initialPDFs, whatsappNumber, globalWhatsappText }: PDF
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredPDFs.map((pdf, index) => {
-              const cleanPhone = (whatsappNumber || "919345639627").replace(/[^0-9]/g, '')
+              const cleanPhone = (whatsappNumber || "6380513228").replace(/[^0-9]/g, '')
               const encodedMsg = encodeURIComponent(`${globalWhatsappText}${pdf.name}`)
               const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`
 
@@ -99,7 +99,7 @@ export function PDFList({ initialPDFs, whatsappNumber, globalWhatsappText }: PDF
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPDFs.map((pdf, index) => {
-              const cleanPhone = (whatsappNumber || "919345639627").replace(/[^0-9]/g, '')
+              const cleanPhone = (whatsappNumber || "6380513228").replace(/[^0-9]/g, '')
               const encodedMsg = encodeURIComponent(`${globalWhatsappText}${pdf.name}`)
               const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`
 

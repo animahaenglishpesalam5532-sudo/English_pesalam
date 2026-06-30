@@ -7,7 +7,8 @@ import Link from 'next/link';
 interface HeroSectionProps {
   heroSubtitle?: string;
   heroTitle?: string;
-  heroDescription?: string;
+  heroDescriptionLine1?: string;
+  heroDescriptionLine2?: string;
   trainerName?: string;
   trainerTitle?: string;
   trainerImageUrl?: string;
@@ -20,7 +21,8 @@ interface HeroSectionProps {
 export function HeroSection({
   heroSubtitle = "1M+ YOUTUBE FAMILY • TAMIL TO ENGLISH FOCUS",
   heroTitle = "தமிழ் பேசும் மக்களுக்கான Practical Spoken English Platform",
-  heroDescription = "English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா? Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.",
+  heroDescriptionLine1 = "English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா?",
+  heroDescriptionLine2 = "Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.",
   trainerName = "Maha JC",
   trainerTitle = "Founder & Spoken English Trainer",
   trainerImageUrl = "",
@@ -44,7 +46,7 @@ export function HeroSection({
         </>
       );
     }
-    
+
     // Otherwise, split words into beautiful blocks
     return <span className="block text-slate-900 leading-tight pb-2">{titleText}</span>;
   };
@@ -58,9 +60,9 @@ export function HeroSection({
 
   return (
     <section id="home" className="pt-28 pb-12 px-4 w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-      
+
       {/* Left Column - Content */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7 }}
@@ -78,7 +80,13 @@ export function HeroSection({
 
         {/* Description */}
         <p className="text-slate-600 text-sm md:text-base lg:text-lg leading-relaxed mb-8 max-w-xl">
-          {heroDescription}
+          {heroDescriptionLine1}
+          {heroDescriptionLine2 && (
+            <>
+              <br />
+              {heroDescriptionLine2}
+            </>
+          )}
         </p>
 
         {/* Action Buttons */}
@@ -91,7 +99,7 @@ export function HeroSection({
           >
             Start Learning Free
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -110,7 +118,7 @@ export function HeroSection({
         </div>
 
         {/* Pill Badge */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -121,16 +129,16 @@ export function HeroSection({
       </motion.div>
 
       {/* Right Column - Trainer Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
         className="w-full lg:w-auto flex justify-center items-center"
       >
         <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-100 flex flex-col gap-6 relative group">
-          
+
           {/* Trainer Image Box */}
-          <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden flex items-center justify-center p-4 bg-gradient-to-tr from-[#FF5722]/5 via-[#FFFDFC] to-[#0B256B]/5 border border-slate-100 shadow-inner">
+          <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden flex items-center justify-center bg-gradient-to-tr from-[#FF5722]/5 via-[#FFFDFC] to-[#0B256B]/5 border border-slate-100 shadow-inner">
             {trainerImageUrl ? (
               <img
                 src={trainerImageUrl}
@@ -168,7 +176,7 @@ export function HeroSection({
           </div>
         </div>
       </motion.div>
-      
+
     </section>
   );
 }

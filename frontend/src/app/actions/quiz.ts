@@ -129,7 +129,7 @@ export async function saveQuizzes(quizzes: Quiz[]): Promise<{ success?: boolean;
     if (result.error) {
       return { error: result.error }
     }
-    
+
     revalidatePath('/admin/quiz')
     revalidatePath('/quiz')
     revalidatePath('/', 'layout')

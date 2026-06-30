@@ -129,7 +129,7 @@ export function OnlineClassCard({
 }: OnlineClassCardProps) {
   
   const handleJoinClick = () => {
-    const phone = whatsappNumber.trim().replace(/\D/g, "") || "919345639627";
+    const phone = whatsappNumber.trim().replace(/\D/g, "") || "6380513228";
     const text = encodeURIComponent(whatsappMessage);
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };

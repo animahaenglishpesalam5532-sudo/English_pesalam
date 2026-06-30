@@ -9,7 +9,8 @@ export default async function HeroSettingsPage() {
   // Fetch Hero and Trainer Settings with default fallback values
   const heroSubtitle = await getSetting('hero_subtitle') || '1M+ YOUTUBE FAMILY • TAMIL TO ENGLISH FOCUS'
   const heroTitle = await getSetting('hero_title') || 'தமிழ் பேசும் மக்களுக்கான Practical Spoken English Platform'
-  const heroDescription = await getSetting('hero_description') || 'English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா? Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.'
+  const heroDescriptionLine1 = await getSetting('hero_description_line_1') || 'English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா?'
+  const heroDescriptionLine2 = await getSetting('hero_description_line_2') || 'Simple Tamil explanation, daily use sentences, grammar patterns, vocabulary, pronunciation practice மூலம் English-ஐ confidence-ஆ பேச ஆரம்பிக்க English Pesalam உங்களுக்கு உதவும்.'
   
   const trainerName = await getSetting('trainer_name') || 'Maha JC'
   const trainerTitle = await getSetting('trainer_title') || 'Founder & Spoken English Trainer'
@@ -31,7 +32,8 @@ export default async function HeroSettingsPage() {
           initialValues={{
             hero_subtitle: heroSubtitle,
             hero_title: heroTitle,
-            hero_description: heroDescription,
+            hero_description_line_1: heroDescriptionLine1,
+            hero_description_line_2: heroDescriptionLine2,
             trainer_name: trainerName,
             trainer_title: trainerTitle,
             trainer_image_url: trainerImageUrl,

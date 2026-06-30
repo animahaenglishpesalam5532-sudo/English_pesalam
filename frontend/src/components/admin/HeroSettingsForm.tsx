@@ -11,7 +11,8 @@ import { Loader2, Upload, X, Link as LinkIcon } from 'lucide-react'
 const heroSettingsSchema = Yup.object().shape({
   hero_subtitle: Yup.string().nullable(),
   hero_title: Yup.string().nullable(),
-  hero_description: Yup.string().nullable(),
+  hero_description_line_1: Yup.string().nullable(),
+  hero_description_line_2: Yup.string().nullable(),
   trainer_name: Yup.string().nullable(),
   trainer_title: Yup.string().nullable(),
   trainer_image_url: Yup.string().nullable(),
@@ -25,7 +26,8 @@ interface HeroSettingsFormProps {
   initialValues: {
     hero_subtitle: string
     hero_title: string
-    hero_description: string
+    hero_description_line_1: string
+    hero_description_line_2: string
     trainer_name: string
     trainer_title: string
     trainer_image_url: string
@@ -50,7 +52,8 @@ export default function HeroSettingsForm({ initialValues }: HeroSettingsFormProp
             await Promise.all([
               setSetting('hero_subtitle', values.hero_subtitle || ''),
               setSetting('hero_title', values.hero_title || ''),
-              setSetting('hero_description', values.hero_description || ''),
+              setSetting('hero_description_line_1', values.hero_description_line_1 || ''),
+              setSetting('hero_description_line_2', values.hero_description_line_2 || ''),
               setSetting('trainer_name', values.trainer_name || ''),
               setSetting('trainer_title', values.trainer_title || ''),
               setSetting('trainer_image_url', values.trainer_image_url || ''),
@@ -123,14 +126,25 @@ export default function HeroSettingsForm({ initialValues }: HeroSettingsFormProp
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Hero Description</label>
-                    <textarea
-                      name="hero_description"
-                      value={values.hero_description}
-                      onChange={(e) => setFieldValue('hero_description', e.target.value)}
-                      rows={4}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hero Description Line 1</label>
+                    <input
+                      name="hero_description_line_1"
+                      value={values.hero_description_line_1}
+                      onChange={(e) => setFieldValue('hero_description_line_1', e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700 font-sans"
-                      placeholder="English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா? Simple Tamil explanation..."
+                      placeholder="English தெரிந்தும் பேச முடியாமல் தவிக்கிறீர்களா?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hero Description Line 2</label>
+                    <textarea
+                      name="hero_description_line_2"
+                      value={values.hero_description_line_2}
+                      onChange={(e) => setFieldValue('hero_description_line_2', e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700 font-sans"
+                      placeholder="Simple Tamil explanation, daily use sentences..."
                     />
                   </div>
                 </div>
