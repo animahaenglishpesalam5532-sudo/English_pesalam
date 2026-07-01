@@ -25,7 +25,7 @@ function LaptopPlaceholder() {
     <div className="relative w-full max-w-[480px] mx-auto p-2 flex items-center justify-center">
       {/* Decorative ambient background glow */}
       <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
-      
+
       {/* SVG Canvas */}
       <svg className="w-full h-auto drop-shadow-2xl select-none" viewBox="0 0 520 340" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Glowing spots */}
@@ -78,7 +78,7 @@ function LaptopPlaceholder() {
 
           {/* Teacher/Instructor avatar */}
           <circle cx="340" cy="140" r="38" fill="#312E81" stroke="#4F46E5" strokeWidth="2" />
-          
+
           {/* Avatar Graphic (Smiling woman) */}
           <path d="M305 140 C305 110 375 110 375 140 Z" fill="#111827" />
           <circle cx="340" cy="138" r="24" fill="#FDBA74" />
@@ -87,7 +87,7 @@ function LaptopPlaceholder() {
           <path d="M334 144 Q340 152 346 144" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" fill="none" />
           <path d="M316 130 C316 115 330 115 340 122 C350 115 364 115 364 130 C364 148 358 152 358 152 C354 135 348 135 340 135 C332 135 326 135 322 152 C322 152 316 148 316 130 Z" fill="#111827" />
           <path d="M312 178 C312 165 325 158 340 158 C355 158 368 165 368 178" fill="#1E40AF" />
-          
+
           {/* Video Control Buttons */}
           <circle cx="250" cy="222" r="7" fill="#EF4444" />
           <path d="M248 220 H252 V224 H248 Z" fill="#FFFFFF" />
@@ -127,7 +127,7 @@ export function OnlineClassCard({
   originalPrice = "₹1999",
   buttonText = "WhatsApp-ல் Course Details வாங்குங்கள்"
 }: OnlineClassCardProps) {
-  
+
   const handleJoinClick = () => {
     const phone = whatsappNumber.trim().replace(/\D/g, "") || "6380513228";
     const text = encodeURIComponent(whatsappMessage);
@@ -178,26 +178,25 @@ export function OnlineClassCard({
           {/* Decorative Background Glows */}
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-blue-500/5 blur-[80px] rounded-full pointer-events-none" />
           <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-emerald-500/5 blur-[80px] rounded-full pointer-events-none" />
-          
+
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-12">
             {/* Left Content */}
             <div className="flex-1 text-left">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50/70 border border-blue-100 text-blue-700 text-xs md:text-sm font-semibold mb-5 backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                 <span>Live Interactive Sessions</span>
               </div>
-              
+
               {/* Title */}
               <h2 className="text-3xl md:text-5xl font-black text-[#0B256B] mb-4 tracking-tight leading-tight">
                 {renderHighlightedTitle(title)}
               </h2>
-              
+
               {/* Description */}
               <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-6 max-w-2xl font-normal">
                 {description}
               </p>
-              
+
               {/* Grid of Points */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {/* Point 1 */}
@@ -259,14 +258,14 @@ export function OnlineClassCard({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleJoinClick}
-                className="group relative inline-flex items-center justify-between gap-8 px-6 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-slate-950 rounded-full font-black text-sm md:text-base shadow-lg shadow-amber-500/20 transition-all hover:brightness-105 active:brightness-95 w-full sm:w-auto"
+                className="group relative inline-flex items-center justify-between gap-8 px-6 py-4 bg-[#25D366]/10 hover:bg-[#25D366]/20 backdrop-blur-md border border-[#25D366]/30 hover:border-[#25D366]/60 text-[#128C5E] hover:text-[#075E3A] rounded-full font-black text-sm md:text-base shadow-lg shadow-[#25D366]/5 transition-all w-full sm:w-auto"
               >
                 <div className="flex items-center gap-3">
-                  <WhatsAppIcon className="text-slate-950" size={24} />
+                  <WhatsAppIcon className="text-[#128C5E] group-hover:text-[#075E3A] transition-colors" size={24} />
                   <span className="tracking-wide">{buttonText}</span>
                 </div>
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-950/10 transition-transform group-hover:translate-x-1">
-                  <ChevronRight className="w-4 h-4 text-slate-950 stroke-[3]" />
+                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#25D366]/15 group-hover:bg-[#25D366]/30 transition-all group-hover:translate-x-1">
+                  <ChevronRight className="w-4 h-4 text-[#128C5E] group-hover:text-[#075E3A] stroke-[3]" />
                 </div>
               </motion.button>
             </div>

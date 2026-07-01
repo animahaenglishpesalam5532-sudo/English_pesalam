@@ -67,7 +67,7 @@ export function HomeQuizzes({ quizzes }: { quizzes: Quiz[] }) {
 
               <Link
                 href={`/quiz/${quiz.id}`}
-                className="w-full text-center py-3 rounded-full font-bold text-xs bg-slate-900 group-hover:bg-indigo-600 text-white transition-all active:scale-[0.98] shadow-md shadow-slate-900/10 group-hover:shadow-indigo-500/20 relative z-10 flex items-center justify-center gap-1.5"
+                className="w-full text-center py-3 rounded-full font-bold text-xs bg-[#0B256B] group-hover:bg-[#2962FF] text-white transition-all active:scale-[0.98] shadow-md shadow-[#0B256B]/10 group-hover:shadow-[#2962FF]/20 relative z-10 flex items-center justify-center gap-1.5"
               >
                 Take Quiz
                 <ArrowRight className="w-3.5 h-3.5" />

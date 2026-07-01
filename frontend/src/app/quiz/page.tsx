@@ -90,7 +90,7 @@ export default async function QuizListPage() {
                     {/* Start Button */}
                     <Link
                       href={`/quiz/${quiz.id}`}
-                      className="w-full flex items-center justify-center py-3.5 px-5 rounded-2xl bg-slate-900 group-hover:bg-indigo-600 text-white font-bold text-sm tracking-wide shadow-lg shadow-slate-950/10 group-hover:shadow-indigo-500/20 transition-all duration-300"
+                      className="w-full flex items-center justify-center py-3.5 px-5 rounded-2xl bg-[#0B256B] group-hover:bg-[#2962FF] text-white font-bold text-sm tracking-wide shadow-lg shadow-[#0B256B]/15 group-hover:shadow-[#2962FF]/20 transition-all duration-300"
                     >
                       Start Quiz
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1.5 transition-transform duration-300" />
