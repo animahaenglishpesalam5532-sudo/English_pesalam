@@ -32,8 +32,23 @@ function BlogGridSkeleton() {
 import { BlogCard } from '@/components/BlogCard'
 
 import { BlogGrid } from '@/components/BlogGrid'
+import type { Metadata } from 'next'
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: 'English Pesalam Blog - Learn English with Tamil Explanations',
+  description:
+    'Practical English lessons, grammar tips, and spoken-English guides explained simply in Tamil. Learn English step by step with English Pesalam.',
+  alternates: { canonical: '/blogs' },
+  openGraph: {
+    type: 'website',
+    title: 'English Pesalam Blog',
+    description:
+      'Practical English lessons, grammar tips, and spoken-English guides explained simply in Tamil.',
+    url: '/blogs',
+  },
+};
 
 async function FeaturedBlogs() {
   const supabase = createStaticClient()

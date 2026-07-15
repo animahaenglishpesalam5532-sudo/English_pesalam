@@ -2,9 +2,20 @@ import { Suspense } from 'react'
 import { BlogGrid } from '@/components/BlogGrid'
 import { createStaticClient } from '@/lib/supabase/static'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 
 export const dynamicParams = true;
 export const revalidate = 3600;
+
+export async function generateMetadata({ params }: { params: { page: string } }): Promise<Metadata> {
+  const page = parseInt(params.page, 10)
+  return {
+    title: `English Pesalam Blog - Page ${Number.isNaN(page) ? '' : page}`.trim(),
+    description:
+      'Practical English lessons, grammar tips, and spoken-English guides explained simply in Tamil.',
+    alternates: { canonical: `/blogs/p/${params.page}` },
+  }
+}
 
 export async function generateStaticParams() {
   const supabase = createStaticClient()

@@ -1,14 +1,15 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
+import { absoluteUrl } from '@/lib/seo'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
-
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/admin/', '/api/'],
-    },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/admin', '/api', '/coming-soon'],
+      },
+    ],
+    sitemap: absoluteUrl('sitemap.xml'),
   }
 }

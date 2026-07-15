@@ -1,31 +1,53 @@
-import { MetadataRoute } from 'next'
-import { getAllPublishedSlugs } from '@/app/actions/blog'
+import type { MetadataRoute } from 'next'
+import { createStaticClient } from '@/lib/supabase/static'
+import { absoluteUrl } from '@/lib/seo'
+
+// Rebuild the sitemap on the same cadence as the pages it lists.
+export const revalidate = 3600
+
+const BLOGS_PER_PAGE = 9
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
+  const now = new Date()
 
-  // Static routes
-  const staticRoutes = [
-    '',
-    '/blogs',
-    '/ppts',
-    '/pdfs',
-    '/video-courses',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1 : 0.8,
-  }))
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: absoluteUrl('/'), lastModified: now, changeFrequency: 'daily', priority: 1 },
+    { url: absoluteUrl('/blogs'), lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: absoluteUrl('/ppts'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: absoluteUrl('/pdfs'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: absoluteUrl('/video-courses'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+  ]
 
-  // Dynamic blog routes
-  const blogs = await getAllPublishedSlugs()
-  const blogRoutes = blogs.map((blog) => ({
-    url: `${baseUrl}/blogs/${blog.slug}`,
-    lastModified: new Date(blog.updated_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }))
+  try {
+    const supabase = createStaticClient()
+    const { data: blogs, count } = await supabase
+      .from('blogs')
+      .select('slug, updated_at, created_at', { count: 'exact' })
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
 
-  return [...staticRoutes, ...blogRoutes]
+    const blogRoutes: MetadataRoute.Sitemap = (blogs ?? []).map((b) => ({
+      url: absoluteUrl(`/blogs/${b.slug}`),
+      lastModified: new Date(b.updated_at ?? b.created_at ?? now),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }))
+
+    // Paginated blog list pages: /blogs/p/2, /blogs/p/3, ...
+    const totalPages = Math.ceil((count ?? 0) / BLOGS_PER_PAGE)
+    const pageRoutes: MetadataRoute.Sitemap = []
+    for (let p = 2; p <= totalPages; p++) {
+      pageRoutes.push({
+        url: absoluteUrl(`/blogs/p/${p}`),
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.5,
+      })
+    }
+
+    return [...staticRoutes, ...blogRoutes, ...pageRoutes]
+  } catch {
+    // If the DB is unreachable at build time, still emit the static routes.
+    return staticRoutes
+  }
 }
