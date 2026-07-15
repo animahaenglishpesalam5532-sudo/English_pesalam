@@ -25,6 +25,7 @@
     "react-dom": "^18",
     "react-hot-toast": "^2.6.0",
     "react-quill": "^2.0.0",
+    "recharts": "^3.9.2",
     "yup": "^1.7.1"
   },
   "devDependencies": {

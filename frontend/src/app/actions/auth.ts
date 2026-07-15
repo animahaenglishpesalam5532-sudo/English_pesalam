@@ -8,7 +8,7 @@ export async function login(formData: FormData) {
   const password = formData.get('password') as string
   const supabase = createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -17,8 +17,15 @@ export async function login(formData: FormData) {
     return { error: 'Invalid login credentials' }
   }
 
-  // Use a string literal for the redirect path
-  redirect('/admin/dashboard')
+  // Route by role: staff go to the data-entry screen, admins to the dashboard
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_active')
+    .eq('id', data.user.id)
+    .single()
+
+  const isAdmin = profile?.is_active && profile.role === 'admin'
+  redirect(isAdmin ? '/admin/dashboard' : '/admin/sales-entry')
 }
 
 export async function logout() {

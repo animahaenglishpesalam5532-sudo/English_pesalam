@@ -32,21 +32,41 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname === '/admin'
-  const isResetRoute = request.nextUrl.pathname === '/admin/reset-password'
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin') && !isAuthRoute && !isResetRoute
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname === '/admin'
+  const isResetRoute = pathname === '/admin/reset-password'
+  const isProtectedRoute = pathname.startsWith('/admin') && !isAuthRoute && !isResetRoute
 
   // Protect admin routes
-  if (isAdminRoute && !user) {
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated user away from login page to dashboard
+  // For signed-in users, resolve role to gate staff vs admin areas
+  let role: string | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, is_active')
+      .eq('id', user.id)
+      .single()
+    role = profile?.is_active ? profile.role : null
+  }
+
+  // Staff may only access the sales-entry and their own records screens inside /admin
+  const staffAllowed = pathname === '/admin/sales-entry' || pathname === '/admin/my-records'
+  if (isProtectedRoute && user && role !== 'admin' && !staffAllowed) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin/sales-entry'
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated user away from the login page
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin/dashboard'
+    url.pathname = role === 'admin' ? '/admin/dashboard' : '/admin/sales-entry'
     return NextResponse.redirect(url)
   }
 

@@ -21,6 +21,74 @@ body {
   }
 }
 
+/* =====================================================================
+   Admin panel dark theme.
+   Scoped to `.admin-scope` so the public site is never affected. Activated
+   when `.dark` is present on <html> (managed by the admin ThemeProvider).
+   Remaps the common Tailwind gray/white palette used across the panel so
+   every admin page is themed without editing each component.
+   ===================================================================== */
+html.dark .admin-scope {
+  color-scheme: dark;
+  color: #e2e8f0;
+}
+
+/* Surfaces */
+html.dark .admin-scope .bg-white { background-color: #1e293b; }
+html.dark .admin-scope .bg-gray-50 { background-color: #0f172a; }
+html.dark .admin-scope .bg-gray-100 { background-color: #334155; }
+html.dark .admin-scope .bg-gray-200 { background-color: #475569; }
+
+/* Hover surfaces */
+html.dark .admin-scope .hover\:bg-gray-50:hover { background-color: #334155; }
+html.dark .admin-scope .hover\:bg-gray-100:hover { background-color: #3b4a61; }
+html.dark .admin-scope .hover\:bg-gray-200:hover { background-color: #475569; }
+
+/* Text */
+html.dark .admin-scope .text-gray-900,
+html.dark .admin-scope .text-slate-900 { color: #f1f5f9; }
+html.dark .admin-scope .text-gray-800 { color: #e2e8f0; }
+html.dark .admin-scope .text-gray-700 { color: #cbd5e1; }
+html.dark .admin-scope .text-gray-600 { color: #cbd5e1; }
+html.dark .admin-scope .text-gray-500 { color: #94a3b8; }
+html.dark .admin-scope .text-gray-400 { color: #94a3b8; }
+
+/* Borders */
+html.dark .admin-scope .border-gray-100 { border-color: #334155; }
+html.dark .admin-scope .border-gray-200 { border-color: #334155; }
+html.dark .admin-scope .border-gray-300 { border-color: #475569; }
+
+/* Divide (border between flex/stack children) */
+html.dark .admin-scope .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #334155; }
+html.dark .admin-scope .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #334155; }
+
+/* Form controls */
+html.dark .admin-scope input,
+html.dark .admin-scope select,
+html.dark .admin-scope textarea {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+html.dark .admin-scope input::placeholder,
+html.dark .admin-scope textarea::placeholder { color: #64748b; }
+html.dark .admin-scope select option { background-color: #1e293b; color: #f1f5f9; }
+
+/* Light accent tints → translucent so they read on dark surfaces */
+html.dark .admin-scope .bg-blue-50 { background-color: rgba(59, 130, 246, 0.16); }
+html.dark .admin-scope .bg-sky-50 { background-color: rgba(14, 165, 233, 0.16); }
+html.dark .admin-scope .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.16); }
+html.dark .admin-scope .bg-green-50 { background-color: rgba(34, 197, 94, 0.16); }
+html.dark .admin-scope .bg-amber-50 { background-color: rgba(245, 158, 11, 0.16); }
+html.dark .admin-scope .bg-purple-50 { background-color: rgba(168, 85, 247, 0.16); }
+html.dark .admin-scope .bg-red-50 { background-color: rgba(239, 68, 68, 0.16); }
+html.dark .admin-scope .hover\:bg-blue-50:hover { background-color: rgba(59, 130, 246, 0.16); }
+html.dark .admin-scope .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.16); }
+
+/* Keep accent text bright enough on dark */
+html.dark .admin-scope .text-blue-700 { color: #93c5fd; }
+html.dark .admin-scope .text-blue-600 { color: #60a5fa; }
+
 @layer base {
   /* Automatically center and responsive-scale all embedded media inside WYSIWYG editor and public blog view */
   .prose img, .prose iframe,
