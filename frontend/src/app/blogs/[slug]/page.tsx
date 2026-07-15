@@ -3,6 +3,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { User, ArrowLeft } from 'lucide-react'
+import type { Metadata } from 'next'
+import { SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo'
 
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
 export const revalidate = 3600; // ISR fallback
@@ -29,7 +31,7 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO based on the blog data
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return { title: 'English Pesalam' }
   }
@@ -40,24 +42,48 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   )
   const { data: blog } = await supabase
     .from('blogs')
-    .select('title, content, meta_title, meta_description')
+    .select('title, content, meta_title, meta_description, featured_image, created_at, updated_at, authors(name)')
     .eq('slug', params.slug)
     .single()
 
   if (!blog) {
-    return { title: 'Blog Not Found' }
+    return { title: 'Blog Not Found', robots: { index: false, follow: false } }
   }
 
   // Use custom meta if provided, otherwise auto-generate from content
-  const title = blog.meta_title?.trim()
-    ? blog.meta_title
-    : `${blog.title} | English Pesalam`
+  const title = blog.meta_title?.trim() ? blog.meta_title : blog.title
 
   const description = blog.meta_description?.trim()
     ? blog.meta_description
     : blog.content.replace(/<[^>]+>/g, '').substring(0, 160).trim() + '...'
 
-  return { title, description }
+  const url = absoluteUrl(`/blogs/${params.slug}`)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors
+  const images = blog.featured_image ? [{ url: blog.featured_image }] : undefined
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      publishedTime: blog.created_at,
+      modifiedTime: blog.updated_at ?? blog.created_at,
+      authors: author?.name ? [author.name] : undefined,
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: blog.featured_image ? [blog.featured_image] : undefined,
+    },
+  }
 }
 
 export default async function SingleBlogPage({ params }: { params: { slug: string } }) {
@@ -80,8 +106,35 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
 
+  const url = absoluteUrl(`/blogs/${params.slug}`)
+  const plainText = (blog.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': `${url}#article`,
+    headline: blog.title,
+    description: blog.meta_description?.trim() || plainText.substring(0, 160),
+    image: blog.featured_image ? [blog.featured_image] : undefined,
+    datePublished: blog.created_at,
+    dateModified: blog.updated_at ?? blog.created_at,
+    author: author?.name
+      ? { '@type': 'Person', name: author.name }
+      : { '@type': 'Organization', name: SITE_NAME },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: absoluteUrl('/favicon.png') },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: 'en',
+  }
+
   return (
       <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        />
         {/* Article Header */}
         <div className="bg-gray-50/50 pt-12 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
           <div className="max-w-3xl mx-auto">
