@@ -82,8 +82,8 @@ export default async function QuizListPage() {
                         {quiz.title}
                       </h3>
                       
-                      <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                        Ready to check your understanding? Click below to begin the quiz. Remember to complete all questions!
+                      <p className="text-slate-500 text-sm mb-6 leading-relaxed line-clamp-3">
+                        {quiz.description || 'Ready to check your understanding? Click below to begin the quiz. Remember to complete all questions!'}
                       </p>
                     </div>
 

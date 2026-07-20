@@ -14,6 +14,9 @@ export interface Question {
 export interface Quiz {
   id: string
   title: string
+  description?: string
+  videoUrl?: string
+  order?: number
   questions: Question[]
   createdAt: string
 }
@@ -110,15 +113,26 @@ const DEFAULT_QUIZZES: Quiz[] = [
   }
 ]
 
+// Sort by explicit "order" (ascending). Quizzes without an order fall back to
+// creation date so newly created quizzes remain visible at the end.
+function sortQuizzes(quizzes: Quiz[]): Quiz[] {
+  return [...quizzes].sort((a, b) => {
+    const aOrder = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER
+    const bOrder = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  })
+}
+
 export async function getQuizzes(): Promise<Quiz[]> {
   try {
     const value = await getSetting('quizzes')
-    if (!value) return DEFAULT_QUIZZES
+    if (!value) return sortQuizzes(DEFAULT_QUIZZES)
     const parsed = JSON.parse(value) as Quiz[]
-    return parsed.length === 0 ? DEFAULT_QUIZZES : parsed
+    return parsed.length === 0 ? sortQuizzes(DEFAULT_QUIZZES) : sortQuizzes(parsed)
   } catch (error) {
     console.error('Failed to parse quizzes:', error)
-    return DEFAULT_QUIZZES
+    return sortQuizzes(DEFAULT_QUIZZES)
   }
 }
 

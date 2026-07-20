@@ -2,12 +2,28 @@
 
 import React, { useState } from 'react'
 import { Quiz, Question } from '@/app/actions/quiz'
-import { Check, X, Trophy, RefreshCw, ChevronLeft, AlertTriangle, Sparkles } from 'lucide-react'
+import { Check, X, Trophy, RefreshCw, ChevronLeft, AlertTriangle, Sparkles, Video } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
 interface QuizPlayerProps {
   quiz: Quiz
+}
+
+// Extract the YouTube video id from common URL formats (watch, youtu.be, embed, shorts).
+function getYouTubeEmbedUrl(url?: string): string | null {
+  if (!url) return null
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([\w-]{11})/,
+    /(?:youtu\.be\/)([\w-]{11})/,
+    /(?:youtube\.com\/embed\/)([\w-]{11})/,
+    /(?:youtube\.com\/shorts\/)([\w-]{11})/,
+  ]
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return `https://www.youtube.com/embed/${match[1]}`
+  }
+  return null
 }
 
 export default function QuizPlayer({ quiz }: QuizPlayerProps) {
@@ -17,6 +33,7 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
   const [showModal, setShowModal] = useState(false)
 
   const totalQuestions = quiz.questions.length
+  const videoEmbedUrl = getYouTubeEmbedUrl(quiz.videoUrl)
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     if (isSubmitted) return // Prevent editing after submission
@@ -79,7 +96,7 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
           {quiz.title}
         </h1>
         <p className="text-slate-500 text-sm md:text-base">
-          Please read each question carefully and select the best option. All questions are mandatory.
+          {quiz.description || 'Please read each question carefully and select the best option. All questions are mandatory.'}
         </p>
         
         {/* Progress Bar */}
@@ -224,6 +241,25 @@ export default function QuizPlayer({ quiz }: QuizPlayerProps) {
           </div>
         </div>
       </div>
+
+      {/* Lesson Video */}
+      {videoEmbedUrl && (
+        <div className="bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-2 mb-4">
+            <Video className="w-5 h-5 text-red-600" />
+            <h2 className="text-lg font-black text-slate-800 tracking-tight">Watch the Lesson Video</h2>
+          </div>
+          <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/60" style={{ paddingBottom: '56.25%' }}>
+            <iframe
+              src={videoEmbedUrl}
+              title={`${quiz.title} - Lesson Video`}
+              className="absolute inset-0 w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
 
       {/* RESULTS MODAL */}
       <AnimatePresence>
