@@ -2,8 +2,10 @@
 
 import Link from 'next/link'
 
-export default function RecordsTabs({ active }: { active: 'records' | 'customers' }) {
-  const cls = (t: 'records' | 'customers') =>
+type Tab = 'records' | 'customers' | 'analytics'
+
+export default function RecordsTabs({ active }: { active: Tab }) {
+  const cls = (t: Tab) =>
     `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
       active === t
         ? 'bg-blue-600 text-white'
@@ -16,6 +18,9 @@ export default function RecordsTabs({ active }: { active: 'records' | 'customers
       </Link>
       <Link href="/admin/records?tab=customers" className={cls('customers')}>
         Top Customers
+      </Link>
+      <Link href="/admin/records?tab=analytics" className={cls('analytics')}>
+        Analytics
       </Link>
     </div>
   )

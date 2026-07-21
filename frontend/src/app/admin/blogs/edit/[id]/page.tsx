@@ -3,11 +3,12 @@ import BlogForm from '@/components/admin/BlogForm'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 
-export default async function EditBlogPage({ params }: { params: { id: string } }) {
-  const supabase = createClient()
-  
+export default async function EditBlogPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+
   const [blogRes, authorsRes] = await Promise.all([
-    supabase.from('blogs').select('*').eq('id', params.id).single(),
+    supabase.from('blogs').select('*').eq('id', id).single(),
     supabase.from('authors').select('*').order('name')
   ])
 

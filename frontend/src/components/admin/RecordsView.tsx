@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Pencil, Search } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
 import RecordsTabs from './RecordsTabs'
+import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
@@ -87,6 +88,15 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
     applyFilters({ ...f, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
   }
 
+  // Highlight whichever quick-range pill matches the currently applied dates.
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const rangeIsActive = (days: number) => {
+    const from = new Date()
+    from.setDate(from.getDate() - days)
+    return (filters.from ?? '') === from.toISOString().slice(0, 10) && (filters.to ?? '') === todayISO
+  }
+  const allTimeActive = !filters.from && !filters.to
+
   const handleEditSubmit = async (values: EntryFormValues) => {
     if (!editRow) return
     return updateInteraction(editRow.id, {
@@ -118,11 +128,11 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input type="date" className={selectCls} value={f.from ?? ''} onChange={(e) => setF({ ...f, from: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input type="date" className={selectCls} value={f.to ?? ''} onChange={(e) => setF({ ...f, to: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Category</label>
@@ -202,13 +212,22 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
               <button
                 key={label}
                 onClick={() => quickRange(days)}
-                className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className={`px-3 py-1 text-xs rounded-full ${
+                  rangeIsActive(days)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               >
                 {label}
               </button>
             )
           )}
-          <button onClick={() => quickRange('all')} className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
+          <button
+            onClick={() => quickRange('all')}
+            className={`px-3 py-1 text-xs rounded-full ${
+              allTimeActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
             All time
           </button>
         </div>

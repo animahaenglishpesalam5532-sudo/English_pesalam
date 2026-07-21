@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search, Trophy, IndianRupee, ShoppingBag } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
 import RecordsTabs from './RecordsTabs'
+import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
 import type { CustomerSummaryPage, CustomerSummaryFilters, Category } from '@/app/actions/sales'
 
@@ -52,7 +53,7 @@ export default function CustomersView({ data, filters }: Props) {
     params.set('tab', 'customers')
     if (next.from) params.set('from', next.from)
     if (next.to) params.set('to', next.to)
-    if (next.purchasedCategory && next.purchasedCategory !== 'any') params.set('purchasedCategory', next.purchasedCategory)
+    if (next.purchasedCategories && next.purchasedCategories.length) params.set('purchasedCategory', next.purchasedCategories.join(','))
     if (next.search?.trim()) params.set('search', next.search.trim())
     if (next.sort) params.set('sort', next.sort)
     if (next.page && next.page > 1) params.set('page', String(next.page))
@@ -85,25 +86,37 @@ export default function CustomersView({ data, filters }: Props) {
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input type="date" className={selectCls} value={f.from ?? ''} onChange={(e) => setF({ ...f, from: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input type="date" className={selectCls} value={f.to ?? ''} onChange={(e) => setF({ ...f, to: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Purchased</label>
-            <select
-              className={selectCls}
-              value={f.purchasedCategory ?? 'any'}
-              onChange={(e) => setF({ ...f, purchasedCategory: e.target.value as Category | 'any' })}
-            >
-              <option value="any">Any product</option>
-              <option value="book">Book</option>
-              <option value="pdf_ppt">PDF &amp; PPT</option>
-              <option value="video_course">Video Course</option>
-              <option value="general">General</option>
-            </select>
+            <label className="block text-xs text-gray-500 mb-1">Purchased {(f.purchasedCategories?.length ?? 0) === 0 && '(any)'}</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(['book', 'pdf_ppt', 'video_course', 'general'] as Category[]).map((c) => {
+                const active = (f.purchasedCategories ?? []).includes(c)
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      const cur = f.purchasedCategories ?? []
+                      const next = active ? cur.filter((x) => x !== c) : [...cur, c]
+                      setF({ ...f, purchasedCategories: next })
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      active
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {CATEGORY_LABEL[c]}
+                  </button>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Sort</label>

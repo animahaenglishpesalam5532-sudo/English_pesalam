@@ -15,7 +15,7 @@ export interface CurrentUser {
  * authenticated / no profile row exists.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

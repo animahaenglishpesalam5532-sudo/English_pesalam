@@ -13,7 +13,7 @@ export default async function SalesEntryPage() {
 
   // Authenticated but no active profile yet — show a clear notice instead of
   // bouncing between routes (avoids an infinite redirect loop).
-  if (!user.isActive) {
+  if (!user?.isActive) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
@@ -23,7 +23,7 @@ export default async function SalesEntryPage() {
             add your account under <span className="font-medium">Team</span>, or run
             the admin seed if this is the first setup.
           </p>
-          <p className="mt-3 text-xs text-gray-400">Signed in as {user.email}</p>
+          <p className="mt-3 text-xs text-gray-400">Signed in as {user?.email}</p>
           <form action={logout} className="mt-6">
             <button className="inline-block rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
               Sign out
@@ -37,7 +37,7 @@ export default async function SalesEntryPage() {
   const products = await getEntryProducts()
 
   return (
-    <AdminLayout role={user.role} userName={user.fullName ?? user.email}>
+    <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
       <SalesEntry products={products} />
     </AdminLayout>
   )

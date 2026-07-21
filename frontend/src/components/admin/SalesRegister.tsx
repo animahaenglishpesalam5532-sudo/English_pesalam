@@ -2,8 +2,9 @@
 
 import React, { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, Users, IndianRupee, TrendingUp, Pencil, Search } from 'lucide-react'
+import { ShoppingCart, Users, IndianRupee, TrendingUp, Pencil, Search, Loader2 } from 'lucide-react'
 import SalesCharts, { type Aggregates } from './SalesCharts'
+import DateField from './DateField'
 import CustomerDrilldown from './CustomerDrilldown'
 import { TableSkeleton, Pagination } from './TableUI'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
@@ -63,7 +64,7 @@ export default function SalesRegister({ rows, aggregates, staffOptions, products
     const params = new URLSearchParams()
     if (next.from) params.set('from', next.from)
     if (next.to) params.set('to', next.to)
-    if (next.category && next.category !== 'all') params.set('category', next.category)
+    if (next.categories?.length) params.set('category', next.categories.join(','))
     if (next.callType && next.callType !== 'all') params.set('callType', next.callType)
     if (next.staffId && next.staffId !== 'all') params.set('staffId', next.staffId)
     if (next.search?.trim()) params.set('search', next.search.trim())
@@ -119,21 +120,37 @@ export default function SalesRegister({ rows, aggregates, staffOptions, products
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">From</label>
-            <input type="date" className={selectCls} value={f.from ?? ''} onChange={(e) => setF({ ...f, from: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">To</label>
-            <input type="date" className={selectCls} value={f.to ?? ''} onChange={(e) => setF({ ...f, to: e.target.value })} />
+            <DateField className={`${selectCls} cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Category</label>
-            <select className={selectCls} value={f.category ?? 'all'} onChange={(e) => setF({ ...f, category: e.target.value as Category | 'all' })}>
-              <option value="all">All</option>
-              <option value="general">General</option>
-              <option value="book">Book</option>
-              <option value="pdf_ppt">PDF &amp; PPT</option>
-              <option value="video_course">Video Course</option>
-            </select>
+            <label className="block text-xs text-gray-500 mb-1">Category {(f.categories?.length ?? 0) === 0 && '(all)'}</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(['general', 'book', 'pdf_ppt', 'video_course'] as Category[]).map((c) => {
+                const active = (f.categories ?? []).includes(c)
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      const cur = f.categories ?? []
+                      const next = active ? cur.filter((x) => x !== c) : [...cur, c]
+                      setF({ ...f, categories: next })
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      active
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {CATEGORY_LABEL[c]}
+                  </button>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Salesperson</label>
@@ -167,9 +184,11 @@ export default function SalesRegister({ rows, aggregates, staffOptions, products
           </div>
           <button
             onClick={() => applyFilters(f)}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            disabled={isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Apply
+            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isPending ? 'Applying…' : 'Apply'}
           </button>
         </div>
 

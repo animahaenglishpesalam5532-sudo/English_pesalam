@@ -3,7 +3,7 @@ import BlogForm from '@/components/admin/BlogForm'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function CreateBlogPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: authors } = await supabase.from('authors').select('*').order('name')
 
   return (

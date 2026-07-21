@@ -31,7 +31,8 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO based on the blog data
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return { title: 'English Pesalam' }
   }
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const { data: blog } = await supabase
     .from('blogs')
     .select('title, content, meta_title, meta_description, featured_image, created_at, updated_at, authors(name)')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .single()
 
   if (!blog) {
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     ? blog.meta_description
     : blog.content.replace(/<[^>]+>/g, '').substring(0, 160).trim() + '...'
 
-  const url = absoluteUrl(`/blogs/${params.slug}`)
+  const url = absoluteUrl(`/blogs/${slug}`)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors
   const images = blog.featured_image ? [{ url: blog.featured_image }] : undefined
@@ -86,7 +87,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function SingleBlogPage({ params }: { params: { slug: string } }) {
+export default async function SingleBlogPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const supabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -94,7 +96,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   const { data: blog } = await supabase
     .from('blogs')
     .select('*, authors(*)')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
@@ -106,7 +108,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
 
-  const url = absoluteUrl(`/blogs/${params.slug}`)
+  const url = absoluteUrl(`/blogs/${slug}`)
   const plainText = (blog.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
   const articleJsonLd = {
     '@context': 'https://schema.org',

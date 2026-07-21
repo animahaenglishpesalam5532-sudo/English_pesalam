@@ -4,7 +4,7 @@ import { FileText, Users, PlusCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Fetch stats concurrently
   const [blogsCountRes, authorsCountRes, recentBlogsRes] = await Promise.all([

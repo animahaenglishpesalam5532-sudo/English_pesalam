@@ -16,7 +16,7 @@ export interface Member {
 
 export async function getMembers(): Promise<Member[]> {
   await requireAdmin()
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, role, is_active, created_at')

@@ -5,8 +5,8 @@ import { headers } from 'next/headers'
 
 export async function logVisit(sessionId: string, path: string) {
   try {
-    const supabase = createClient()
-    const headerList = headers()
+    const supabase = await createClient()
+    const headerList = await headers()
     const userAgent = headerList.get('user-agent')
     const referrer = headerList.get('referer')
 
@@ -36,7 +36,7 @@ export async function logVisit(sessionId: string, path: string) {
 
 export async function getAnalytics() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Total visits
     const { count: totalVisits } = await supabase

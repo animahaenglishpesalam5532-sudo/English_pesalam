@@ -23,7 +23,7 @@ export interface Book {
 export type BookInput = Omit<Book, 'id' | 'created_at' | 'updated_at'>
 
 export async function getBooks(): Promise<Book[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('books')
     .select('*')
@@ -35,7 +35,7 @@ export async function getBooks(): Promise<Book[]> {
 }
 
 export async function getVisibleBooks(useStatic: boolean = false): Promise<Book[]> {
-  const supabase = useStatic ? createStaticClient() : createClient()
+  const supabase = useStatic ? createStaticClient() : await createClient()
   const { data, error } = await supabase
     .from('books')
     .select('*')
@@ -49,7 +49,7 @@ export async function getVisibleBooks(useStatic: boolean = false): Promise<Book[
 }
 
 export async function createBook(input: BookInput): Promise<{ success?: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('books').insert([input])
   if (error) return { error: error.message }
 
@@ -59,7 +59,7 @@ export async function createBook(input: BookInput): Promise<{ success?: boolean;
 }
 
 export async function updateBook(id: string, input: Partial<BookInput>): Promise<{ success?: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from('books')
     .update({ ...input, updated_at: new Date().toISOString() })
@@ -73,7 +73,7 @@ export async function updateBook(id: string, input: Partial<BookInput>): Promise
 }
 
 export async function deleteBook(id: string): Promise<{ success?: boolean; error?: string }> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.from('books').delete().eq('id', id)
   if (error) return { error: error.message }
 

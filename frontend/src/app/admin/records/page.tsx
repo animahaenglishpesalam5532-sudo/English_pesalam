@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/admin/AdminLayout'
 import RecordsView from '@/components/admin/RecordsView'
 import CustomersView from '@/components/admin/CustomersView'
+import AnalyticsView from '@/components/admin/AnalyticsView'
 import { logout } from '@/app/actions/auth'
 import { getCurrentUser } from '@/lib/auth/roles'
 import {
@@ -14,6 +15,7 @@ import {
   type Category,
   type CallType,
 } from '@/app/actions/sales'
+import { getSalesAnalytics, type SalesAnalyticsFilters } from '@/app/actions/sales-analytics'
 
 const DEFAULT_PAGE_SIZE = 25
 
@@ -31,12 +33,13 @@ export const dynamic = 'force-dynamic'
 export default async function RecordsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined }
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
+  const sp = await searchParams
   const user = await getCurrentUser()
   if (!user) redirect('/admin')
 
-  if (!user.isActive) {
+  if (!user?.isActive) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
         <div className="max-w-sm rounded-xl border border-gray-100 bg-white p-8 text-center shadow-sm">
@@ -54,38 +57,61 @@ export default async function RecordsPage({
     )
   }
 
-  const isAdmin = user.role === 'admin'
-  const tab = searchParams.tab === 'customers' ? 'customers' : 'records'
+  const isAdmin = user?.role === 'admin'
+  const tab =
+    sp?.tab === 'customers'
+      ? 'customers'
+      : sp?.tab === 'analytics'
+        ? 'analytics'
+        : 'records'
+
+  if (tab === 'analytics') {
+    const analyticsFilters: SalesAnalyticsFilters = {
+      from: sp?.from ?? '',
+      to: sp?.to ?? '',
+    }
+    const analytics = await getSalesAnalytics(analyticsFilters)
+    return (
+      <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
+        <AnalyticsView data={analytics} filters={analyticsFilters} />
+      </AdminLayout>
+    )
+  }
 
   if (tab === 'customers') {
+    const validCategories: Category[] = ['general', 'book', 'pdf_ppt', 'video_course']
+    const purchasedCategories = (sp?.purchasedCategory ?? '')
+      .split(',')
+      .map((c) => c?.trim())
+      .filter((c): c is Category => (validCategories as string[]).includes(c))
     const custFilters: CustomerSummaryFilters = {
-      from: searchParams.from ?? '',
-      to: searchParams.to ?? '',
-      purchasedCategory: (searchParams.purchasedCategory as Category | 'any') ?? 'any',
-      search: searchParams.search ?? '',
-      sort: (searchParams.sort as CustomerSummaryFilters['sort']) ?? 'spend_desc',
-      page: parsePage(searchParams.page),
-      pageSize: parsePageSize(searchParams.pageSize),
+      from: sp?.from ?? '',
+      to: sp?.to ?? '',
+      purchasedCategories,
+      search: sp?.search ?? '',
+      sort: (sp?.sort as CustomerSummaryFilters['sort']) ?? 'spend_desc',
+      page: parsePage(sp?.page),
+      pageSize: parsePageSize(sp?.pageSize),
     }
     const customers = await getCustomerSummaries(custFilters)
     return (
-      <AdminLayout role={user.role} userName={user.fullName ?? user.email}>
+      <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
         <CustomersView data={customers} filters={custFilters} />
       </AdminLayout>
     )
   }
 
   const filters: RegisterFilters = {
-    from: searchParams.from ?? '',
-    to: searchParams.to ?? '',
-    category: (searchParams.category as Category | 'all') ?? 'all',
-    callType: (searchParams.callType as CallType | 'all') ?? 'all',
-    staffId: searchParams.staffId ?? 'all',
-    search: searchParams.search ?? '',
-    sort: (searchParams.sort as RegisterFilters['sort']) ?? 'recent',
-    onlyLeads: searchParams.onlyLeads === '1',
-    page: parsePage(searchParams.page),
-    pageSize: parsePageSize(searchParams.pageSize),
+    from: sp?.from ?? '',
+    to: sp?.to ?? '',
+    category: (sp?.category as Category | 'all') ?? 'all',
+    callType: (sp?.callType as CallType | 'all') ?? 'all',
+    staffId: sp?.staffId ?? 'all',
+    search: sp?.search ?? '',
+    sort: (sp?.sort as RegisterFilters['sort']) ?? 'recent',
+    onlyLeads: sp?.onlyLeads === '1',
+    page: parsePage(sp?.page),
+    pageSize: parsePageSize(sp?.pageSize),
   }
 
   const [{ rows, total }, staffOptions, products] = await Promise.all([
@@ -95,7 +121,7 @@ export default async function RecordsPage({
   ])
 
   return (
-    <AdminLayout role={user.role} userName={user.fullName ?? user.email}>
+    <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
       <RecordsView
         rows={rows}
         total={total}

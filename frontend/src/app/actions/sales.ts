@@ -36,7 +36,7 @@ export interface EntryProducts {
 // ------------------------------------------------------------- products
 
 export async function getEntryProducts(): Promise<EntryProducts> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const [books, pdfs, ppts, videos] = await Promise.all([
     supabase.from('books').select('id, title_1').order('sort_order', { ascending: true }),
     supabase.from('pdfs').select('id, name').order('created_at', { ascending: false }),
@@ -66,7 +66,7 @@ export async function logInteraction(
     return { error: 'Amount is required for a purchase' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase.rpc('log_interaction', {
     p_phone: phone,
     p_name: input.name?.trim() || null,
@@ -104,7 +104,7 @@ export interface EditableInteraction {
 export async function getInteractionForEdit(
   id: string
 ): Promise<EditableInteraction | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('interactions')
     .select('id, customer_id, category, items, notes, call_type, amount, call_at, customers(phone, name)')
@@ -151,7 +151,7 @@ export async function updateInteraction(
     return { error: 'Amount is required for a purchase' }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
   const current = await getInteractionForEdit(id)
   if (!current) return { error: 'Record not found' }
 
@@ -229,6 +229,7 @@ export interface RegisterFilters {
   from?: string // ISO date (inclusive)
   to?: string // ISO date (inclusive)
   category?: Category | 'all'
+  categories?: Category[] // multi-select; when set, takes precedence over `category`
   callType?: CallType | 'all'
   staffId?: string | 'all'
   search?: string // name or phone
@@ -254,7 +255,7 @@ export interface RegisterRow {
 }
 
 export async function getRegisterRows(filters: RegisterFilters): Promise<RegisterRow[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let query = supabase
     .from('interactions')
@@ -264,7 +265,8 @@ export async function getRegisterRows(filters: RegisterFilters): Promise<Registe
 
   if (filters.from) query = query.gte('call_at', `${filters.from}T00:00:00`)
   if (filters.to) query = query.lte('call_at', `${filters.to}T23:59:59`)
-  if (filters.category && filters.category !== 'all') query = query.eq('category', filters.category)
+  if (filters.categories?.length) query = query.in('category', filters.categories)
+  else if (filters.category && filters.category !== 'all') query = query.eq('category', filters.category)
   if (filters.callType && filters.callType !== 'all') query = query.eq('call_type', filters.callType)
   if (filters.staffId && filters.staffId !== 'all') query = query.eq('created_by', filters.staffId)
 
@@ -337,7 +339,7 @@ export async function getRegisterPage(filters: RegisterFilters): Promise<Registe
 export interface CustomerSummaryFilters {
   from?: string
   to?: string
-  purchasedCategory?: Category | 'any'
+  purchasedCategories?: Category[] // empty/undefined = any product
   search?: string
   sort?: 'spend_desc' | 'purchases_desc' | 'recent'
   page?: number // 1-based
@@ -366,7 +368,7 @@ export interface CustomerSummary {
 export async function getCustomerSummaries(
   filters: CustomerSummaryFilters
 ): Promise<CustomerSummaryPage> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   let query = supabase
     .from('interactions')
@@ -415,8 +417,9 @@ export async function getCustomerSummaries(
     .filter((s) => s.purchaseCount > 0)
     .map(({ cats, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
 
-  if (filters.purchasedCategory && filters.purchasedCategory !== 'any') {
-    list = list.filter((s) => s.categories.includes(filters.purchasedCategory as Category))
+  if (filters.purchasedCategories && filters.purchasedCategories.length) {
+    const wanted = filters.purchasedCategories
+    list = list.filter((s) => wanted.some((c) => s.categories.includes(c)))
   }
 
   if (filters.search?.trim()) {
@@ -450,7 +453,7 @@ export interface StaffOption {
 }
 
 export async function getStaffOptions(): Promise<StaffOption[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase
     .from('profiles')
     .select('id, full_name, email')
@@ -477,7 +480,7 @@ export interface CustomerTimeline {
 }
 
 export async function getCustomerTimeline(customerId: string): Promise<CustomerTimeline | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: customer } = await supabase
     .from('customers')

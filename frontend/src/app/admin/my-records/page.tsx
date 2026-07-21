@@ -21,8 +21,9 @@ function parsePageSize(v?: string) {
 export default async function MyRecordsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined }
+  searchParams: Promise<{ [key: string]: string | undefined }>
 }) {
+  const sp = await searchParams
   const user = await getCurrentUser()
   if (!user) redirect('/admin')
 
@@ -48,10 +49,10 @@ export default async function MyRecordsPage({
   }
 
   const filters: RegisterFilters = {
-    search: searchParams.search ?? '',
+    search: sp.search ?? '',
     sort: 'recent',
-    page: parsePage(searchParams.page),
-    pageSize: parsePageSize(searchParams.pageSize),
+    page: parsePage(sp.page),
+    pageSize: parsePageSize(sp.pageSize),
   }
 
   const [{ rows, total }, products] = await Promise.all([
