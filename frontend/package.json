@@ -26,6 +26,7 @@
     "react-dom": "^19.2.8",
     "react-flatpickr": "^4.0.11",
     "react-hot-toast": "^2.6.0",
+    "react-international-phone": "^4.8.0",
     "recharts": "^3.9.2",
     "yup": "^1.7.1"
   },

@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
+import { PhoneInput } from 'react-international-phone'
+import 'react-international-phone/style.css'
 import { Modal } from '@/components/ui/Modal'
 import toast from 'react-hot-toast'
 import type { Category, CallType, InteractionItem, EntryProducts } from '@/app/actions/sales'
@@ -47,6 +49,8 @@ export function InteractionModal({
   onSubmit,
 }: Props) {
   const [phone, setPhone] = useState(initial?.phone ?? '')
+  // Country of the phone input (create mode); India is the default.
+  const [phoneCountry, setPhoneCountry] = useState<{ iso2: string; dialCode: string }>({ iso2: 'in', dialCode: '91' })
   const [name, setName] = useState(initial?.name ?? '')
   const [items, setItems] = useState<InteractionItem[]>(initial?.items ?? [])
   const [notes, setNotes] = useState(initial?.notes ?? '')
@@ -83,10 +87,28 @@ export function InteractionModal({
   const isSelected = (type: InteractionItem['type'], id: string) =>
     items.some((i) => i.type === type && i.id === id)
 
+  // Digits of the number without its country dial code.
+  const nationalDigits = (full: string) => {
+    const digits = full.replace(/\D/g, '')
+    const dial = phoneCountry.dialCode
+    return dial && digits.startsWith(dial) ? digits.slice(dial.length) : digits
+  }
+
+  // The value we persist: India -> bare 10 digits (matches existing records);
+  // any other country -> full E.164 (+<code><number>).
+  const storePhone = () =>
+    phoneCountry.iso2 === 'in' ? nationalDigits(phone) : `+${phone.replace(/\D/g, '')}`
+
   const validate = () => {
     const e: Record<string, string> = {}
-    if (!phone.trim()) e.phone = 'Phone number is required'
-    else if (!/^\d{10}$/.test(phone.trim())) e.phone = 'Enter a valid 10-digit phone number'
+    // Phone can't be changed while editing, so only validate on new entries.
+    if (mode !== 'edit') {
+      const national = nationalDigits(phone)
+      if (!national) e.phone = 'Phone number is required'
+      else if (phoneCountry.iso2 === 'in') {
+        if (national.length !== 10) e.phone = 'Enter a valid 10-digit phone number'
+      } else if (national.length < 4) e.phone = 'Enter a valid phone number'
+    }
     if (callType === 'purchase') {
       const amt = parseFloat(amount)
       if (!amount.trim() || isNaN(amt) || amt <= 0) e.amount = 'Enter the purchase amount'
@@ -100,7 +122,8 @@ export function InteractionModal({
     ev.preventDefault()
     if (!validate()) return
     setSubmitting(true)
-    const res = await onSubmit({ phone, name, items, notes, callType, amount, callAt })
+    // In edit mode phone is unchanged (server ignores it); otherwise normalize it.
+    const res = await onSubmit({ phone: mode === 'edit' ? phone : storePhone(), name, items, notes, callType, amount, callAt })
     setSubmitting(false)
     if (res && 'error' in res && res.error) {
       toast.error(res.error)
@@ -134,15 +157,27 @@ export function InteractionModal({
         {/* Phone */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-          <input
-            className={`${inputBase} ${errors.phone ? errBorder : okBorder}`}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-            placeholder="e.g. 9876543210"
-            disabled={mode === 'edit'}
-            inputMode="numeric"
-            maxLength={10}
-          />
+          {mode === 'edit' ? (
+            <input
+              className={`${inputBase} ${okBorder}`}
+              value={phone}
+              disabled
+              inputMode="tel"
+            />
+          ) : (
+            <PhoneInput
+              defaultCountry="in"
+              value={phone}
+              onChange={(value, meta) => {
+                setPhone(value)
+                setPhoneCountry(meta.country)
+              }}
+              className="phone-field w-full"
+              inputClassName={`!w-full !text-sm !py-2 ${errors.phone ? '!border-red-300' : ''}`}
+              countrySelectorStyleProps={{ buttonClassName: errors.phone ? '!border-red-300' : '' }}
+              placeholder="e.g. 9876543210"
+            />
+          )}
           {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
           {mode === 'edit' && (
             <p className="mt-1 text-xs text-gray-400">Phone number cannot be changed.</p>

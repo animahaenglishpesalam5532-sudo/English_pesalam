@@ -74,6 +74,36 @@ html.dark .admin-scope input::placeholder,
 html.dark .admin-scope textarea::placeholder { color: #64748b; }
 html.dark .admin-scope select option { background-color: #1e293b; color: #f1f5f9; }
 
+/* International phone input (react-international-phone) — force the dark theme.
+   The widget paints the flag button / dropdown through its own styles, so we
+   override them directly via the custom `.phone-field` class on the widget. */
+html.dark .admin-scope .phone-field .react-international-phone-input,
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-button {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-button:hover {
+  background-color: #334155 !important;
+}
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-button__dropdown-arrow {
+  border-top-color: #94a3b8 !important;
+}
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-dropdown {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-dropdown__list-item:hover,
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-dropdown__list-item--focused,
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-dropdown__list-item--selected {
+  background-color: #334155 !important;
+}
+html.dark .admin-scope .phone-field .react-international-phone-country-selector-dropdown__list-item-dial-code {
+  color: #94a3b8 !important;
+}
+
 /* Light accent tints → translucent so they read on dark surfaces */
 html.dark .admin-scope .bg-blue-50 { background-color: rgba(59, 130, 246, 0.16); }
 html.dark .admin-scope .bg-sky-50 { background-color: rgba(14, 165, 233, 0.16); }
