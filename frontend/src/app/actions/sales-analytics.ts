@@ -8,6 +8,7 @@ import type { Category, InteractionItem } from './sales'
 export interface SalesAnalyticsFilters {
   from?: string // ISO date (inclusive)
   to?: string // ISO date (inclusive)
+  categories?: Category[] // empty/undefined = all categories
 }
 
 export interface FunnelData {
@@ -87,6 +88,7 @@ async function fetchAll<T>(build: (from: number, to: number) => PromiseLike<{ da
 
 export async function getSalesAnalytics(filters: SalesAnalyticsFilters): Promise<SalesAnalyticsData> {
   const supabase: SupabaseClient = await createClient()
+  const cats = filters?.categories?.length ? filters.categories : null
 
   // In-range interactions drive the funnel, top products and heatmap.
   const rangeQuery = (from: number, to: number) => {
@@ -97,18 +99,24 @@ export async function getSalesAnalytics(filters: SalesAnalyticsFilters): Promise
       .range(from, to)
     if (filters?.from) q = q.gte('call_at', `${filters.from}T00:00:00`)
     if (filters?.to) q = q.lte('call_at', `${filters.to}T23:59:59`)
+    if (cats) q = q.in('category', cats)
     return q
   }
 
   // All-time purchases give each customer's first-ever purchase date, so a
-  // purchase in the selected range can be classified new vs returning.
-  const historyQuery = (from: number, to: number) =>
-    supabase
+  // purchase in the selected range can be classified new vs returning. When a
+  // category filter is active, "first purchase" is scoped to that category, so
+  // new/returning reflects the customer's history within the selected category.
+  const historyQuery = (from: number, to: number) => {
+    let q = supabase
       .from('interactions')
       .select('customer_id, call_at')
       .eq('call_type', 'purchase')
       .order('call_at', { ascending: true })
       .range(from, to)
+    if (cats) q = q.in('category', cats)
+    return q
+  }
 
   const [rows, history] = await Promise.all([fetchAll(rangeQuery), fetchAll(historyQuery)])
 

@@ -223,6 +223,20 @@ export async function updateInteraction(
   return { success: true }
 }
 
+export async function deleteInteraction(id: string): Promise<{ success?: boolean; error?: string }> {
+  const user = await getCurrentUser()
+  if (!user || user.role !== 'admin' || !user.isActive) return { error: 'Not authorized' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('interactions').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/sales-register')
+  revalidatePath('/admin/records')
+  revalidatePath('/admin/my-records')
+  return { success: true }
+}
+
 // --------------------------------------------------- admin: register data
 
 export interface RegisterFilters {
@@ -340,6 +354,7 @@ export interface CustomerSummaryFilters {
   from?: string
   to?: string
   purchasedCategories?: Category[] // empty/undefined = any product
+  purchaseMatch?: 'any' | 'all' // 'any' = bought at least one selected; 'all' = bought every selected
   search?: string
   sort?: 'spend_desc' | 'purchases_desc' | 'recent'
   page?: number // 1-based
@@ -370,17 +385,16 @@ export async function getCustomerSummaries(
 ): Promise<CustomerSummaryPage> {
   const supabase = await createClient()
 
-  let query = supabase
-    .from('interactions')
-    .select('customer_id, category, call_type, amount, call_at, customers(phone, name)')
-    .order('call_at', { ascending: false })
-    .limit(10000)
-
-  if (filters.from) query = query.gte('call_at', `${filters.from}T00:00:00`)
-  if (filters.to) query = query.lte('call_at', `${filters.to}T23:59:59`)
-
-  const { data, error } = await query
-  if (error || !data) return { rows: [], total: 0, totalRevenue: 0, totalPurchases: 0 }
+  const data = await fetchAllPaged<any>((from, to) => {
+    let q = supabase
+      .from('interactions')
+      .select('customer_id, category, call_type, amount, call_at, customers(phone, name)')
+      .order('call_at', { ascending: false })
+      .range(from, to)
+    if (filters.from) q = q.gte('call_at', `${filters.from}T00:00:00`)
+    if (filters.to) q = q.lte('call_at', `${filters.to}T23:59:59`)
+    return q
+  })
 
   type Acc = Omit<CustomerSummary, 'categories'> & { cats: Set<Category> }
   const map = new Map<string, Acc>()
@@ -419,7 +433,10 @@ export async function getCustomerSummaries(
 
   if (filters.purchasedCategories && filters.purchasedCategories.length) {
     const wanted = filters.purchasedCategories
-    list = list.filter((s) => wanted.some((c) => s.categories.includes(c)))
+    list =
+      filters.purchaseMatch === 'all'
+        ? list.filter((s) => wanted.every((c) => s.categories.includes(c)))
+        : list.filter((s) => wanted.some((c) => s.categories.includes(c)))
   }
 
   if (filters.search?.trim()) {
@@ -445,6 +462,134 @@ export async function getCustomerSummaries(
   const page = filters.page && filters.page > 0 ? filters.page : 1
   const start = (page - 1) * pageSize
   return { rows: list.slice(start, start + pageSize), total, totalRevenue, totalPurchases }
+}
+
+// ------------------------------------------------- leads (enquiry-only)
+
+export interface LeadSummaryFilters {
+  from?: string
+  to?: string
+  enquiredCategories?: Category[] // empty/undefined = any category
+  match?: 'any' | 'all' // 'any' = enquired about at least one selected; 'all' = every selected
+  search?: string
+  sort?: 'recent' | 'inquiries_desc'
+  page?: number // 1-based
+  pageSize?: number
+}
+
+export interface LeadSummary {
+  customer_id: string
+  phone: string
+  name: string | null
+  inquiryCount: number
+  categories: Category[] // categories the lead has enquired about
+  lastInquiryAt: string | null
+}
+
+export interface LeadSummaryPage {
+  rows: LeadSummary[]
+  total: number
+  totalInquiries: number
+}
+
+// PostgREST caps each response at 1000 rows regardless of .limit(), so page
+// through with .range() until a short page signals the end.
+async function fetchAllPaged<T>(
+  build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>
+): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await build(from, from + 999)
+    if (error) break
+    const page = data ?? []
+    out.push(...page)
+    if (page.length < 1000) break
+  }
+  return out
+}
+
+// Aggregates leads: customers who have ONLY ever enquired and NEVER purchased
+// (all-time). The date window scopes which inquiries count; the never-purchased
+// test is all-time so a customer who bought outside the window is not a lead.
+export async function getLeadSummaries(filters: LeadSummaryFilters): Promise<LeadSummaryPage> {
+  const supabase = await createClient()
+
+  // Every customer who has ever purchased anything (any category, all time).
+  const purchaseRows = await fetchAllPaged<{ customer_id: string }>((from, to) =>
+    supabase.from('interactions').select('customer_id').eq('call_type', 'purchase').range(from, to)
+  )
+  const everPurchased = new Set(purchaseRows.map((r) => r.customer_id))
+
+  // Inquiries within the selected window drive the lead list.
+  const inquiries = await fetchAllPaged<any>((from, to) => {
+    let q = supabase
+      .from('interactions')
+      .select('customer_id, category, call_at, customers(phone, name)')
+      .eq('call_type', 'inquiry')
+      .order('call_at', { ascending: false })
+      .range(from, to)
+    if (filters.from) q = q.gte('call_at', `${filters.from}T00:00:00`)
+    if (filters.to) q = q.lte('call_at', `${filters.to}T23:59:59`)
+    return q
+  })
+
+  type Acc = Omit<LeadSummary, 'categories'> & { cats: Set<Category> }
+  const map = new Map<string, Acc>()
+
+  for (const d of inquiries) {
+    // Skip anyone who has ever bought — they are a converted customer, not a lead.
+    if (everPurchased.has(d.customer_id)) continue
+    const customer = Array.isArray(d.customers) ? d.customers[0] : d.customers
+    let s = map.get(d.customer_id)
+    if (!s) {
+      s = {
+        customer_id: d.customer_id,
+        phone: customer?.phone ?? '',
+        name: customer?.name ?? null,
+        inquiryCount: 0,
+        lastInquiryAt: null,
+        cats: new Set<Category>(),
+      }
+      map.set(d.customer_id, s)
+    }
+    s.inquiryCount += 1
+    s.cats.add(d.category as Category)
+    if (!s.lastInquiryAt || new Date(d.call_at) > new Date(s.lastInquiryAt)) {
+      s.lastInquiryAt = d.call_at
+    }
+  }
+
+  let list: LeadSummary[] = Array.from(map.values())
+    .filter((s) => s.inquiryCount > 0)
+    .map(({ cats, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
+
+  if (filters.enquiredCategories && filters.enquiredCategories.length) {
+    const wanted = filters.enquiredCategories
+    list =
+      filters.match === 'all'
+        ? list.filter((s) => wanted.every((c) => s.categories.includes(c)))
+        : list.filter((s) => wanted.some((c) => s.categories.includes(c)))
+  }
+
+  if (filters.search?.trim()) {
+    const q = filters.search.trim().toLowerCase()
+    list = list.filter(
+      (s) => s.phone.toLowerCase().includes(q) || (s.name ?? '').toLowerCase().includes(q)
+    )
+  }
+
+  const sort = filters.sort ?? 'recent'
+  list.sort((a, b) => {
+    if (sort === 'inquiries_desc') return b.inquiryCount - a.inquiryCount
+    return new Date(b.lastInquiryAt ?? 0).getTime() - new Date(a.lastInquiryAt ?? 0).getTime()
+  })
+
+  const total = list.length
+  const totalInquiries = list.reduce((a, c) => a + c.inquiryCount, 0)
+  const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 25
+  const page = filters.page && filters.page > 0 ? filters.page : 1
+  const start = (page - 1) * pageSize
+  return { rows: list.slice(start, start + pageSize), total, totalInquiries }
 }
 
 export interface StaffOption {

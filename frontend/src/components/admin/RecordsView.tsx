@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Search } from 'lucide-react'
+import { Pencil, Trash2, Search, Loader2, AlertTriangle } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
 import RecordsTabs from './RecordsTabs'
 import DateField from './DateField'
@@ -10,6 +10,7 @@ import { TableSkeleton, Pagination } from './TableUI'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
   updateInteraction,
+  deleteInteraction,
   type RegisterRow,
   type RegisterFilters,
   type StaffOption,
@@ -46,15 +47,19 @@ interface Props {
   products: EntryProducts
   filters: RegisterFilters
   showStaffFilter?: boolean
+  canDelete?: boolean
 }
 
-export default function RecordsView({ rows, total, staffOptions, products, filters, showStaffFilter = false }: Props) {
+export default function RecordsView({ rows, total, staffOptions, products, filters, showStaffFilter = false, canDelete = false }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   const [f, setF] = useState<RegisterFilters>(filters)
   const [drilldownId, setDrilldownId] = useState<string | null>(null)
   const [editRow, setEditRow] = useState<RegisterRow | null>(null)
+  const [deleteRow, setDeleteRow] = useState<RegisterRow | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const page = filters.page && filters.page > 0 ? filters.page : 1
   const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 25
@@ -77,25 +82,26 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
   // Changing filters resets to the first page.
   const applyFilters = (next: RegisterFilters) => navigate({ ...next, page: 1 })
 
+  // Quick-range pills only fill the From/To fields; the API call fires on Apply.
   const quickRange = (days: number | 'all') => {
     if (days === 'all') {
-      applyFilters({ ...f, from: '', to: '' })
+      setF({ ...f, from: '', to: '' })
       return
     }
     const to = new Date()
     const from = new Date()
     from.setDate(from.getDate() - days)
-    applyFilters({ ...f, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
+    setF({ ...f, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
   }
 
-  // Highlight whichever quick-range pill matches the currently applied dates.
+  // Highlight whichever quick-range pill matches the currently selected dates.
   const todayISO = new Date().toISOString().slice(0, 10)
   const rangeIsActive = (days: number) => {
     const from = new Date()
     from.setDate(from.getDate() - days)
-    return (filters.from ?? '') === from.toISOString().slice(0, 10) && (filters.to ?? '') === todayISO
+    return (f.from ?? '') === from.toISOString().slice(0, 10) && (f.to ?? '') === todayISO
   }
-  const allTimeActive = !filters.from && !filters.to
+  const allTimeActive = !f.from && !f.to
 
   const handleEditSubmit = async (values: EntryFormValues) => {
     if (!editRow) return
@@ -112,6 +118,20 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
     })
   }
 
+  const handleDelete = async () => {
+    if (!deleteRow) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    const res = await deleteInteraction(deleteRow.id)
+    setIsDeleting(false)
+    if (res.error) {
+      setDeleteError(res.error)
+      return
+    }
+    setDeleteRow(null)
+    router.refresh()
+  }
+
   const selectCls = 'px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
@@ -124,19 +144,48 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
       <RecordsTabs active="records" />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex flex-wrap items-end gap-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+        {/* Quick ranges */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-xs font-medium text-gray-400 mr-1">Quick range</span>
+          {([['Today', 0], ['7 days', 7], ['30 days', 30], ['90 days', 90], ['1 year', 365]] as [string, number][]).map(
+            ([label, days]) => (
+              <button
+                key={label}
+                onClick={() => quickRange(days)}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  rangeIsActive(days)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => quickRange('all')}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+              allTimeActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All time
+          </button>
+        </div>
+
+        {/* Field grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
-            <DateField className={`${selectCls} cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">From</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
-            <DateField className={`${selectCls} cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">To</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Category</label>
-            <select className={selectCls} value={f.category ?? 'all'} onChange={(e) => setF({ ...f, category: e.target.value as Category | 'all' })}>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Category</label>
+            <select className={`${selectCls} w-full`} value={f.category ?? 'all'} onChange={(e) => setF({ ...f, category: e.target.value as Category | 'all' })}>
               <option value="all">All</option>
               <option value="general">General</option>
               <option value="book">Book</option>
@@ -145,8 +194,8 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Type</label>
-            <select className={selectCls} value={f.callType ?? 'all'} onChange={(e) => setF({ ...f, callType: e.target.value as CallType | 'all' })}>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
+            <select className={`${selectCls} w-full`} value={f.callType ?? 'all'} onChange={(e) => setF({ ...f, callType: e.target.value as CallType | 'all' })}>
               <option value="all">All</option>
               <option value="inquiry">Inquiry</option>
               <option value="purchase">Purchase</option>
@@ -154,8 +203,8 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
           </div>
           {showStaffFilter && (
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Salesperson</label>
-              <select className={selectCls} value={f.staffId ?? 'all'} onChange={(e) => setF({ ...f, staffId: e.target.value })}>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Salesperson</label>
+              <select className={`${selectCls} w-full`} value={f.staffId ?? 'all'} onChange={(e) => setF({ ...f, staffId: e.target.value })}>
                 <option value="all">All</option>
                 {staffOptions.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
@@ -164,15 +213,19 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
             </div>
           )}
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Sort</label>
-            <select className={selectCls} value={f.sort ?? 'recent'} onChange={(e) => setF({ ...f, sort: e.target.value as RegisterFilters['sort'] })}>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Sort</label>
+            <select className={`${selectCls} w-full`} value={f.sort ?? 'recent'} onChange={(e) => setF({ ...f, sort: e.target.value as RegisterFilters['sort'] })}>
               <option value="recent">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="amount_desc">Highest amount</option>
             </select>
           </div>
-          <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs text-gray-500 mb-1">Search name / phone</label>
+        </div>
+
+        {/* Search + Apply */}
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Search name / phone</label>
             <div className="relative">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -186,13 +239,13 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
           </div>
           <button
             onClick={() => applyFilters(f)}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Apply
           </button>
         </div>
 
-        <label className="mt-3 flex w-fit items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label className="mt-4 flex w-fit items-center gap-2 text-sm text-gray-700 cursor-pointer">
           <input
             type="checkbox"
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -205,32 +258,6 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
           />
           Only leads — enquired but never purchased
         </label>
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          {([['Today', 0], ['7 days', 7], ['30 days', 30], ['90 days', 90], ['1 year', 365]] as [string, number][]).map(
-            ([label, days]) => (
-              <button
-                key={label}
-                onClick={() => quickRange(days)}
-                className={`px-3 py-1 text-xs rounded-full ${
-                  rangeIsActive(days)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          )}
-          <button
-            onClick={() => quickRange('all')}
-            className={`px-3 py-1 text-xs rounded-full ${
-              allTimeActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All time
-          </button>
-        </div>
       </div>
 
       {/* Table */}
@@ -288,13 +315,24 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{r.staff_name || '—'}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => setEditRow(r)}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setEditRow(r)}
+                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => { setDeleteError(null); setDeleteRow(r) }}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -312,6 +350,46 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
           onPageSize={(n) => navigate({ ...filters, page: 1, pageSize: n })}
         />
       </div>
+
+      {deleteRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !isDeleting && setDeleteRow(null)}>
+          <div className="w-full max-w-md rounded-xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 rounded-full bg-red-50 text-red-600 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete this record?</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    This permanently removes the {CATEGORY_LABEL[deleteRow.category]} {deleteRow.call_type} for{' '}
+                    <span className="font-medium text-gray-700">{deleteRow.name || deleteRow.phone}</span>
+                    {deleteRow.amount != null && <> ({fmtMoney(deleteRow.amount)})</>}. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              {deleteError && <p className="mt-4 text-sm text-red-600">{deleteError}</p>}
+            </div>
+            <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                onClick={() => setDeleteRow(null)}
+                disabled={isDeleting}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {isDeleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CustomerDrilldown customerId={drilldownId} onClose={() => setDrilldownId(null)} />
 

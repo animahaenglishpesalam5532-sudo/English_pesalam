@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/admin/AdminLayout'
 import RecordsView from '@/components/admin/RecordsView'
 import CustomersView from '@/components/admin/CustomersView'
+import LeadsView from '@/components/admin/LeadsView'
 import AnalyticsView from '@/components/admin/AnalyticsView'
 import { logout } from '@/app/actions/auth'
 import { getCurrentUser } from '@/lib/auth/roles'
@@ -10,8 +11,10 @@ import {
   getStaffOptions,
   getEntryProducts,
   getCustomerSummaries,
+  getLeadSummaries,
   type RegisterFilters,
   type CustomerSummaryFilters,
+  type LeadSummaryFilters,
   type Category,
   type CallType,
 } from '@/app/actions/sales'
@@ -61,14 +64,22 @@ export default async function RecordsPage({
   const tab =
     sp?.tab === 'customers'
       ? 'customers'
-      : sp?.tab === 'analytics'
-        ? 'analytics'
-        : 'records'
+      : sp?.tab === 'leads'
+        ? 'leads'
+        : sp?.tab === 'analytics'
+          ? 'analytics'
+          : 'records'
 
   if (tab === 'analytics') {
+    const validCategories: Category[] = ['general', 'book', 'pdf_ppt', 'video_course']
+    const analyticsCategories = (sp?.category ?? '')
+      .split(',')
+      .map((c) => c?.trim())
+      .filter((c): c is Category => (validCategories as string[]).includes(c))
     const analyticsFilters: SalesAnalyticsFilters = {
       from: sp?.from ?? '',
       to: sp?.to ?? '',
+      categories: analyticsCategories,
     }
     const analytics = await getSalesAnalytics(analyticsFilters)
     return (
@@ -88,6 +99,7 @@ export default async function RecordsPage({
       from: sp?.from ?? '',
       to: sp?.to ?? '',
       purchasedCategories,
+      purchaseMatch: sp?.purchaseMatch === 'all' ? 'all' : 'any',
       search: sp?.search ?? '',
       sort: (sp?.sort as CustomerSummaryFilters['sort']) ?? 'spend_desc',
       page: parsePage(sp?.page),
@@ -97,6 +109,30 @@ export default async function RecordsPage({
     return (
       <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
         <CustomersView data={customers} filters={custFilters} />
+      </AdminLayout>
+    )
+  }
+
+  if (tab === 'leads') {
+    const validCategories: Category[] = ['general', 'book', 'pdf_ppt', 'video_course']
+    const enquiredCategories = (sp?.enquiredCategory ?? '')
+      .split(',')
+      .map((c) => c?.trim())
+      .filter((c): c is Category => (validCategories as string[]).includes(c))
+    const leadFilters: LeadSummaryFilters = {
+      from: sp?.from ?? '',
+      to: sp?.to ?? '',
+      enquiredCategories,
+      match: sp?.match === 'all' ? 'all' : 'any',
+      search: sp?.search ?? '',
+      sort: (sp?.sort as LeadSummaryFilters['sort']) ?? 'recent',
+      page: parsePage(sp?.page),
+      pageSize: parsePageSize(sp?.pageSize),
+    }
+    const leads = await getLeadSummaries(leadFilters)
+    return (
+      <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
+        <LeadsView data={leads} filters={leadFilters} />
       </AdminLayout>
     )
   }
@@ -129,6 +165,7 @@ export default async function RecordsPage({
         products={products}
         filters={filters}
         showStaffFilter={isAdmin}
+        canDelete={isAdmin}
       />
     </AdminLayout>
   )

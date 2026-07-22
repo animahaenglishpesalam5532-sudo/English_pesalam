@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-type Tab = 'records' | 'customers' | 'analytics'
+type Tab = 'records' | 'customers' | 'leads' | 'analytics'
 
 export default function RecordsTabs({ active }: { active: Tab }) {
   const cls = (t: Tab) =>
@@ -18,6 +18,9 @@ export default function RecordsTabs({ active }: { active: Tab }) {
       </Link>
       <Link href="/admin/records?tab=customers" className={cls('customers')}>
         Top Customers
+      </Link>
+      <Link href="/admin/records?tab=leads" className={cls('leads')}>
+        Leads
       </Link>
       <Link href="/admin/records?tab=analytics" className={cls('analytics')}>
         Analytics

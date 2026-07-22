@@ -86,7 +86,7 @@ export function InteractionModal({
   const validate = () => {
     const e: Record<string, string> = {}
     if (!phone.trim()) e.phone = 'Phone number is required'
-    else if (!/^[0-9+\-\s]{6,15}$/.test(phone.trim())) e.phone = 'Enter a valid phone number'
+    else if (!/^\d{10}$/.test(phone.trim())) e.phone = 'Enter a valid 10-digit phone number'
     if (callType === 'purchase') {
       const amt = parseFloat(amount)
       if (!amount.trim() || isNaN(amt) || amt <= 0) e.amount = 'Enter the purchase amount'
@@ -137,10 +137,11 @@ export function InteractionModal({
           <input
             className={`${inputBase} ${errors.phone ? errBorder : okBorder}`}
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
             placeholder="e.g. 9876543210"
             disabled={mode === 'edit'}
-            inputMode="tel"
+            inputMode="numeric"
+            maxLength={10}
           />
           {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
           {mode === 'edit' && (

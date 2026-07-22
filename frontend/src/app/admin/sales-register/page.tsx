@@ -27,7 +27,6 @@ function computeAggregates(rows: RegisterRow[]): Aggregates {
   const buyers = new Set<string>()
   const dayMap = new Map<string, { revenue: number; sales: number }>()
   const catMap = new Map<Category, { revenue: number; sales: number }>()
-  const staffMap = new Map<string, { revenue: number; sales: number }>()
 
   for (const r of rows) {
     const amt = Number(r?.amount ?? 0)
@@ -44,12 +43,6 @@ function computeAggregates(rows: RegisterRow[]): Aggregates {
     c.revenue += amt
     c.sales += 1
     catMap.set(r?.category, c)
-
-    const staff = r?.staff_name || 'Unknown'
-    const s = staffMap.get(staff) ?? { revenue: 0, sales: 0 }
-    s.revenue += amt
-    s.sales += 1
-    staffMap.set(staff, s)
   }
 
   const byDay = Array.from(dayMap.entries())
@@ -66,12 +59,6 @@ function computeAggregates(rows: RegisterRow[]): Aggregates {
     sales: catMap.get(c)?.sales ?? 0,
   }))
 
-  const byStaff = Array.from(staffMap.entries()).map(([name, v]) => ({
-    name,
-    revenue: v.revenue,
-    sales: v.sales,
-  }))
-
   const totalSales = rows.length
   return {
     totalSales,
@@ -80,7 +67,6 @@ function computeAggregates(rows: RegisterRow[]): Aggregates {
     uniqueBuyers: buyers.size,
     byDay,
     byCategory,
-    byStaff,
   }
 }
 

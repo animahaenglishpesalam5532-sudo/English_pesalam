@@ -10,6 +10,14 @@ import NewVsReturning from './analytics/NewVsReturning'
 import TopProducts from './analytics/TopProducts'
 import CallHeatmap from './analytics/CallHeatmap'
 import type { SalesAnalyticsData, SalesAnalyticsFilters } from '@/app/actions/sales-analytics'
+import type { Category } from '@/app/actions/sales'
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  general: 'General',
+  book: 'Book',
+  pdf_ppt: 'PDF & PPT',
+  video_course: 'Video Course',
+}
 
 interface Props {
   data: SalesAnalyticsData
@@ -26,18 +34,19 @@ export default function AnalyticsView({ data, filters }: Props) {
     params.set('tab', 'analytics')
     if (next?.from) params.set('from', next.from)
     if (next?.to) params.set('to', next.to)
+    if (next?.categories?.length) params.set('category', next.categories.join(','))
     startTransition(() => router.push(`/admin/records?${params.toString()}`))
   }
 
   const quickRange = (days: number | 'all') => {
     if (days === 'all') {
-      apply({ from: '', to: '' })
+      apply({ ...f, from: '', to: '' })
       return
     }
     const to = new Date()
     const from = new Date()
     from.setDate(from.getDate() - days)
-    apply({ from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
+    apply({ ...f, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
   }
 
   const selectCls =
@@ -70,35 +79,72 @@ export default function AnalyticsView({ data, filters }: Props) {
       <RecordsTabs active="analytics" />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex flex-wrap items-end gap-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+        {/* Quick ranges */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-xs font-medium text-gray-400 mr-1">Quick range</span>
+          {([['30 days', 30], ['90 days', 90], ['1 year', 365]] as [string, number][]).map(([label, days]) => (
+            <button key={label} onClick={() => quickRange(days)} className={pillCls(activePreset === days)}>
+              {label}
+            </button>
+          ))}
+          <button onClick={() => quickRange('all')} className={pillCls(activePreset === 'all')}>
+            All time
+          </button>
+        </div>
+
+        {/* Field grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">From</label>
-            <DateField className={`${selectCls} cursor-pointer`} value={f?.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">From</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f?.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">To</label>
-            <DateField className={`${selectCls} cursor-pointer`} value={f?.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">To</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f?.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
           </div>
+        </div>
+
+        {/* Category chips */}
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Category {(f?.categories?.length ?? 0) === 0 && <span className="text-gray-400">(all)</span>}
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {(['book', 'pdf_ppt', 'video_course', 'general'] as Category[]).map((c) => {
+              const active = (f?.categories ?? []).includes(c)
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    const cur = f?.categories ?? []
+                    const next = active ? cur.filter((x) => x !== c) : [...cur, c]
+                    setF({ ...f, categories: next })
+                  }}
+                  className={`px-3.5 py-1.5 text-sm rounded-full border transition-colors ${
+                    active
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {CATEGORY_LABEL[c]}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Apply */}
+        <div className="mt-4">
           <button
             onClick={() => apply(f)}
             disabled={isPending}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             {isPending ? 'Applying…' : 'Apply'}
           </button>
-
-          <div className="flex flex-wrap gap-2">
-            {([['30 days', 30], ['90 days', 90], ['1 year', 365]] as [string, number][]).map(([label, days]) => (
-              <button key={label} onClick={() => quickRange(days)} className={pillCls(activePreset === days)}>
-                {label}
-              </button>
-            ))}
-            <button onClick={() => quickRange('all')} className={pillCls(activePreset === 'all')}>
-              All time
-            </button>
-          </div>
         </div>
       </div>
 
