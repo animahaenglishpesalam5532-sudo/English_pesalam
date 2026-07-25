@@ -67,7 +67,7 @@ export default function AuthorModal({ isOpen, onClose, onSuccess, initialData }:
             const formData = new FormData()
             formData.append('file', file)
 
-            const result = await uploadImage(formData)
+            const result = await uploadImage(formData, 'authors')
             if (result.error) {
               toast.error(result.error)
             } else if (result.url) {

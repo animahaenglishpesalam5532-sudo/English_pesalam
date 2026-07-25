@@ -3,13 +3,21 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 
 const sidebarLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Blogs', href: '/admin/blogs', icon: FileText },
+  { name: 'PDF Manager', href: '/admin/pdfs', icon: FileText },
+  { name: 'PPT Manager', href: '/admin/ppts', icon: Presentation },
+  { name: 'Video Courses', href: '/admin/video-courses', icon: Video },
   { name: 'Authors', href: '/admin/authors', icon: Users },
+  { name: 'QR Manager', href: '/admin/qr-manager', icon: QrCode },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { name: 'Quiz', href: '/admin/quiz', icon: HelpCircle },
+  { name: 'Hero Settings', href: '/admin/hero-settings', icon: Sparkles },
+  { name: 'About Settings', href: '/admin/about-settings', icon: Info },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

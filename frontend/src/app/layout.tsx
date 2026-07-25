@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { ViewTracker } from "@/components/ViewTracker";
 import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_KEYWORDS, absoluteUrl } from "@/lib/seo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -115,6 +116,7 @@ export default function RootLayout({
           }}
         />
         <ToastProvider />
+        <ViewTracker />
         {children}
       </body>
     </html>

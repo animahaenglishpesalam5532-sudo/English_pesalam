@@ -105,10 +105,17 @@ export default function BookManager() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return null
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB')
+      e.target.value = ''
+      return null
+    }
+
     setIsUploading(true)
     const fd = new FormData()
     fd.append('file', file)
-    const result = await uploadImage(fd)
+    const result = await uploadImage(fd, 'books')
     if (result.error) {
       toast.error(result.error)
     } else if (result.url) {

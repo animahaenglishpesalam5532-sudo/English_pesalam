@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { User, ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
-import { SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo'
 
 export const dynamicParams = true; // allow on-demand generation for blogs not in top 9
 export const revalidate = 3600; // ISR fallback
@@ -14,19 +13,19 @@ export async function generateStaticParams() {
     console.warn('⚠️ Supabase environment variables missing. Skipping static params generation.');
     return [];
   }
-  
+
   const supabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
-  
+
   const { data: blogs } = await supabase
     .from('blogs')
     .select('slug')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(9)
-    
+
   return blogs ? blogs.map((blog) => ({ slug: String(blog.slug) })) : []
 }
 
@@ -50,6 +49,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Blog Not Found', robots: { index: false, follow: false } }
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
+  const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
+
   // Use custom meta if provided, otherwise auto-generate from content
   const title = blog.meta_title?.trim() ? blog.meta_title : blog.title
 
@@ -57,32 +59,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     ? blog.meta_description
     : blog.content.replace(/<[^>]+>/g, '').substring(0, 160).trim() + '...'
 
-  const url = absoluteUrl(`/blogs/${params.slug}`)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors
-  const images = blog.featured_image ? [{ url: blog.featured_image }] : undefined
-
   return {
     title,
     description,
-    alternates: { canonical: url },
-    openGraph: {
-      type: 'article',
-      title,
-      description,
-      url,
-      siteName: SITE_NAME,
-      publishedTime: blog.created_at,
-      modifiedTime: blog.updated_at ?? blog.created_at,
-      authors: author?.name ? [author.name] : undefined,
-      images,
+    alternates: {
+      canonical: `${baseUrl}/blogs/${params.slug}`,
     },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: blog.featured_image ? [blog.featured_image] : undefined,
+    robots: {
+      index: true,
+      follow: true,
     },
+    authors: author?.name ? [{ name: author.name }] : undefined,
   }
 }
 
@@ -106,35 +93,43 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const author: any = Array.isArray(blog.authors) ? blog.authors[0] : blog.authors;
 
-  const url = absoluteUrl(`/blogs/${params.slug}`)
-  const plainText = (blog.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  const articleJsonLd = {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://englishpesalam.com'
+
+  const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
-    '@id': `${url}#article`,
     headline: blog.title,
-    description: blog.meta_description?.trim() || plainText.substring(0, 160),
-    image: blog.featured_image ? [blog.featured_image] : undefined,
+    image: blog.featured_image,
     datePublished: blog.created_at,
-    dateModified: blog.updated_at ?? blog.created_at,
-    author: author?.name
-      ? { '@type': 'Person', name: author.name }
-      : { '@type': 'Organization', name: SITE_NAME },
+    dateModified: blog.updated_at || blog.created_at,
+    author: {
+      '@type': 'Person',
+      name: author?.name || 'English Pesalam',
+      jobTitle: author?.designation,
+      image: author?.profile_image,
+    },
     publisher: {
       '@type': 'Organization',
-      name: SITE_NAME,
-      logo: { '@type': 'ImageObject', url: absoluteUrl('/favicon.png') },
+      name: 'English Pesalam',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/icon.png`,
+      },
     },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    inLanguage: 'en',
+    description: blog.meta_description || blog.content.replace(/<[^>]+>/g, '').substring(0, 160),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/blogs/${params.slug}`,
+    },
   }
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="flex-1 mt-14 bg-white" suppressHydrationWarning={true}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-        />
         {/* Article Header */}
         <div className="bg-gray-50/50 pt-12 pb-8 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
           <div className="max-w-3xl mx-auto">
@@ -143,7 +138,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Blogs
               </Link>
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
               {blog.title}
             </h1>
@@ -151,7 +146,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
             <div className="flex items-center space-x-6 text-gray-500">
               <div className="flex items-center">
                 {author?.profile_image ? (
-                   <img src={author.profile_image} alt="" className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm bg-gray-100" />
+                  <img src={author.profile_image} alt="" className="w-8 h-8 rounded-full mr-3 object-cover shadow-sm bg-gray-100" />
                 ) : (
                   <div className="w-8 h-8 rounded-full mr-3 bg-blue-100 text-blue-600 flex items-center justify-center">
                     <User className="w-4 h-4" />
@@ -175,11 +170,11 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
 
         {/* Content Area */}
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 overflow-hidden">
-          <article 
+          <article
             className="prose prose-lg prose-blue max-w-full text-gray-800 break-words [overflow-wrap:anywhere] font-jakarta prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md prose-img:border prose-img:border-gray-100 prose-img:mx-auto prose-img:my-[15px] [&_iframe]:my-[15px] [&_video]:my-[15px] [&_figure]:my-[15px]"
             dangerouslySetInnerHTML={{ __html: blog.content || '' }}
           />
-          
+
           {/* Author Bio Section */}
           {author && (
             <div className="mt-16 pt-10 border-t border-gray-200">
@@ -205,6 +200,7 @@ export default async function SingleBlogPage({ params }: { params: { slug: strin
           )}
         </div>
       </main>
+    </>
   )
 }
 

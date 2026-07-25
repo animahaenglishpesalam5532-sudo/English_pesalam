@@ -15,31 +15,62 @@ export default function BlogListPage() {
   const [blogs, setBlogs] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const itemsPerPage = 20
 
   const [isDefaultImageModalOpen, setIsDefaultImageModalOpen] = useState(false)
   const [defaultImage, setDefaultImage] = useState<string | null>(null)
   const [isUploadingDefault, setIsUploadingDefault] = useState(false)
   const [defaultImageUrlInput, setDefaultImageUrlInput] = useState('')
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm)
+      setCurrentPage(1) // Reset to first page on search
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   const fetchBlogs = async () => {
     setIsLoading(true)
     const supabase = createClient()
-    const { data } = await supabase
+    
+    let query = supabase
       .from('blogs')
-      .select('*, authors(name)')
-      .order('created_at', { ascending: false })
+      .select('*, authors(name)', { count: 'exact' })
+    
+    if (debouncedSearch) {
+      query = query.or(`title.ilike.%${debouncedSearch}%,slug.ilike.%${debouncedSearch}%`)
+    }
 
-    if (data) {
-      setBlogs(data)
+    const from = (currentPage - 1) * itemsPerPage
+    const to = from + itemsPerPage - 1
+
+    const { data, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      toast.error('Error fetching blogs: ' + error.message)
+    } else {
+      setBlogs(data || [])
+      setTotalCount(count || 0)
     }
     setIsLoading(false)
   }
 
   useEffect(() => {
     fetchBlogs()
+  }, [currentPage, debouncedSearch])
+
+  useEffect(() => {
     const fetchSettings = async () => {
       const img = await getSetting('default_featured_image')
       setDefaultImage(img)
@@ -51,6 +82,12 @@ export default function BlogListPage() {
   const handleDefaultImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB')
+      e.target.value = ''
+      return
+    }
 
     setIsUploadingDefault(true)
     const formData = new FormData()
@@ -85,25 +122,17 @@ export default function BlogListPage() {
       toast.error(result.error)
     } else {
       toast.success('Blog deleted successfully')
-      setBlogs(blogs.filter(b => b.id !== deleteId))
+      if (blogs.length === 1 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1)
+      } else {
+        fetchBlogs()
+      }
     }
     setIsDeleting(false)
     setDeleteId(null)
   }
 
-  const filteredBlogs = blogs.filter(b =>
-    b.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const itemsPerPage = 10;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBlogs = filteredBlogs.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   return (
     <AdminLayout>
@@ -143,6 +172,11 @@ export default function BlogListPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {isLoading && searchTerm !== debouncedSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -158,7 +192,7 @@ export default function BlogListPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
+              {isLoading && blogs.length === 0 ? (
                 [1, 2, 3, 4, 5].map((i) => (
                   <tr key={`skel-${i}`} className="animate-pulse bg-white">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -183,12 +217,17 @@ export default function BlogListPage() {
                     </td>
                   </tr>
                 ))
-              ) : currentBlogs.length === 0 ? (
+              ) : blogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">No blogs found.</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <div className="flex flex-col items-center">
+                      <Search className="h-10 w-10 text-gray-300 mb-2" />
+                      <p>No blogs found matching your search.</p>
+                    </div>
+                  </td>
                 </tr>
               ) : (
-                currentBlogs.map((blog) => (
+                blogs.map((blog) => (
                   <tr key={blog.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{blog.title}</div>
@@ -224,19 +263,19 @@ export default function BlogListPage() {
           </table>
         </div>
 
-        {totalPages > 1 && (
+        {totalCount > 0 && (
           <div className="bg-white px-4 py-4 border-t border-gray-200 flex items-center justify-between sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoading}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || isLoading}
                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
                 Next
@@ -245,37 +284,47 @@ export default function BlogListPage() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">{Math.min(indexOfLastItem, filteredBlogs.length)}</span> of <span className="font-medium">{filteredBlogs.length}</span> results
+                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalCount)}</span> of <span className="font-medium">{totalCount}</span> results
                 </p>
               </div>
               <div>
                 <nav className="relative z-0 inline-flex flex-wrap justify-center gap-1.5" aria-label="Pagination">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
+                    disabled={currentPage === 1 || isLoading}
                     className="relative inline-flex items-center justify-center h-10 w-10 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                   >
                     <span className="sr-only">Previous</span>
                     <ChevronLeft className="h-5 w-5" />
                   </button>
 
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`relative inline-flex items-center justify-center h-10 min-w-[40px] rounded-lg border text-sm font-medium transition-colors ${
-                        currentPage === i + 1
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                  {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                    let pageNum = currentPage;
+                    if (totalPages <= 5) pageNum = i + 1;
+                    else {
+                      if (currentPage <= 3) pageNum = i + 1;
+                      else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                      else pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`relative inline-flex items-center justify-center h-10 min-w-[40px] rounded-lg border text-sm font-medium transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
 
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages || isLoading}
                     className="relative inline-flex items-center justify-center h-10 w-10 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                   >
                     <span className="sr-only">Next</span>
