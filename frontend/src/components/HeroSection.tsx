@@ -30,7 +30,7 @@ function BookCard({ book, index }: { book: Book; index: number }) {
       {/* Left Side Content */}
       <div className="flex-1 flex flex-col items-start w-full order-2 md:order-1 relative z-10">
         {/* Title */}
-        <h1 className="mb-4 md:mb-6 pb-2 leading-tight tracking-tight">
+        <h2 className="mb-4 md:mb-6 pb-2 leading-tight tracking-tight">
           <span
             className="block text-2xl md:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text"
             style={{ backgroundImage: "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)" }}
@@ -45,7 +45,7 @@ function BookCard({ book, index }: { book: Book; index: number }) {
               {book.title_2}
             </span>
           )}
-        </h1>
+        </h2>
 
         {/* Description */}
         {book.description && (
@@ -152,6 +152,31 @@ export function HeroSection({ books = [] }: HeroSectionProps) {
 
   return (
     <section id="home" className="pt-24 pb-8 px-4 w-full max-w-md md:max-w-6xl mx-auto">
+      {/* Main Homepage H1 Heading & SEO Subtitle */}
+      <div className="text-center mb-10 md:mb-14 max-w-3xl mx-auto">
+        <motion.h1
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
+        >
+          <span
+            className="bg-clip-text text-transparent"
+            style={{ backgroundImage: "linear-gradient(to right, #0090F7 0%, #BA62FC 50%, #F2416B 100%)" }}
+          >
+            Learn Spoken English in Tamil
+          </span>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="mt-3 md:mt-4 text-base md:text-lg lg:text-xl text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed"
+        >
+          Learn Spoken English in Tamil with simple lessons, daily-use English sentences, grammar, vocabulary, speaking practice, quizzes and online classes from English Pesalam.
+        </motion.p>
+      </div>
+
       <div className="flex flex-col gap-6">
         {displayBooks.map((book, i) => (
           <BookCard key={book.id} book={book} index={i} />
