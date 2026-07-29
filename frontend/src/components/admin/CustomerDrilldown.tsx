@@ -9,7 +9,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General Inquiry',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 function fmtMoney(n: number) {

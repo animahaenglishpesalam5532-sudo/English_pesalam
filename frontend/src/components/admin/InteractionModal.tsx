@@ -11,7 +11,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 // Stored phone (India = bare 10 digits, else +E.164) -> value the PhoneInput

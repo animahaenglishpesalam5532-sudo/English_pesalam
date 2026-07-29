@@ -44,7 +44,7 @@ export function LearningPaths() {
       href: "/ppts"
     },
     {
-      title: "Full Video Course",
+      title: "Full Online Class",
       description:
         "15+ hours of step-by-step video instruction by experts in English Pesalam.",
       icon: <Video className="w-5 h-5 text-white" />,
@@ -54,7 +54,7 @@ export function LearningPaths() {
       buttonText: "Join Course",
       buttonClass: "bg-white/80 backdrop-blur-md text-[#5649E8] border border-white/50 hover:bg-white",
       textDark: false,
-      href: "/video-courses"
+      href: "/online-classes"
     },
   ];
 

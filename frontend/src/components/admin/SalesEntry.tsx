@@ -16,7 +16,7 @@ const CARDS: {
   { category: 'general', title: 'General Inquiry', desc: 'Any general question or inquiry', icon: MessageCircle, color: 'from-sky-500 to-blue-600' },
   { category: 'book', title: 'Book', desc: 'Book inquiry or purchase', icon: BookOpen, color: 'from-emerald-500 to-green-600' },
   { category: 'pdf_ppt', title: 'PDF & PPT', desc: 'Digital PDF / PPT products', icon: Files, color: 'from-amber-500 to-orange-600' },
-  { category: 'video_course', title: 'Online Video Course', desc: 'Video course inquiry or purchase', icon: Video, color: 'from-fuchsia-500 to-purple-600' },
+  { category: 'video_course', title: 'Online Class', desc: 'Online class inquiry or purchase', icon: Video, color: 'from-fuchsia-500 to-purple-600' },
 ]
 
 export default function SalesEntry({ products }: { products: EntryProducts }) {

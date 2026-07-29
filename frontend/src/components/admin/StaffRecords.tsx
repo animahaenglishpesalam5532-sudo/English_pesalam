@@ -18,14 +18,14 @@ import {
 const FILTER_CATEGORIES: { value: Category; label: string }[] = [
   { value: 'book', label: 'Book' },
   { value: 'pdf_ppt', label: 'PDF & PPT' },
-  { value: 'video_course', label: 'Video Course' },
+  { value: 'video_course', label: 'Online Class' },
 ]
 
 const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 function fmtMoney(n: number) {

@@ -440,11 +440,11 @@ export function AboutContent({
               </a>
 
               <a 
-                href="/video-courses" 
+                href="/online-classes"
                 className="inline-flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 text-white rounded-full font-bold text-sm md:text-base shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all hover:scale-[1.02]"
               >
                 <Video className="w-5 h-5" />
-                Explore Video Course
+                Explore Online Class
               </a>
             </div>
           </div>

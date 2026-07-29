@@ -23,7 +23,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 // Products belonging to the selected categories, for the item-level filter.
@@ -204,7 +204,7 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
               <option value="general">General</option>
               <option value="book">Book</option>
               <option value="pdf_ppt">PDF &amp; PPT</option>
-              <option value="video_course">Video Course</option>
+              <option value="video_course">Online Class</option>
             </select>
           </div>
           <div>

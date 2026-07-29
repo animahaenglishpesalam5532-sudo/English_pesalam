@@ -34,7 +34,7 @@ export function Navbar({ logoType, logoText, logoImageUrl }: NavbarProps) {
     { name: 'Blogs', href: '/blogs' },
     { name: 'PDF Guide', href: '/pdfs' },
     { name: 'PPT Masterclass', href: '/ppts' },
-    { name: 'Video Course', href: '/video-courses' },
+    { name: 'Online Class', href: '/online-classes' },
     { name: 'Quiz', href: '/quiz' },
     { name: 'About Us', href: '/about' },
   ];

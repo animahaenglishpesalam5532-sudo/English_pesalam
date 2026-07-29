@@ -13,7 +13,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 // Products belonging to the selected categories, for the item-level filter.

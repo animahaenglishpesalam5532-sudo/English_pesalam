@@ -34,7 +34,7 @@ const adminGroups: NavGroup[] = [
       { name: 'Blogs', href: '/admin/blogs', icon: FileText },
       { name: 'PDF Manager', href: '/admin/pdfs', icon: FileText },
       { name: 'PPT Manager', href: '/admin/ppts', icon: Presentation },
-      { name: 'Video Courses', href: '/admin/video-courses', icon: Video },
+      { name: 'Online Classes', href: '/admin/video-courses', icon: Video },
       { name: 'Authors', href: '/admin/authors', icon: Users },
       { name: 'Quiz', href: '/admin/quiz', icon: HelpCircle },
     ],

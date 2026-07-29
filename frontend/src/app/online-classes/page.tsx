@@ -22,7 +22,7 @@ export default async function VideoCoursesPage() {
       
       <main className="relative z-10 pt-24 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <Breadcrumbs items={[{ label: 'Video Courses' }]} />
+          <Breadcrumbs items={[{ label: 'Online Classes' }]} />
           {/* Header Section */}
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50/50 backdrop-blur-md rounded-full text-red-600 border border-red-100 mb-2">
@@ -30,7 +30,7 @@ export default async function VideoCoursesPage() {
               <span className="text-sm font-bold uppercase tracking-wider">Premium Masterclasses</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-              Comprehensive <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Video Courses</span>
+              Comprehensive <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Online Classes</span>
             </h1>
             <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">
               Learn English from experts with structured video modules, practical exercises, and lifetime access to high-quality lessons.

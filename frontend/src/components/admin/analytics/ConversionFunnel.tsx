@@ -7,7 +7,7 @@ const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
-  video_course: 'Video Course',
+  video_course: 'Online Class',
 }
 
 export default function ConversionFunnel({ data }: { data: FunnelData }) {
