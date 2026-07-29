@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Search } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
+import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
@@ -13,6 +14,12 @@ import {
   type EntryProducts,
   type Category,
 } from '@/app/actions/sales'
+
+const FILTER_CATEGORIES: { value: Category; label: string }[] = [
+  { value: 'book', label: 'Book' },
+  { value: 'pdf_ppt', label: 'PDF & PPT' },
+  { value: 'video_course', label: 'Video Course' },
+]
 
 const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
@@ -46,26 +53,56 @@ export default function StaffRecords({ rows, total, products, filters }: Props) 
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  const [search, setSearch] = useState(filters.search ?? '')
+  const [f, setF] = useState<RegisterFilters>(filters)
   const [drilldownId, setDrilldownId] = useState<string | null>(null)
   const [editRow, setEditRow] = useState<RegisterRow | null>(null)
 
   const page = filters.page && filters.page > 0 ? filters.page : 1
   const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 25
 
-  const navigate = (next: { search?: string; page?: number; pageSize?: number }) => {
+  const navigate = (next: RegisterFilters) => {
     const params = new URLSearchParams()
+    if (next.from) params.set('from', next.from)
+    if (next.to) params.set('to', next.to)
+    if (next.categories?.length) params.set('categories', next.categories.join(','))
     if (next.search?.trim()) params.set('search', next.search.trim())
     if (next.page && next.page > 1) params.set('page', String(next.page))
     if (next.pageSize && next.pageSize !== 25) params.set('pageSize', String(next.pageSize))
     startTransition(() => router.push(`/admin/my-records?${params.toString()}`))
   }
 
-  const runSearch = () => navigate({ search, page: 1, pageSize })
+  // Changing filters resets to the first page.
+  const applyFilters = (next: RegisterFilters) => navigate({ ...next, page: 1, pageSize })
+
+  const toggleCategory = (c: Category) => {
+    const set = new Set(f.categories ?? [])
+    if (set.has(c)) set.delete(c)
+    else set.add(c)
+    setF({ ...f, categories: Array.from(set) })
+  }
+
+  // Quick-range pills only fill From/To; the query fires on Apply.
+  const quickRange = (days: number | 'all') => {
+    if (days === 'all') return setF({ ...f, from: '', to: '' })
+    const to = new Date()
+    const from = new Date()
+    from.setDate(from.getDate() - days)
+    setF({ ...f, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) })
+  }
+
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const rangeIsActive = (days: number) => {
+    const from = new Date()
+    from.setDate(from.getDate() - days)
+    return (f.from ?? '') === from.toISOString().slice(0, 10) && (f.to ?? '') === todayISO
+  }
+  const allTimeActive = !f.from && !f.to
+  const selectCls = 'px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   const handleEditSubmit = async (values: EntryFormValues) => {
     if (!editRow) return
     return updateInteraction(editRow.id, {
+      phone: values.phone,
       name: values.name,
       items: values.items,
       notes: values.notes,
@@ -85,28 +122,95 @@ export default function StaffRecords({ rows, total, products, filters }: Props) 
         <p className="mt-1 text-sm text-gray-500">Search a customer and edit their calls. Click a phone to see full history.</p>
       </div>
 
-      {/* Search only */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="relative">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            className="w-full pl-9 pr-28 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && runSearch()}
-            placeholder="Search by name or phone..."
-          />
+      {/* Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6">
+        {/* Quick ranges */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-xs font-medium text-gray-400 mr-1">Quick range</span>
+          {([['Today', 0], ['7 days', 7], ['30 days', 30], ['90 days', 90], ['1 year', 365]] as [string, number][]).map(
+            ([label, days]) => (
+              <button
+                key={label}
+                onClick={() => quickRange(days)}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                  rangeIsActive(days) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
           <button
-            onClick={runSearch}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700"
+            onClick={() => quickRange('all')}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+              allTimeActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
           >
-            Search
+            All time
+          </button>
+        </div>
+
+        {/* Date range */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">From</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f.from ?? ''} onChange={(v) => setF({ ...f, from: v })} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">To</label>
+            <DateField className={`${selectCls} w-full cursor-pointer`} value={f.to ?? ''} onChange={(v) => setF({ ...f, to: v })} />
+          </div>
+        </div>
+
+        {/* Category toggles */}
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Category</label>
+          <div className="flex flex-wrap gap-2">
+            {FILTER_CATEGORIES.map((c) => {
+              const active = (f.categories ?? []).includes(c.value)
+              return (
+                <button
+                  key={c.value}
+                  onClick={() => toggleCategory(c.value)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+                    active
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Search + Apply */}
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Search name / phone</label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                className={`${selectCls} w-full pl-9`}
+                value={f.search ?? ''}
+                onChange={(e) => setF({ ...f, search: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters(f)}
+                placeholder="Search..."
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => applyFilters(f)}
+            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Apply
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="records-zoom bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="text-lg font-medium text-gray-900">Records</h3>
           <span className="text-sm text-gray-500">{total} total</span>
@@ -183,8 +287,8 @@ export default function StaffRecords({ rows, total, products, filters }: Props) 
           pageSize={pageSize}
           total={total}
           disabled={isPending}
-          onPage={(p) => navigate({ search: filters.search, page: p, pageSize })}
-          onPageSize={(n) => navigate({ search: filters.search, page: 1, pageSize: n })}
+          onPage={(p) => navigate({ ...filters, page: p, pageSize })}
+          onPageSize={(n) => navigate({ ...filters, page: 1, pageSize: n })}
         />
       </div>
 

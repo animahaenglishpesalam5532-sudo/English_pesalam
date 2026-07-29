@@ -21,6 +21,14 @@ body {
   }
 }
 
+/* Staff "My Records" table: zoom out on small screens so more columns are
+   visible at once instead of being cut off. Applies to phones only. */
+@media (max-width: 640px) {
+  .records-zoom {
+    zoom: 0.55;
+  }
+}
+
 /* =====================================================================
    Admin panel dark theme.
    Scoped to `.admin-scope` so the public site is never affected. Activated

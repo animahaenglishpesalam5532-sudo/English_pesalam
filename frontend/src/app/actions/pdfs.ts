@@ -13,7 +13,7 @@ export async function getVisiblePDFs(useStatic: boolean = false, page: number = 
     .from('pdfs')
     .select('*')
     .eq('is_visible', true)
-    .order('is_featured', { ascending: false })
+    .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
     .range(from, to)
 

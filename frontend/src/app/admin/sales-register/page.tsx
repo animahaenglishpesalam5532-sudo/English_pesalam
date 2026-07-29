@@ -90,10 +90,13 @@ export default async function SalesRegisterPage({
     .map((c) => c?.trim())
     .filter((c): c is Category => (validCategories as string[]).includes(c))
 
+  const itemIds = (sp?.items ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+
   const filters: RegisterFilters = {
     from: sp?.from ?? (hasRange ? '' : defaultFrom.toISOString().slice(0, 10)),
     to: sp?.to ?? '',
     categories,
+    itemIds: itemIds.length ? itemIds : undefined,
     callType: 'purchase', // Sales Register shows completed purchases only
     staffId: sp?.staffId ?? 'all',
     search: sp?.search ?? '',

@@ -7,13 +7,25 @@ import CustomerDrilldown from './CustomerDrilldown'
 import RecordsTabs from './RecordsTabs'
 import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
-import type { LeadSummaryPage, LeadSummaryFilters, Category } from '@/app/actions/sales'
+import type { LeadSummaryPage, LeadSummaryFilters, Category, EntryProducts } from '@/app/actions/sales'
 
 const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
   video_course: 'Video Course',
+}
+
+// Products belonging to the selected categories, for the item-level filter.
+function productOptions(products: EntryProducts, cats: Category[]): { id: string; label: string }[] {
+  const out: { id: string; label: string }[] = []
+  if (cats.includes('book')) products.books.forEach((b) => out.push({ id: b.id, label: b.title }))
+  if (cats.includes('pdf_ppt')) {
+    products.pdfs.forEach((p) => out.push({ id: p.id, label: `PDF · ${p.title}` }))
+    products.ppts.forEach((p) => out.push({ id: p.id, label: `PPT · ${p.title}` }))
+  }
+  if (cats.includes('video_course')) products.videoCourses.forEach((v) => out.push({ id: v.id, label: v.title }))
+  return out
 }
 
 const CATEGORY_BADGE: Record<Category, string> = {
@@ -30,10 +42,11 @@ function fmtDate(iso: string | null) {
 
 interface Props {
   data: LeadSummaryPage
+  products: EntryProducts
   filters: LeadSummaryFilters
 }
 
-export default function LeadsView({ data, filters }: Props) {
+export default function LeadsView({ data, products, filters }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [f, setF] = useState<LeadSummaryFilters>(filters)
@@ -52,6 +65,7 @@ export default function LeadsView({ data, filters }: Props) {
       params.set('enquiredCategory', next.enquiredCategories.join(','))
       if (next.match === 'all') params.set('match', 'all')
     }
+    if (next.enquiredItemIds?.length) params.set('enquiredItem', next.enquiredItemIds.join(','))
     if (next.search?.trim()) params.set('search', next.search.trim())
     if (next.sort) params.set('sort', next.sort)
     if (next.page && next.page > 1) params.set('page', String(next.page))
@@ -117,8 +131,10 @@ export default function LeadsView({ data, filters }: Props) {
                   type="button"
                   onClick={() => {
                     const cur = f.enquiredCategories ?? []
-                    const next = active ? cur.filter((x) => x !== c) : [...cur, c]
-                    setF({ ...f, enquiredCategories: next })
+                    const nextCats = active ? cur.filter((x) => x !== c) : [...cur, c]
+                    const allowed = new Set(productOptions(products, nextCats).map((o) => o.id))
+                    const nextItems = (f.enquiredItemIds ?? []).filter((id) => allowed.has(id))
+                    setF({ ...f, enquiredCategories: nextCats, enquiredItemIds: nextItems })
                   }}
                   className={`px-3.5 py-1.5 text-sm rounded-full border transition-colors ${
                     active
@@ -151,6 +167,42 @@ export default function LeadsView({ data, filters }: Props) {
             )}
           </div>
         </div>
+
+        {/* Item picker for selected categories */}
+        {(() => {
+          const opts = productOptions(products, f.enquiredCategories ?? [])
+          if (opts.length === 0) return null
+          return (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                Specific items {(f.enquiredItemIds?.length ?? 0) === 0 && <span className="text-gray-400">(all)</span>}
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                {opts.map((o) => {
+                  const active = (f.enquiredItemIds ?? []).includes(o.id)
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => {
+                        const cur = f.enquiredItemIds ?? []
+                        const next = active ? cur.filter((x) => x !== o.id) : [...cur, o.id]
+                        setF({ ...f, enquiredItemIds: next })
+                      }}
+                      className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        active
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Search + Apply */}
         <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">

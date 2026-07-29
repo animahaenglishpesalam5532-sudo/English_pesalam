@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { MessageCircle, BookOpen, Files, Video } from 'lucide-react'
+import Link from 'next/link'
+import { MessageCircle, BookOpen, Files, Video, FileText } from 'lucide-react'
 import { InteractionModal, EntryFormValues } from './InteractionModal'
 import { logInteraction, type Category, type EntryProducts } from '@/app/actions/sales'
 
@@ -37,11 +38,19 @@ export default function SalesEntry({ products }: { products: EntryProducts }) {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Log a Call</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Select the type of call to record an inquiry or purchase.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Log a Call</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Select the type of call to record an inquiry or purchase.
+          </p>
+        </div>
+        <Link
+          href="/admin/my-records"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        >
+          <FileText className="w-4 h-4" /> View Records
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

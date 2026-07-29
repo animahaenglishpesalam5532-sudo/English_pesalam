@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown, SquarePlay } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import ThemeProvider from './ThemeProvider'
 import ThemeToggle from './ThemeToggle'
@@ -23,6 +23,7 @@ const adminGroups: NavGroup[] = [
     links: [
       { name: 'Sales Entry', href: '/admin/sales-entry', icon: PhoneCall },
       { name: 'Sales Register', href: '/admin/sales-register', icon: Receipt },
+      { name: 'YouTube Revenue', href: '/admin/youtube-revenue', icon: SquarePlay },
       { name: 'Records', href: '/admin/records', icon: FileText },
       { name: 'Team', href: '/admin/team', icon: UserCog },
     ],

@@ -1,11 +1,26 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { Modal } from '@/components/ui/Modal'
 import toast from 'react-hot-toast'
-import type { Category, CallType, InteractionItem, EntryProducts } from '@/app/actions/sales'
+import { getRecentByPhone, type Category, type CallType, type InteractionItem, type EntryProducts, type RecentByPhone } from '@/app/actions/sales'
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  general: 'General',
+  book: 'Book',
+  pdf_ppt: 'PDF & PPT',
+  video_course: 'Video Course',
+}
+
+// Stored phone (India = bare 10 digits, else +E.164) -> value the PhoneInput
+// understands (always prefixed with a country dial code).
+function toInputPhone(stored?: string): string {
+  if (!stored) return ''
+  const trimmed = stored.trim()
+  return trimmed.startsWith('+') ? trimmed : `+91${trimmed.replace(/\D/g, '')}`
+}
 
 export interface EntryFormValues {
   phone: string
@@ -48,8 +63,10 @@ export function InteractionModal({
   initial,
   onSubmit,
 }: Props) {
-  const [phone, setPhone] = useState(initial?.phone ?? '')
-  // Country of the phone input (create mode); India is the default.
+  const [phone, setPhone] = useState(
+    mode === 'edit' ? toInputPhone(initial?.phone) : initial?.phone ?? ''
+  )
+  // Country of the phone input; India is the default.
   const [phoneCountry, setPhoneCountry] = useState<{ iso2: string; dialCode: string }>({ iso2: 'in', dialCode: '91' })
   const [name, setName] = useState(initial?.name ?? '')
   const [items, setItems] = useState<InteractionItem[]>(initial?.items ?? [])
@@ -59,6 +76,8 @@ export function InteractionModal({
   const [callAt, setCallAt] = useState(initial?.callAt ?? nowLocal())
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [recent, setRecent] = useState<RecentByPhone[]>([])
+  const [recentLoading, setRecentLoading] = useState(false)
 
   const groups: ProductGroup[] = useMemo(() => {
     switch (category) {
@@ -99,16 +118,38 @@ export function InteractionModal({
   const storePhone = () =>
     phoneCountry.iso2 === 'in' ? nationalDigits(phone) : `+${phone.replace(/\D/g, '')}`
 
+  // Preview the customer's last 10 calls once a valid number is entered (new entries).
+  useEffect(() => {
+    if (mode === 'edit') return
+    const national = nationalDigits(phone)
+    const valid = phoneCountry.iso2 === 'in' ? national.length === 10 : national.length >= 4
+    if (!valid) {
+      setRecent([])
+      return
+    }
+    let cancelled = false
+    setRecentLoading(true)
+    const t = setTimeout(async () => {
+      const rows = await getRecentByPhone(storePhone())
+      if (!cancelled) {
+        setRecent(rows)
+        setRecentLoading(false)
+      }
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, phoneCountry, mode])
+
   const validate = () => {
     const e: Record<string, string> = {}
-    // Phone can't be changed while editing, so only validate on new entries.
-    if (mode !== 'edit') {
-      const national = nationalDigits(phone)
-      if (!national) e.phone = 'Phone number is required'
-      else if (phoneCountry.iso2 === 'in') {
-        if (national.length !== 10) e.phone = 'Enter a valid 10-digit phone number'
-      } else if (national.length < 4) e.phone = 'Enter a valid phone number'
-    }
+    const national = nationalDigits(phone)
+    if (!national) e.phone = 'Phone number is required'
+    else if (phoneCountry.iso2 === 'in') {
+      if (national.length !== 10) e.phone = 'Enter a valid 10-digit phone number'
+    } else if (national.length < 4) e.phone = 'Enter a valid phone number'
     if (callType === 'purchase') {
       const amt = parseFloat(amount)
       if (!amount.trim() || isNaN(amt) || amt <= 0) e.amount = 'Enter the purchase amount'
@@ -122,8 +163,7 @@ export function InteractionModal({
     ev.preventDefault()
     if (!validate()) return
     setSubmitting(true)
-    // In edit mode phone is unchanged (server ignores it); otherwise normalize it.
-    const res = await onSubmit({ phone: mode === 'edit' ? phone : storePhone(), name, items, notes, callType, amount, callAt })
+    const res = await onSubmit({ phone: storePhone(), name, items, notes, callType, amount, callAt })
     setSubmitting(false)
     if (res && 'error' in res && res.error) {
       toast.error(res.error)
@@ -157,30 +197,60 @@ export function InteractionModal({
         {/* Phone */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
-          {mode === 'edit' ? (
-            <input
-              className={`${inputBase} ${okBorder}`}
-              value={phone}
-              disabled
-              inputMode="tel"
-            />
-          ) : (
-            <PhoneInput
-              defaultCountry="in"
-              value={phone}
-              onChange={(value, meta) => {
-                setPhone(value)
-                setPhoneCountry(meta.country)
-              }}
-              className="phone-field w-full"
-              inputClassName={`!w-full !text-sm !py-2 ${errors.phone ? '!border-red-300' : ''}`}
-              countrySelectorStyleProps={{ buttonClassName: errors.phone ? '!border-red-300' : '' }}
-              placeholder="e.g. 9876543210"
-            />
-          )}
+          <PhoneInput
+            defaultCountry="in"
+            value={phone}
+            onChange={(value, meta) => {
+              setPhone(value)
+              setPhoneCountry(meta.country)
+            }}
+            className="phone-field w-full"
+            inputClassName={`!w-full !text-sm !py-2 ${errors.phone ? '!border-red-300' : ''}`}
+            countrySelectorStyleProps={{ buttonClassName: errors.phone ? '!border-red-300' : '' }}
+            placeholder="e.g. 9876543210"
+          />
           {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
           {mode === 'edit' && (
-            <p className="mt-1 text-xs text-gray-400">Phone number cannot be changed.</p>
+            <p className="mt-1 text-xs text-gray-400">
+              Changing the number moves this record to that customer.
+            </p>
+          )}
+
+          {/* Recent history for this number (new entries only) */}
+          {mode !== 'edit' && (recentLoading || recent.length > 0) && (
+            <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+              <p className="px-1 pb-1 text-xs font-medium text-gray-500">
+                {recentLoading ? 'Checking history…' : `Last ${recent.length} record${recent.length > 1 ? 's' : ''} for this number`}
+              </p>
+              {!recentLoading && (
+                <div className="max-h-40 overflow-y-auto divide-y divide-gray-100">
+                  {recent.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between gap-2 px-1 py-1.5 text-xs">
+                      <div className="min-w-0">
+                        <span className="font-medium text-gray-800">{r.name || '—'}</span>
+                        <span className="text-gray-400"> · </span>
+                        <span className="text-gray-600">
+                          {CATEGORY_LABEL[r.category]}
+                          {r.items.length ? ` (${r.items.map((i) => i.title).join(', ')})` : ''}
+                        </span>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span
+                          className={`inline-flex px-1.5 py-0.5 rounded-full font-medium capitalize ${
+                            r.call_type === 'purchase' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {r.call_type === 'purchase' ? 'Purchased' : 'Enquiry'}
+                        </span>
+                        <span className="text-gray-500 whitespace-nowrap">
+                          {new Date(r.call_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

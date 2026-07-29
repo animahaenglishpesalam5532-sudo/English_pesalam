@@ -52,6 +52,50 @@ export async function getEntryProducts(): Promise<EntryProducts> {
   }
 }
 
+// ----------------------------------------------- recent calls by phone
+
+export interface RecentByPhone {
+  id: string
+  name: string | null
+  category: Category
+  items: InteractionItem[]
+  call_type: CallType
+  call_at: string
+}
+
+// Last 10 interactions for a given phone number (for the entry modal preview).
+export async function getRecentByPhone(phone: string): Promise<RecentByPhone[]> {
+  const user = await getCurrentUser()
+  if (!user || !user.isActive) return []
+
+  const p = phone.trim()
+  if (!p) return []
+
+  const supabase = await createClient()
+  const { data: customer } = await supabase
+    .from('customers')
+    .select('id, name')
+    .eq('phone', p)
+    .maybeSingle()
+  if (!customer) return []
+
+  const { data } = await supabase
+    .from('interactions')
+    .select('id, category, items, call_type, call_at')
+    .eq('customer_id', customer.id)
+    .order('call_at', { ascending: false })
+    .limit(10)
+
+  return (data ?? []).map((d: any) => ({
+    id: d.id,
+    name: customer.name ?? null,
+    category: d.category as Category,
+    items: (d.items as InteractionItem[]) ?? [],
+    call_type: d.call_type as CallType,
+    call_at: d.call_at,
+  }))
+}
+
 // --------------------------------------------------------- create call
 
 export async function logInteraction(
@@ -136,6 +180,7 @@ function itemsLabel(items: InteractionItem[]): string {
 export async function updateInteraction(
   id: string,
   input: {
+    phone?: string
     name?: string
     items: InteractionItem[]
     notes?: string
@@ -158,6 +203,35 @@ export async function updateInteraction(
   const edits: { field: string; old_value: string | null; new_value: string | null }[] = []
   const newName = input.name?.trim() || null
   const newAmount = input.callType === 'purchase' ? input.amount ?? null : null
+
+  // If the phone changed, move this record to the customer with that number
+  // (creating the customer when it doesn't exist yet).
+  let targetCustomerId = current.customer_id
+  const newPhone = input.phone?.trim()
+  if (newPhone && newPhone !== current.phone) {
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('phone', newPhone)
+      .maybeSingle()
+    if (existing) {
+      targetCustomerId = existing.id
+    } else {
+      const { data: created, error: custErr } = await supabase
+        .from('customers')
+        .insert({
+          phone: newPhone,
+          name: newName,
+          is_auto_named: false,
+          created_by: user.id,
+        })
+        .select('id')
+        .single()
+      if (custErr || !created) return { error: custErr?.message ?? 'Could not create customer' }
+      targetCustomerId = created.id
+    }
+    edits.push({ field: 'Phone', old_value: current.phone, new_value: newPhone })
+  }
 
   if ((current.name || null) !== newName) {
     edits.push({ field: 'Name', old_value: current.name, new_value: newName })
@@ -186,6 +260,7 @@ export async function updateInteraction(
   const { error: updErr } = await supabase
     .from('interactions')
     .update({
+      customer_id: targetCustomerId,
       items: input.items,
       notes: input.notes?.trim() || null,
       call_type: input.callType,
@@ -196,12 +271,12 @@ export async function updateInteraction(
     .eq('id', id)
   if (updErr) return { error: updErr.message }
 
-  // Update customer name if it changed
-  if ((current.name || null) !== newName && newName) {
+  // Keep the (target) customer's name in sync when a name was provided
+  if (newName) {
     await supabase
       .from('customers')
       .update({ name: newName, is_auto_named: false, updated_at: new Date().toISOString() })
-      .eq('id', current.customer_id)
+      .eq('id', targetCustomerId)
   }
 
   // Write audit rows
@@ -244,6 +319,7 @@ export interface RegisterFilters {
   to?: string // ISO date (inclusive)
   category?: Category | 'all'
   categories?: Category[] // multi-select; when set, takes precedence over `category`
+  itemIds?: string[] // filter to records containing any of these product ids
   callType?: CallType | 'all'
   staffId?: string | 'all'
   search?: string // name or phone
@@ -321,6 +397,12 @@ export async function getRegisterRows(filters: RegisterFilters): Promise<Registe
     )
   }
 
+  // Keep only records containing at least one of the selected products.
+  if (filters.itemIds?.length) {
+    const wanted = new Set(filters.itemIds)
+    rows = rows.filter((r) => r.items.some((i) => wanted.has(i.id)))
+  }
+
   // Keep only records from customers who have NEVER purchased (pure leads).
   if (filters.onlyLeads) {
     const { data: purch } = await supabase
@@ -354,6 +436,7 @@ export interface CustomerSummaryFilters {
   from?: string
   to?: string
   purchasedCategories?: Category[] // empty/undefined = any product
+  purchasedItemIds?: string[] // specific purchased product ids; honours purchaseMatch
   purchaseMatch?: 'any' | 'all' // 'any' = bought at least one selected; 'all' = bought every selected
   search?: string
   sort?: 'spend_desc' | 'purchases_desc' | 'recent'
@@ -388,7 +471,7 @@ export async function getCustomerSummaries(
   const data = await fetchAllPaged<any>((from, to) => {
     let q = supabase
       .from('interactions')
-      .select('customer_id, category, call_type, amount, call_at, customers(phone, name)')
+      .select('customer_id, category, items, call_type, amount, call_at, customers(phone, name)')
       .order('call_at', { ascending: false })
       .range(from, to)
     if (filters.from) q = q.gte('call_at', `${filters.from}T00:00:00`)
@@ -396,7 +479,7 @@ export async function getCustomerSummaries(
     return q
   })
 
-  type Acc = Omit<CustomerSummary, 'categories'> & { cats: Set<Category> }
+  type Acc = Omit<CustomerSummary, 'categories'> & { cats: Set<Category>; itemIds: Set<string> }
   const map = new Map<string, Acc>()
 
   for (const d of data as any[]) {
@@ -412,6 +495,7 @@ export async function getCustomerSummaries(
         inquiryCount: 0,
         lastPurchaseAt: null,
         cats: new Set<Category>(),
+        itemIds: new Set<string>(),
       }
       map.set(d.customer_id, s)
     }
@@ -419,6 +503,7 @@ export async function getCustomerSummaries(
       s.purchaseCount += 1
       s.totalSpend += Number(d.amount ?? 0)
       s.cats.add(d.category as Category)
+      for (const it of (d.items as InteractionItem[]) ?? []) s.itemIds.add(it.id)
       if (!s.lastPurchaseAt || new Date(d.call_at) > new Date(s.lastPurchaseAt)) {
         s.lastPurchaseAt = d.call_at
       }
@@ -427,9 +512,18 @@ export async function getCustomerSummaries(
     }
   }
 
-  let list: CustomerSummary[] = Array.from(map.values())
-    .filter((s) => s.purchaseCount > 0)
-    .map(({ cats, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
+  let acc = Array.from(map.values()).filter((s) => s.purchaseCount > 0)
+
+  // Filter by specific purchased products (honours the any/all match toggle).
+  if (filters.purchasedItemIds && filters.purchasedItemIds.length) {
+    const wanted = filters.purchasedItemIds
+    acc =
+      filters.purchaseMatch === 'all'
+        ? acc.filter((s) => wanted.every((id) => s.itemIds.has(id)))
+        : acc.filter((s) => wanted.some((id) => s.itemIds.has(id)))
+  }
+
+  let list: CustomerSummary[] = acc.map(({ cats, itemIds, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
 
   if (filters.purchasedCategories && filters.purchasedCategories.length) {
     const wanted = filters.purchasedCategories
@@ -470,6 +564,7 @@ export interface LeadSummaryFilters {
   from?: string
   to?: string
   enquiredCategories?: Category[] // empty/undefined = any category
+  enquiredItemIds?: string[] // specific enquired product ids; honours match
   match?: 'any' | 'all' // 'any' = enquired about at least one selected; 'all' = every selected
   search?: string
   sort?: 'recent' | 'inquiries_desc'
@@ -524,7 +619,7 @@ export async function getLeadSummaries(filters: LeadSummaryFilters): Promise<Lea
   const inquiries = await fetchAllPaged<any>((from, to) => {
     let q = supabase
       .from('interactions')
-      .select('customer_id, category, call_at, customers(phone, name)')
+      .select('customer_id, category, items, call_at, customers(phone, name)')
       .eq('call_type', 'inquiry')
       .order('call_at', { ascending: false })
       .range(from, to)
@@ -533,7 +628,7 @@ export async function getLeadSummaries(filters: LeadSummaryFilters): Promise<Lea
     return q
   })
 
-  type Acc = Omit<LeadSummary, 'categories'> & { cats: Set<Category> }
+  type Acc = Omit<LeadSummary, 'categories'> & { cats: Set<Category>; itemIds: Set<string> }
   const map = new Map<string, Acc>()
 
   for (const d of inquiries) {
@@ -549,19 +644,30 @@ export async function getLeadSummaries(filters: LeadSummaryFilters): Promise<Lea
         inquiryCount: 0,
         lastInquiryAt: null,
         cats: new Set<Category>(),
+        itemIds: new Set<string>(),
       }
       map.set(d.customer_id, s)
     }
     s.inquiryCount += 1
     s.cats.add(d.category as Category)
+    for (const it of (d.items as InteractionItem[]) ?? []) s.itemIds.add(it.id)
     if (!s.lastInquiryAt || new Date(d.call_at) > new Date(s.lastInquiryAt)) {
       s.lastInquiryAt = d.call_at
     }
   }
 
-  let list: LeadSummary[] = Array.from(map.values())
-    .filter((s) => s.inquiryCount > 0)
-    .map(({ cats, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
+  let acc = Array.from(map.values()).filter((s) => s.inquiryCount > 0)
+
+  // Filter by specific enquired products (honours the any/all match toggle).
+  if (filters.enquiredItemIds && filters.enquiredItemIds.length) {
+    const wanted = filters.enquiredItemIds
+    acc =
+      filters.match === 'all'
+        ? acc.filter((s) => wanted.every((id) => s.itemIds.has(id)))
+        : acc.filter((s) => wanted.some((id) => s.itemIds.has(id)))
+  }
+
+  let list: LeadSummary[] = acc.map(({ cats, itemIds, ...rest }) => ({ ...rest, categories: Array.from(cats) }))
 
   if (filters.enquiredCategories && filters.enquiredCategories.length) {
     const wanted = filters.enquiredCategories

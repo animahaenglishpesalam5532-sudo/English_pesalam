@@ -16,6 +16,8 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
   const [members, setMembers] = useState<Member[]>(initialMembers)
   const [showCreate, setShowCreate] = useState(false)
   const [resetFor, setResetFor] = useState<Member | null>(null)
+  const [deleteFor, setDeleteFor] = useState<Member | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   // create form
@@ -64,13 +66,17 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
     toast.success(m.is_active ? 'Member deactivated' : 'Member activated')
   }
 
-  const handleDelete = async (m: Member) => {
-    if (!confirm(`Remove ${m.full_name || m.email}? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    if (!deleteFor) return
+    const m = deleteFor
+    setDeleting(true)
     setBusyId(m.id)
     const res = await deleteStaff(m.id)
+    setDeleting(false)
     setBusyId(null)
     if (res.error) return toast.error(res.error)
     setMembers((prev) => prev.filter((x) => x.id !== m.id))
+    setDeleteFor(null)
     toast.success('Member removed')
   }
 
@@ -133,7 +139,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{m.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                           m.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                         }`}
                       >
@@ -169,7 +175,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
                             <Power className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(m)}
+                            onClick={() => setDeleteFor(m)}
                             disabled={busyId === m.id}
                             title="Remove"
                             className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
@@ -232,6 +238,24 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete confirmation modal */}
+      <Modal isOpen={!!deleteFor} onClose={() => setDeleteFor(null)} title="Remove team member">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to remove{' '}
+            <span className="font-semibold text-gray-900">{deleteFor?.full_name || deleteFor?.email}</span>? This cannot be undone.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setDeleteFor(null)} className="flex-1 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="button" onClick={handleDelete} disabled={deleting} className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+              {deleting ? 'Removing...' : 'Remove'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

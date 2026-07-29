@@ -95,20 +95,25 @@ export default async function RecordsPage({
       .split(',')
       .map((c) => c?.trim())
       .filter((c): c is Category => (validCategories as string[]).includes(c))
+    const purchasedItemIds = (sp?.purchasedItem ?? '').split(',').map((s) => s.trim()).filter(Boolean)
     const custFilters: CustomerSummaryFilters = {
       from: sp?.from ?? '',
       to: sp?.to ?? '',
       purchasedCategories,
+      purchasedItemIds: purchasedItemIds.length ? purchasedItemIds : undefined,
       purchaseMatch: sp?.purchaseMatch === 'all' ? 'all' : 'any',
       search: sp?.search ?? '',
       sort: (sp?.sort as CustomerSummaryFilters['sort']) ?? 'spend_desc',
       page: parsePage(sp?.page),
       pageSize: parsePageSize(sp?.pageSize),
     }
-    const customers = await getCustomerSummaries(custFilters)
+    const [customers, products] = await Promise.all([
+      getCustomerSummaries(custFilters),
+      getEntryProducts(),
+    ])
     return (
       <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
-        <CustomersView data={customers} filters={custFilters} />
+        <CustomersView data={customers} products={products} filters={custFilters} />
       </AdminLayout>
     )
   }
@@ -119,28 +124,35 @@ export default async function RecordsPage({
       .split(',')
       .map((c) => c?.trim())
       .filter((c): c is Category => (validCategories as string[]).includes(c))
+    const enquiredItemIds = (sp?.enquiredItem ?? '').split(',').map((s) => s.trim()).filter(Boolean)
     const leadFilters: LeadSummaryFilters = {
       from: sp?.from ?? '',
       to: sp?.to ?? '',
       enquiredCategories,
+      enquiredItemIds: enquiredItemIds.length ? enquiredItemIds : undefined,
       match: sp?.match === 'all' ? 'all' : 'any',
       search: sp?.search ?? '',
       sort: (sp?.sort as LeadSummaryFilters['sort']) ?? 'recent',
       page: parsePage(sp?.page),
       pageSize: parsePageSize(sp?.pageSize),
     }
-    const leads = await getLeadSummaries(leadFilters)
+    const [leads, products] = await Promise.all([
+      getLeadSummaries(leadFilters),
+      getEntryProducts(),
+    ])
     return (
       <AdminLayout role={user?.role} userName={user?.fullName ?? user?.email}>
-        <LeadsView data={leads} filters={leadFilters} />
+        <LeadsView data={leads} products={products} filters={leadFilters} />
       </AdminLayout>
     )
   }
 
+  const itemIds = (sp?.items ?? '').split(',').map((s) => s.trim()).filter(Boolean)
   const filters: RegisterFilters = {
     from: sp?.from ?? '',
     to: sp?.to ?? '',
     category: (sp?.category as Category | 'all') ?? 'all',
+    itemIds: itemIds.length ? itemIds : undefined,
     callType: (sp?.callType as CallType | 'all') ?? 'all',
     staffId: sp?.staffId ?? 'all',
     search: sp?.search ?? '',

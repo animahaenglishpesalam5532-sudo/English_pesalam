@@ -26,6 +26,18 @@ const CATEGORY_LABEL: Record<Category, string> = {
   video_course: 'Video Course',
 }
 
+// Products belonging to the selected categories, for the item-level filter.
+function productOptions(products: EntryProducts, cats: Category[]): { id: string; label: string }[] {
+  const out: { id: string; label: string }[] = []
+  if (cats.includes('book')) products.books.forEach((b) => out.push({ id: b.id, label: b.title }))
+  if (cats.includes('pdf_ppt')) {
+    products.pdfs.forEach((p) => out.push({ id: p.id, label: `PDF · ${p.title}` }))
+    products.ppts.forEach((p) => out.push({ id: p.id, label: `PPT · ${p.title}` }))
+  }
+  if (cats.includes('video_course')) products.videoCourses.forEach((v) => out.push({ id: v.id, label: v.title }))
+  return out
+}
+
 function fmtMoney(n: number) {
   return `₹${Number(n).toLocaleString('en-IN')}`
 }
@@ -69,6 +81,7 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
     if (next.from) params.set('from', next.from)
     if (next.to) params.set('to', next.to)
     if (next.category && next.category !== 'all') params.set('category', next.category)
+    if (next.itemIds?.length) params.set('items', next.itemIds.join(','))
     if (next.callType && next.callType !== 'all') params.set('callType', next.callType)
     if (next.staffId && next.staffId !== 'all') params.set('staffId', next.staffId)
     if (next.search?.trim()) params.set('search', next.search.trim())
@@ -106,6 +119,7 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
   const handleEditSubmit = async (values: EntryFormValues) => {
     if (!editRow) return
     return updateInteraction(editRow.id, {
+      phone: values.phone,
       name: values.name,
       items: values.items,
       notes: values.notes,
@@ -185,7 +199,7 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">Category</label>
-            <select className={`${selectCls} w-full`} value={f.category ?? 'all'} onChange={(e) => setF({ ...f, category: e.target.value as Category | 'all' })}>
+            <select className={`${selectCls} w-full`} value={f.category ?? 'all'} onChange={(e) => setF({ ...f, category: e.target.value as Category | 'all', itemIds: [] })}>
               <option value="all">All</option>
               <option value="general">General</option>
               <option value="book">Book</option>
@@ -221,6 +235,43 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
             </select>
           </div>
         </div>
+
+        {/* Item-level filter for the selected category */}
+        {(() => {
+          const cats = f.category && f.category !== 'all' ? [f.category] : []
+          const opts = productOptions(products, cats)
+          if (!opts.length) return null
+          const selected = new Set(f.itemIds ?? [])
+          const toggle = (id: string) => {
+            const s = new Set(selected)
+            s.has(id) ? s.delete(id) : s.add(id)
+            setF({ ...f, itemIds: Array.from(s) })
+          }
+          return (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                {CATEGORY_LABEL[cats[0]]} items {selected.size === 0 && <span className="text-gray-400">(all)</span>}
+              </label>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto rounded-lg border border-gray-200 p-2">
+                {opts.map((o) => {
+                  const active = selected.has(o.id)
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => toggle(o.id)}
+                      className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                        active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Search + Apply */}
         <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">

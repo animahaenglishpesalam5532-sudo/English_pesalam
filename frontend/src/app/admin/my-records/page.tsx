@@ -3,11 +3,12 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import StaffRecords from '@/components/admin/StaffRecords'
 import { logout } from '@/app/actions/auth'
 import { getCurrentUser } from '@/lib/auth/roles'
-import { getRegisterPage, getEntryProducts, type RegisterFilters } from '@/app/actions/sales'
+import { getRegisterPage, getEntryProducts, type RegisterFilters, type Category } from '@/app/actions/sales'
 
 export const dynamic = 'force-dynamic'
 
 const DEFAULT_PAGE_SIZE = 25
+const VALID_CATEGORIES: Category[] = ['general', 'book', 'pdf_ppt', 'video_course']
 
 function parsePage(v?: string) {
   const n = Number(v)
@@ -16,6 +17,11 @@ function parsePage(v?: string) {
 function parsePageSize(v?: string) {
   const n = Number(v)
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_PAGE_SIZE
+}
+function parseCategories(v?: string): Category[] | undefined {
+  if (!v) return undefined
+  const list = v.split(',').filter((c): c is Category => VALID_CATEGORIES.includes(c as Category))
+  return list.length ? list : undefined
 }
 
 export default async function MyRecordsPage({
@@ -49,6 +55,9 @@ export default async function MyRecordsPage({
   }
 
   const filters: RegisterFilters = {
+    from: sp.from || undefined,
+    to: sp.to || undefined,
+    categories: parseCategories(sp.categories),
     search: sp.search ?? '',
     sort: 'recent',
     page: parsePage(sp.page),
