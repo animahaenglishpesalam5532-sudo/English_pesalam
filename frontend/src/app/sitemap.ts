@@ -13,9 +13,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl('/'), lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: absoluteUrl('/blogs'), lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: absoluteUrl('/ppts'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
-    { url: absoluteUrl('/pdfs'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
-    { url: absoluteUrl('/online-classes'), lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: absoluteUrl('/pdfs'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: absoluteUrl('/ppts'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: absoluteUrl('/online-classes'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: absoluteUrl('/quiz'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
   ]
 
   try {
@@ -45,7 +46,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
-    return [...staticRoutes, ...blogRoutes, ...pageRoutes]
+    // Individual quiz pages (/quiz/{id}) are stored as a JSON settings row.
+    let quizRoutes: MetadataRoute.Sitemap = []
+    try {
+      const { data: quizSetting } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'quizzes')
+        .single()
+
+      if (quizSetting?.value) {
+        const quizzes = JSON.parse(quizSetting.value) as Array<{ id: string; createdAt?: string }>
+        quizRoutes = quizzes
+          .filter((q) => q?.id)
+          .map((q) => ({
+            url: absoluteUrl(`/quiz/${q.id}`),
+            lastModified: new Date(q.createdAt ?? now),
+            changeFrequency: 'weekly',
+            priority: 0.6,
+          }))
+      }
+    } catch {
+      // Ignore malformed/missing quiz data; the /quiz list route still ships.
+    }
+
+    return [...staticRoutes, ...blogRoutes, ...pageRoutes, ...quizRoutes]
   } catch {
     // If the DB is unreachable at build time, still emit the static routes.
     return staticRoutes

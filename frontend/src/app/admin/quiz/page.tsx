@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { PlusCircle, Trash2, Edit2, ArrowLeft, Plus, Trash, Check, HelpCircle, Loader2 } from 'lucide-react'
+import { PlusCircle, Trash2, Edit2, ArrowLeft, Plus, Trash, Check, HelpCircle, Loader2, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Quiz, Question, getQuizzes, saveQuizzes } from '@/app/actions/quiz'
 import { Modal } from '@/components/ui/Modal'
@@ -18,6 +18,8 @@ export default function AdminQuizPage() {
   
   // Form states
   const [quizTitle, setQuizTitle] = useState('')
+  const [quizDescription, setQuizDescription] = useState('')
+  const [quizVideoUrl, setQuizVideoUrl] = useState('')
   const [questions, setQuestions] = useState<Question[]>([
     {
       id: 'q-1',
@@ -30,6 +32,11 @@ export default function AdminQuizPage() {
   
   // Delete state
   const [deleteQuizId, setDeleteQuizId] = useState<string | null>(null)
+
+  // Drag & drop reorder state
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [isReordering, setIsReordering] = useState(false)
 
   // Fetch quizzes on load
   const loadQuizzes = async () => {
@@ -53,6 +60,8 @@ export default function AdminQuizPage() {
     setView('list')
     setActiveQuizId(null)
     setQuizTitle('')
+    setQuizDescription('')
+    setQuizVideoUrl('')
     setQuestions([
       {
         id: 'q-' + Date.now(),
@@ -67,6 +76,8 @@ export default function AdminQuizPage() {
   // Open Create Form
   const handleOpenCreate = () => {
     setQuizTitle('')
+    setQuizDescription('')
+    setQuizVideoUrl('')
     setQuestions([
       {
         id: 'q-' + Date.now(),
@@ -83,6 +94,8 @@ export default function AdminQuizPage() {
   const handleOpenEdit = (quiz: Quiz) => {
     setActiveQuizId(quiz.id)
     setQuizTitle(quiz.title)
+    setQuizDescription(quiz.description || '')
+    setQuizVideoUrl(quiz.videoUrl || '')
     // Deep clone questions to avoid direct state mutation issues
     setQuestions(
       quiz.questions.map(q => ({
@@ -179,17 +192,32 @@ export default function AdminQuizPage() {
       let updatedQuizzes = [...quizzes]
       
       if (view === 'create') {
+        // Place new quizzes at the end of the current order.
+        const maxOrder = updatedQuizzes.reduce(
+          (max, q) => (typeof q.order === 'number' && q.order > max ? q.order : max),
+          0
+        )
         const newQuiz: Quiz = {
           id: 'quiz-' + Date.now(),
           title: quizTitle,
+          description: quizDescription.trim() || undefined,
+          videoUrl: quizVideoUrl.trim() || undefined,
+          order: maxOrder + 1,
           questions: questions,
           createdAt: new Date().toISOString()
         }
         updatedQuizzes.push(newQuiz)
       } else if (view === 'edit' && activeQuizId) {
-        updatedQuizzes = updatedQuizzes.map(q => 
-          q.id === activeQuizId 
-            ? { ...q, title: quizTitle, questions: questions } 
+        // Preserve the existing display order when editing.
+        updatedQuizzes = updatedQuizzes.map(q =>
+          q.id === activeQuizId
+            ? {
+                ...q,
+                title: quizTitle,
+                description: quizDescription.trim() || undefined,
+                videoUrl: quizVideoUrl.trim() || undefined,
+                questions: questions
+              }
             : q
         )
       }
@@ -231,6 +259,39 @@ export default function AdminQuizPage() {
     }
   }
 
+  // Persist a reordered list, assigning sequential order values.
+  const persistOrder = async (reordered: Quiz[]) => {
+    const withOrder = reordered.map((q, i) => ({ ...q, order: i + 1 }))
+    setQuizzes(withOrder)
+    setIsReordering(true)
+    try {
+      const res = await saveQuizzes(withOrder)
+      if (res.error) {
+        toast.error(res.error)
+        loadQuizzes() // revert to server state on failure
+      } else {
+        toast.success('Quiz order updated!')
+      }
+    } catch (e) {
+      toast.error('Failed to update order')
+      loadQuizzes()
+    } finally {
+      setIsReordering(false)
+    }
+  }
+
+  const handleDrop = (dropIndex: number) => {
+    const from = dragIndex
+    setDragIndex(null)
+    setDragOverIndex(null)
+    if (from === null || from === dropIndex) return
+
+    const reordered = [...quizzes]
+    const [moved] = reordered.splice(from, 1)
+    reordered.splice(dropIndex, 0, moved)
+    persistOrder(reordered)
+  }
+
   return (
     <AdminLayout>
       {view === 'list' ? (
@@ -239,7 +300,7 @@ export default function AdminQuizPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Quizzes</h1>
-              <p className="mt-1 text-sm text-gray-500">Manage learning quizzes for your students.</p>
+              <p className="mt-1 text-sm text-gray-500">Manage learning quizzes for your students. Drag rows to reorder how they appear to users.</p>
             </div>
             <button
               onClick={handleOpenCreate}
@@ -274,6 +335,7 @@ export default function AdminQuizPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th scope="col" className="w-10 px-3 py-4"><span className="sr-only">Reorder</span></th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Quiz Title</th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Questions</th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Created</th>
@@ -281,8 +343,31 @@ export default function AdminQuizPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {quizzes.map((quiz) => (
-                      <tr key={quiz.id} className="hover:bg-gray-50/60 transition-colors">
+                    {quizzes.map((quiz, index) => (
+                      <tr
+                        key={quiz.id}
+                        draggable={!isReordering}
+                        onDragStart={() => setDragIndex(index)}
+                        onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index) }}
+                        onDragLeave={() => setDragOverIndex(prev => (prev === index ? null : prev))}
+                        onDrop={() => handleDrop(index)}
+                        onDragEnd={() => { setDragIndex(null); setDragOverIndex(null) }}
+                        className={`transition-colors ${
+                          dragIndex === index ? 'opacity-40' : ''
+                        } ${
+                          dragOverIndex === index && dragIndex !== index
+                            ? 'bg-blue-50/70 border-t-2 border-blue-400'
+                            : 'hover:bg-gray-50/60'
+                        }`}
+                      >
+                        <td className="px-3 py-4 whitespace-nowrap text-center">
+                          <span
+                            className="inline-flex cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                            title="Drag to reorder"
+                          >
+                            <GripVertical className="w-4 h-4" />
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-bold text-gray-900">{quiz.title}</div>
                         </td>
@@ -372,6 +457,29 @@ export default function AdminQuizPage() {
                 placeholder="e.g. Tenses and Prepositions Grammar Test"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
+              <textarea
+                value={quizDescription}
+                onChange={e => setQuizDescription(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 outline-none min-h-[90px] resize-y"
+                placeholder="A short description shown to users on the quiz card and quiz page."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">YouTube Video URL</label>
+              <input
+                type="text"
+                value={quizVideoUrl}
+                onChange={e => setQuizVideoUrl(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 outline-none"
+                placeholder="e.g. https://www.youtube.com/watch?v=..."
+              />
+              <p className="text-xs text-gray-400 mt-1">Optional. Shown below the quiz on the user side.</p>
+            </div>
+            <p className="text-xs text-gray-400 border-t pt-3">Tip: The display order is controlled by dragging quizzes in the list view.</p>
           </div>
 
           {/* Questions Container */}

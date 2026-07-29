@@ -61,6 +61,9 @@ export function HeroSection({
   return (
     <section id="home" className="pt-28 pb-12 px-4 w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
+      {/* SEO H1 (accessible, single keyword-rich page heading) */}
+      <h1 className="sr-only">Learn Spoken English in Tamil</h1>
+
       {/* Left Column - Content */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
@@ -74,9 +77,9 @@ export function HeroSection({
         </div>
 
         {/* Main Title */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 font-jakarta leading-tight">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-6 font-jakarta leading-tight">
           {renderTitle(heroTitle)}
-        </h1>
+        </h2>
 
         {/* Description */}
         <p className="text-slate-600 text-sm md:text-base lg:text-lg leading-relaxed mb-8 max-w-xl">

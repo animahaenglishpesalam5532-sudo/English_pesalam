@@ -8,8 +8,12 @@ export function ViewTracker() {
   const pathname = usePathname()
 
   useEffect(() => {
-    // Ignore private/admin routes
-    if (pathname.startsWith('/admin') || pathname.startsWith('/api')) {
+    // Ignore private/admin routes and the login page
+    if (
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/api') ||
+      pathname === '/login'
+    ) {
       return
     }
 
