@@ -10,7 +10,7 @@ export async function saveAuthor(formData: FormData, id?: string) {
   const profile_image = formData.get('profile_image') as string
   const is_default = formData.get('is_default') === 'true'
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // If setting this author as the default, reset all other authors' is_default to false
   if (is_default) {
@@ -44,7 +44,7 @@ export async function saveAuthor(formData: FormData, id?: string) {
 }
 
 export async function deleteAuthor(id: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Check if author has associated blogs
   const { data: blogs, error: fetchError } = await supabase

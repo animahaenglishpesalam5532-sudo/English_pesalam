@@ -65,7 +65,7 @@ export function VideoCourseCard({ course, whatsappUrl }: VideoCourseCardProps) {
             </div>
           </div>
           <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase tracking-tighter">
-            Video Course
+            Online Class
           </div>
         </div>
 

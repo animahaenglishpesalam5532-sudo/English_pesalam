@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { v2 as cloudinary } from 'cloudinary'
 
 export async function deleteBlog(id: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { error } = await supabase.from('blogs').delete().eq('id', id)
 
@@ -23,7 +23,7 @@ export async function deleteBlog(id: string) {
 }
 
 export async function getFeaturedBlogsCount(excludeId?: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   let query = supabase.from('blogs').select('id', { count: 'exact' }).eq('is_featured', true)
   if (excludeId) {
     query = query.neq('id', excludeId)
@@ -103,7 +103,7 @@ export async function saveBlog(formData: FormData, id?: string) {
     }
   }
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   if (is_featured) {
     let query = supabase.from('blogs').select('id', { count: 'exact' }).eq('is_featured', true)

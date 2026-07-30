@@ -7,13 +7,14 @@ import type { Metadata } from 'next'
 export const dynamicParams = true;
 export const revalidate = 3600;
 
-export async function generateMetadata({ params }: { params: { page: string } }): Promise<Metadata> {
-  const page = parseInt(params.page, 10)
+export async function generateMetadata({ params }: { params: Promise<{ page: string }> }): Promise<Metadata> {
+  const { page: pageParam } = await params
+  const page = parseInt(pageParam, 10)
   return {
     title: `English Pesalam Blog - Page ${Number.isNaN(page) ? '' : page}`.trim(),
     description:
       'Practical English lessons, grammar tips, and spoken-English guides explained simply in Tamil.',
-    alternates: { canonical: `/blogs/p/${params.page}` },
+    alternates: { canonical: `/blogs/p/${pageParam}` },
   }
 }
 
@@ -44,9 +45,10 @@ export async function generateStaticParams() {
 export default async function PaginatedBlogsPage({
   params,
 }: {
-  params: { page: string }
+  params: Promise<{ page: string }>
 }) {
-  const page = parseInt(params.page, 10);
+  const { page: pageParam } = await params
+  const page = parseInt(pageParam, 10);
 
   if (isNaN(page) || page < 2) {
     notFound()

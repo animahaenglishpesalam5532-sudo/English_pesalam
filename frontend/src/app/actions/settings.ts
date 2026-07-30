@@ -5,7 +5,7 @@ import { createStaticClient } from '@/lib/supabase/static'
 import { revalidatePath } from 'next/cache'
 
 export async function getSetting(key: string, useStatic: boolean = false) {
-  const supabase = useStatic ? createStaticClient() : createClient()
+  const supabase = useStatic ? createStaticClient() : await createClient()
   const { data, error } = await supabase
     .from('settings')
     .select('value')
@@ -20,7 +20,7 @@ export async function getSetting(key: string, useStatic: boolean = false) {
 }
 
 export async function setSetting(key: string, value: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   const { error } = await supabase
     .from('settings')

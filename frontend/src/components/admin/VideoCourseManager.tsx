@@ -85,7 +85,7 @@ export default function VideoCourseManager() {
       setCourses(data || [])
       setTotalCount(count || 0)
     } catch (error: any) {
-      toast.error('Failed to fetch video courses: ' + error.message)
+      toast.error('Failed to fetch online classes: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -212,15 +212,15 @@ export default function VideoCourseManager() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Video Course Manager</h1>
-          <p className="text-gray-500">Manage premium video courses and masterclasses.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Online Class Manager</h1>
+          <p className="text-gray-500">Manage premium online classes and masterclasses.</p>
         </div>
         <button
           onClick={() => { resetForm(); setIsModalOpen(true); }}
           className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5 mr-2" />
-          Add Video Course
+          Add Online Class
         </button>
       </div>
 
@@ -362,7 +362,7 @@ export default function VideoCourseManager() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={isEditing ? 'Edit Video Course' : 'Add New Video Course'}
+        title={isEditing ? 'Edit Online Class' : 'Add New Online Class'}
       >
         <form onSubmit={handleSave} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

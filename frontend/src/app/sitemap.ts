@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl('/blogs'), lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: absoluteUrl('/pdfs'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: absoluteUrl('/ppts'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: absoluteUrl('/online-classes'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: absoluteUrl('/quiz'), lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
   ]
 

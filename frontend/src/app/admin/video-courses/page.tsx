@@ -3,8 +3,8 @@ import VideoCourseManager from '@/components/admin/VideoCourseManager'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Video Course Manager | Admin Dashboard',
-  description: 'Manage Premium Video Courses and Masterclasses',
+  title: 'Online Class Manager | Admin Dashboard',
+  description: 'Manage Premium Online Classes and Masterclasses',
 }
 
 export default function VideoCourseManagerPage() {

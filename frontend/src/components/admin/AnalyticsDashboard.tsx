@@ -25,7 +25,7 @@ export default function AnalyticsDashboard() {
     if (path === '/authors') return 'Authors'
     if (path === '/pdfs') return 'PDF Guides'
     if (path === '/ppts') return 'PPT Masterclass'
-    if (path === '/video-courses') return 'Video Courses'
+    if (path === '/online-classes' || path === '/video-courses') return 'Online Classes'
     if (path.startsWith('/blogs/')) return `Blog: ${path.replace('/blogs/', '').replace(/-/g, ' ')}`
     return path
   }

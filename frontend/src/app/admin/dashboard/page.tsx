@@ -4,7 +4,7 @@ import { FileText, Users, PlusCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Fetch stats concurrently
   const [blogsCountRes, authorsCountRes, recentBlogsRes] = await Promise.all([
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
                     {new Date(blog.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                   </p>
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                   blog.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   {blog.status}

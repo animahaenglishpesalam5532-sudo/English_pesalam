@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, Search, FileText, Download, Eye, Edit2, Trash2, ExternalLink, Image as ImageIcon, Upload, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Search, FileText, Download, Eye, Edit2, Trash2, ExternalLink, Image as ImageIcon, Upload, Loader2, X, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from 'react-hot-toast'
@@ -16,6 +16,7 @@ interface PDFData {
   selling_price: string
   is_visible: boolean
   is_featured: boolean
+  sort_order: number
   created_at: string
 }
 
@@ -48,6 +49,12 @@ export default function PDFManager() {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Drag-and-drop reordering
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [savingOrder, setSavingOrder] = useState(false)
+  const canReorder = !debouncedSearch
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -77,6 +84,7 @@ export default function PDFManager() {
       const to = from + pageSize - 1
 
       const { data, count, error } = await query
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false })
         .range(from, to)
 
@@ -144,7 +152,7 @@ export default function PDFManager() {
       } else {
         const { error } = await supabase
           .from('pdfs')
-          .insert([payload])
+          .insert([{ ...payload, sort_order: totalCount }])
 
         if (error) throw error
         toast.success('PDF created successfully')
@@ -206,6 +214,43 @@ export default function PDFManager() {
     setIsModalOpen(true)
   }
 
+  // Persist the new order by writing sort_order to every affected row. The
+  // offset keeps ordering consistent across paginated pages.
+  const persistOrder = async (ordered: PDFData[]) => {
+    const base = (currentPage - 1) * pageSize
+    setSavingOrder(true)
+    try {
+      const results = await Promise.all(
+        ordered.map((pdf, i) =>
+          supabase.from('pdfs').update({ sort_order: base + i }).eq('id', pdf.id)
+        )
+      )
+      const failed = results.find((r) => r.error)
+      if (failed?.error) throw failed.error
+      setPdfs(ordered.map((pdf, i) => ({ ...pdf, sort_order: base + i })))
+      toast.success('Order updated')
+    } catch (error: any) {
+      toast.error('Could not save order: ' + error.message)
+      fetchPDFs()
+    } finally {
+      setSavingOrder(false)
+    }
+  }
+
+  const handleDrop = (dropIndex: number) => {
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    const reordered = [...pdfs]
+    const [moved] = reordered.splice(draggedIndex, 1)
+    reordered.splice(dropIndex, 0, moved)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+    persistOrder(reordered)
+  }
+
   const totalPages = Math.ceil(totalCount / pageSize)
 
   return (
@@ -236,12 +281,21 @@ export default function PDFManager() {
         />
       </div>
 
+      <p className="text-xs text-gray-500 flex items-center gap-1.5">
+        <GripVertical className="w-3.5 h-3.5 text-gray-400" />
+        {canReorder
+          ? 'Drag rows by the handle to change the order shown on the public PDF page.'
+          : 'Clear the search to reorder PDFs.'}
+        {savingOrder && <span className="text-blue-500">Saving order…</span>}
+      </p>
+
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
               <tr>
+                <th className="w-10 px-2 py-4"></th>
                 <th className="px-6 py-4 font-medium">Product</th>
                 <th className="px-6 py-4 font-medium">Pricing</th>
                 <th className="px-6 py-4 font-medium">Status</th>
@@ -252,6 +306,7 @@ export default function PDFManager() {
               {loading && pdfs.length === 0 ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
+                    <td className="px-2 py-4"><div className="w-5 h-5 bg-gray-100 rounded mx-auto"></div></td>
                     <td className="px-6 py-4 flex items-center gap-3">
                       <div className="w-12 h-12 bg-gray-100 rounded"></div>
                       <div className="space-y-2">
@@ -266,14 +321,44 @@ export default function PDFManager() {
                 ))
               ) : pdfs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                     <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p>No PDFs found. Start by adding one!</p>
                   </td>
                 </tr>
               ) : (
-                pdfs.map((pdf) => (
-                  <tr key={pdf.id} className="hover:bg-gray-50 transition-colors">
+                pdfs.map((pdf, index) => (
+                  <tr
+                    key={pdf.id}
+                    draggable={canReorder && !savingOrder}
+                    onDragStart={() => canReorder && setDraggedIndex(index)}
+                    onDragOver={(e) => {
+                      if (!canReorder || draggedIndex === null) return
+                      e.preventDefault()
+                      setDragOverIndex(index)
+                    }}
+                    onDragEnd={() => { setDraggedIndex(null); setDragOverIndex(null) }}
+                    onDrop={(e) => { e.preventDefault(); handleDrop(index) }}
+                    className={`transition-colors ${
+                      draggedIndex === index ? 'opacity-40' : ''
+                    } ${
+                      dragOverIndex === index && draggedIndex !== index
+                        ? 'border-t-2 border-blue-400'
+                        : ''
+                    } hover:bg-gray-50`}
+                  >
+                    <td className="px-2 py-4 text-center">
+                      {canReorder ? (
+                        <span
+                          className="inline-flex cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500"
+                          title="Drag to reorder"
+                        >
+                          <GripVertical className="w-5 h-5" />
+                        </span>
+                      ) : (
+                        <GripVertical className="w-5 h-5 text-gray-200 mx-auto" />
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         {pdf.image_url ? (

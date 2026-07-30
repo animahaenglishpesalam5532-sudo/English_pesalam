@@ -51,11 +51,11 @@ export default function AdminLoginPage() {
               <Form className="mt-8 space-y-6">
                 <div className="rounded-md space-y-4">
                   <FormikInput
-                    label="Email Address"
+                    label="Email or Username"
                     name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="admin@example.com"
+                    type="text"
+                    autoComplete="username"
+                    placeholder="username or admin@example.com"
                   />
                   
                   <div>

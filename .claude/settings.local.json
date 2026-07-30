@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find E:Personalprojecstsgitenglish-pesalamEnglish_pesalam/frontend -iname *.ico -o -iname icon.* -not -path */node_modules/*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc -l \"public/import-data/BOOK STATUS REPORT - July - 2026 \\(1\\).csv\" \"public/import-data/BOOK STATUS REPORT - July - 2026.csv\")",
+      "Bash(tail -8 \"BOOK STATUS REPORT - July - 2026 \\(1\\).csv\")",
+      "Bash(for fpath:*)",
+      "Bash(do echo:*)",
+      "Read(//e/Personal/projecsts/git/english-pesalam/English_pesalam/frontend/public/import-data/$2 ~ /^[0-9]{2}/[0-9]{2}/[0-9]{4}$/**)",
+      "Bash(sort -t/ -k3,3n -k2,2n -k1,1n)",
+      "Bash(done)",
+      "Bash(node scripts/diag-book-dates.mjs)",
+      "Bash(node scripts/import-july-remaining.mjs)",
+      "Bash(node scripts/diag-profiles.mjs)",
+      "Bash(node scripts/reassign-null-creator.mjs)",
+      "Bash(node scripts/import-july-pdf-remaining.mjs)",
+      "Bash(node scripts/import-july-online-remaining.mjs)",
+      "Bash(node scripts/import-book-blankdate.mjs)",
+      "Bash(node -e ':*)",
+      "Bash(sort -k2)",
+      "Bash(node scripts/import-pdf-datefix.mjs)",
+      "Bash(node -e \"const l=require\\(''lucide-react''\\); console.log\\(Object.keys\\(l\\).filter\\(k=>/youtube|play|clapper|tv|monitor|film/i.test\\(k\\)\\).join\\('', ''\\)\\)\")"
+    ]
+  }
+}

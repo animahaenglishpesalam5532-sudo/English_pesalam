@@ -1,0 +1,54 @@
+DATA MIGRATION - DISCREPANCY REPORT
+English Pesalam Sales Register (Book, PDF/PPT, Online Class - July/June/May 2026)
+Prepared: 2026-07-21
+
+====================================================================
+A. DUPLICATE PURCHASE ENTRIES - DOUBLE-COUNTED REVENUE (ONLINE CLASS)
+====================================================================
+Same phone marked "joined" more than once. These inflate sales/revenue.
+
+  1. 94882 04441 | Ranjit   | 14/07 Rs950 AND 15/07 Rs950   (spotted by reviewer)
+  2. 80988 75676 | Pramila  | 25/06 Rs850 x2 SAME DATE       (near-certain duplicate)
+  3. 93607 13375 | Poobalan | 25/06, 26/06, 28/06 - Rs850 x3 (three joined entries)
+  4. 89397 83971 | Ashok    | 01/06 Rs850 AND 29/06 Rs850    (different dates - verify)
+  5. 75501 50728 | Karthika | 26/06 Rs850 AND 27/06 Rs850    (different dates - verify)
+
+  Note: Same-date repeats (Pramila) are near-certain duplicates.
+  Different-date repeats may be genuine (re-joined / shared phone) - needs confirmation.
+
+====================================================================
+B. STATUS vs AMOUNT CONFLICTS (ONLINE CLASS)
+====================================================================
+  6. June | Farzana | 97890 89156 | Marked JOINED but amount BLANK
+        -> Imported as inquiry. NO revenue recorded. Needs amount if it was a real sale.
+  7. June | Mathi   | 82703 54960 | Status "nill" but Rs850 filled
+        -> Confirmed as a sale. ALREADY FIXED to purchase Rs850.
+
+====================================================================
+C. DATA-FORMAT ISSUES (ONLINE CLASS - auto-corrected on import)
+====================================================================
+  8. May dates malformed: "30.05.2026" (dots) + nine x "31-05/2026" (dash/slash mix)
+        -> Normalized to dd/mm/yyyy.
+  9. Status spelling variants: "JOINTED" (typo for joined), "nill / nil / nii".
+ 10. Non-standard / suspicious phone numbers (July), kept as entered - several look
+     like data-entry errors:
+        65 9189 1925, 33 6 72 08 56 07, 60 19-778 2073, 49 1590 6340770,
+        (709) 986-6631, 651 150 4701, 7397 491 277, 965 6092 7401, 76 480 1335
+
+====================================================================
+D. BOOK SHEETS (earlier)
+====================================================================
+ 11. June: date typo "06/06/2016" -> corrected to 2026.
+ 12. May: sheet had extra ORDER STATUS / ORDER DATE columns (handled via qty-column param).
+
+====================================================================
+E. PDF/PPT SHEETS (earlier)
+====================================================================
+ 13. June PDF: 3 rows with product "7 DAYS CLASS", status "nill", no amount
+        -> Treated as inquiries (product named but not purchased).
+
+====================================================================
+SUMMARY
+====================================================================
+Items 1-7 are worth acting on for data accuracy.
+Items 8-13 were format issues already handled during import.

@@ -10,14 +10,15 @@ import { Breadcrumbs } from "@/components/Breadcrumbs"
 export const revalidate = 0 // No caching for live quiz edits
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function QuizPage({ params }: PageProps) {
+  const { id } = await params
   const quizzes = await getQuizzes()
-  const quiz = quizzes.find(q => q.id === params.id)
+  const quiz = quizzes.find(q => q.id === id)
   
   if (!quiz) {
     redirect('/quiz')
