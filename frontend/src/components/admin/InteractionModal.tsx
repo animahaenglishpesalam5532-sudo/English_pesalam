@@ -146,11 +146,25 @@ export function InteractionModal({
       const exists = prev.find((i) => i.type === type && i.id === id)
       return exists
         ? prev.filter((i) => !(i.type === type && i.id === id))
-        : [...prev, { type, id, title: itemTitle }]
+        : [...prev, { type, id, title: itemTitle, ...(type === 'book' ? { qty: 1 } : {}) }]
     })
     // Reset manual-edit flag so price auto-fills on next selection change
     amountManuallyEdited.current = false
   }
+
+  // Update the quantity of a selected book. `undefined` = field cleared while
+  // typing; the value is validated on save so the user can freely backspace.
+  const setItemQty = (type: InteractionItem['type'], id: string, qty: number | undefined) => {
+    setItems((prev) =>
+      prev.map((i) => (i.type === type && i.id === id ? { ...i, qty } : i))
+    )
+    // Reset manual-edit flag so price auto-fills with the new quantity
+    amountManuallyEdited.current = false
+  }
+
+  // Raw quantity for the input (empty string when the field has been cleared).
+  const itemQty = (type: InteractionItem['type'], id: string): number | '' =>
+    items.find((i) => i.type === type && i.id === id)?.qty ?? ''
 
   const isSelected = (type: InteractionItem['type'], id: string) =>
     items.some((i) => i.type === type && i.id === id)
@@ -202,7 +216,7 @@ export function InteractionModal({
       // Online Class uses a single flat price from Settings, not per-item pricing
       total = livePrice['__online_class_price__'] ?? 0
     } else {
-      total = items.reduce((sum, item) => sum + (livePrice[item.id] ?? 0), 0)
+      total = items.reduce((sum, item) => sum + (livePrice[item.id] ?? 0) * (item.qty ?? 1), 0)
     }
     if (total > 0) setAmount(String(total))
   }, [callType, items, livePrice, category])
@@ -230,6 +244,9 @@ export function InteractionModal({
     if (callType === 'purchase') {
       const amt = parseFloat(amount)
       if (!amount.trim() || isNaN(amt) || amt <= 0) e.amount = 'Enter the purchase amount'
+      if (items.some((i) => i.type === 'book' && (i.qty == null || i.qty < 1))) {
+        e.qty = 'Minimum quantity should be 1'
+      }
     }
     if (!callAt) e.callAt = 'Date & time is required'
     setErrors(e)
@@ -338,21 +355,52 @@ export function InteractionModal({
               <p className="text-sm text-gray-400">No {g.label.toLowerCase()} available.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
-                {g.list.map((p) => (
-                  <label
-                    key={p.id}
-                    className="flex items-center gap-2 text-sm text-gray-700 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={isSelected(g.type, p.id)}
-                      onChange={() => toggleItem(g.type, p.id, p.title)}
-                    />
-                    <span className="truncate">{p.title}</span>
-                  </label>
-                ))}
+                {g.list.map((p) => {
+                  const selected = isSelected(g.type, p.id)
+                  const showQty = g.type === 'book' && selected && callType === 'purchase'
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50"
+                    >
+                      <label className="flex flex-1 min-w-0 items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selected}
+                          onChange={() => toggleItem(g.type, p.id, p.title)}
+                        />
+                        <span className="truncate">{p.title}</span>
+                      </label>
+                      {showQty && (() => {
+                        const q = itemQty(g.type, p.id)
+                        const invalid = !!errors.qty && (q === '' || Number(q) < 1)
+                        return (
+                          <div className="flex shrink-0 items-center gap-1">
+                            <span className="text-xs text-gray-500">Qty</span>
+                            <input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={q}
+                              onChange={(e) => {
+                                const v = e.target.value
+                                setItemQty(g.type, p.id, v === '' ? undefined : parseInt(v, 10))
+                              }}
+                              className={`w-14 px-2 py-1 border rounded text-sm text-gray-900 focus:outline-none focus:ring-2 ${
+                                invalid ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                              }`}
+                            />
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )
+                })}
               </div>
+            )}
+            {g.type === 'book' && errors.qty && (
+              <p className="mt-1 text-sm text-red-600">{errors.qty}</p>
             )}
           </div>
         ))}
@@ -383,7 +431,7 @@ export function InteractionModal({
               {items.length > 0 && (() => {
                 const suggested = category === 'video_course'
                   ? (livePrice['__online_class_price__'] ?? 0)
-                  : items.reduce((s, i) => s + (livePrice[i.id] ?? 0), 0)
+                  : items.reduce((s, i) => s + (livePrice[i.id] ?? 0) * (i.qty ?? 1), 0)
                 const current = parseFloat(amount)
                 if (suggested > 0 && (!amount || current !== suggested)) {
                   return (

@@ -16,6 +16,7 @@ import {
   type StaffOption,
   type EntryProducts,
   type Category,
+  type InteractionItem,
 } from '@/app/actions/sales'
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -39,6 +40,10 @@ function productOptions(products: EntryProducts, cats: Category[]): { id: string
 
 function fmtMoney(n: number) {
   return `₹${Number(n).toLocaleString('en-IN')}`
+}
+// Product list with quantity shown for items bought in bulk (e.g. "Book × 2").
+function itemsText(items: InteractionItem[]) {
+  return items.map((i) => (i.qty && i.qty > 1 ? `${i.title} × ${i.qty}` : i.title)).join(', ')
 }
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
@@ -352,8 +357,8 @@ export default function SalesRegister({ rows, aggregates, staffOptions, products
                       </button>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{CATEGORY_LABEL[r.category]}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={r.items.map((i) => i.title).join(', ')}>
-                      {r.items.length ? r.items.map((i) => i.title).join(', ') : '—'}
+                    <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={itemsText(r.items)}>
+                      {r.items.length ? itemsText(r.items) : '—'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
                       {r.amount != null ? fmtMoney(r.amount) : '—'}

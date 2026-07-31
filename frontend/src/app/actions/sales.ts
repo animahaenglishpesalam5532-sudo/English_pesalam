@@ -13,6 +13,7 @@ export interface InteractionItem {
   type: 'book' | 'pdf' | 'ppt' | 'video_course'
   id: string
   title: string
+  qty?: number // quantity (books only); defaults to 1 when absent
 }
 
 export interface LogInteractionInput {
@@ -214,7 +215,7 @@ export async function getInteractionForEdit(
 }
 
 function itemsLabel(items: InteractionItem[]): string {
-  return (items ?? []).map((i) => i.title).join(', ') || '—'
+  return (items ?? []).map((i) => (i.qty && i.qty > 1 ? `${i.title} × ${i.qty}` : i.title)).join(', ') || '—'
 }
 
 export async function updateInteraction(
