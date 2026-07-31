@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from 'react-hot-toast'
 import { uploadImage } from '@/app/actions/blog'
+import { bustClientPriceCache } from '@/components/admin/InteractionModal'
 
 interface VideoCourseData {
   id: string
@@ -149,6 +150,7 @@ export default function VideoCourseManager() {
         if (error) throw error
         toast.success('Course created successfully')
       }
+      bustClientPriceCache()
       
       setIsModalOpen(false)
       fetchCourses()
@@ -172,6 +174,7 @@ export default function VideoCourseManager() {
       if (error) throw error
       toast.success('Course deleted')
       fetchCourses()
+      bustClientPriceCache()
     } catch (error: any) {
       toast.error('Error deleting: ' + error.message)
     }

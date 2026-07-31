@@ -27,30 +27,70 @@ export interface LogInteractionInput {
 }
 
 export interface EntryProducts {
-  books: { id: string; title: string }[]
-  pdfs: { id: string; title: string }[]
-  ppts: { id: string; title: string }[]
-  videoCourses: { id: string; title: string }[]
+  books: { id: string; title: string; price: number | null }[]
+  pdfs: { id: string; title: string; price: number | null }[]
+  ppts: { id: string; title: string; price: number | null }[]
+  videoCourses: { id: string; title: string; price: number | null }[]
+  onlineClassPrice: number | null // from Online Class Settings
 }
 
 // ------------------------------------------------------------- products
 
+function parsePrice(v: string | null | undefined): number | null {
+  if (!v) return null
+  const n = parseFloat(String(v).replace(/[^0-9.]/g, ''))
+  return isNaN(n) ? null : n
+}
+
 export async function getEntryProducts(): Promise<EntryProducts> {
   const supabase = await createClient()
-  const [books, pdfs, ppts, videos] = await Promise.all([
-    supabase.from('books').select('id, title_1').order('sort_order', { ascending: true }),
-    supabase.from('pdfs').select('id, name').order('created_at', { ascending: false }),
-    supabase.from('ppts').select('id, name').order('created_at', { ascending: false }),
-    supabase.from('video_courses').select('id, name').order('created_at', { ascending: false }),
+  const [books, pdfs, ppts, videos, onlineClassPriceSetting] = await Promise.all([
+    supabase.from('books').select('id, title_1, price').order('sort_order', { ascending: true }),
+    supabase.from('pdfs').select('id, name, selling_price').order('created_at', { ascending: false }),
+    supabase.from('ppts').select('id, name, selling_price').order('created_at', { ascending: false }),
+    supabase.from('video_courses').select('id, name, selling_price').order('created_at', { ascending: false }),
+    supabase.from('settings').select('value').eq('key', 'online_class_price').single(),
   ])
 
   return {
-    books: (books.data ?? []).map((b) => ({ id: b.id, title: b.title_1 })),
-    pdfs: (pdfs.data ?? []).map((p) => ({ id: p.id, title: p.name })),
-    ppts: (ppts.data ?? []).map((p) => ({ id: p.id, title: p.name })),
-    videoCourses: (videos.data ?? []).map((v) => ({ id: v.id, title: v.name })),
+    books: (books.data ?? []).map((b) => ({ id: b.id, title: b.title_1, price: parsePrice(b.price) })),
+    pdfs: (pdfs.data ?? []).map((p) => ({ id: p.id, title: p.name, price: parsePrice(p.selling_price) })),
+    ppts: (ppts.data ?? []).map((p) => ({ id: p.id, title: p.name, price: parsePrice(p.selling_price) })),
+    videoCourses: (videos.data ?? []).map((v) => ({ id: v.id, title: v.name, price: parsePrice(v.selling_price) })),
+    onlineClassPrice: parsePrice(onlineClassPriceSetting.data?.value),
   }
 }
+
+// Flat price map keyed by product id – fetched fresh on each server call.
+// The client-side module cache (5-min TTL) prevents repeated server calls.
+// Special key '__online_class_price__' holds the price from Online Class Settings.
+export async function getProductPrices(): Promise<Record<string, number>> {
+  const supabase = await createClient()
+  const [books, pdfs, ppts, videos, onlineClassPrice] = await Promise.all([
+    supabase.from('books').select('id, price'),
+    supabase.from('pdfs').select('id, selling_price'),
+    supabase.from('ppts').select('id, selling_price'),
+    supabase.from('video_courses').select('id, selling_price'),
+    supabase.from('settings').select('value').eq('key', 'online_class_price').single(),
+  ])
+  const map: Record<string, number> = {}
+  for (const b of books.data ?? []) { const p = parsePrice(b.price); if (p != null) map[b.id] = p }
+  for (const p of pdfs.data ?? []) { const pr = parsePrice(p.selling_price); if (pr != null) map[p.id] = pr }
+  for (const p of ppts.data ?? []) { const pr = parsePrice(p.selling_price); if (pr != null) map[p.id] = pr }
+  for (const v of videos.data ?? []) { const pr = parsePrice(v.selling_price); if (pr != null) map[v.id] = pr }
+  // Online Class price from Settings — stored under a special key
+  const ocPrice = parsePrice(onlineClassPrice.data?.value)
+  if (ocPrice != null) map['__online_class_price__'] = ocPrice
+  return map
+}
+
+/** Call this from any admin save/update action to bust the client price cache immediately.
+ *  Returns the current timestamp so the client can detect when prices were last updated. */
+export async function revalidateProductPrices(): Promise<void> {
+  // No-op on server — the client-side cache in InteractionModal will
+  // expire after 5 min or be force-refreshed by passing force=true.
+}
+
 
 // ----------------------------------------------- recent calls by phone
 

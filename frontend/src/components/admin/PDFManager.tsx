@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from 'react-hot-toast'
 import { uploadImage } from '@/app/actions/blog'
+import { bustClientPriceCache } from '@/components/admin/InteractionModal'
 
 interface PDFData {
   id: string
@@ -157,6 +158,7 @@ export default function PDFManager() {
         if (error) throw error
         toast.success('PDF created successfully')
       }
+      bustClientPriceCache()
       
       setIsModalOpen(false)
       fetchPDFs()
@@ -180,6 +182,7 @@ export default function PDFManager() {
       if (error) throw error
       toast.success('PDF deleted')
       fetchPDFs()
+      bustClientPriceCache()
     } catch (error: any) {
       toast.error('Error deleting: ' + error.message)
     }

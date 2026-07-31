@@ -2,7 +2,8 @@
 
 import React, { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Search } from 'lucide-react'
+import Link from 'next/link'
+import { Pencil, Search, PhoneCall } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
 import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
@@ -117,9 +118,17 @@ export default function StaffRecords({ rows, total, products, filters }: Props) 
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Records</h1>
-        <p className="mt-1 text-sm text-gray-500">Search a customer and edit their calls. Click a phone to see full history.</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Records</h1>
+          <p className="mt-1 text-sm text-gray-500">Search a customer and edit their calls. Click a phone to see full history.</p>
+        </div>
+        <Link
+          href="/admin/sales-entry"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        >
+          <PhoneCall className="w-4 h-4" /> Sales Entry
+        </Link>
       </div>
 
       {/* Filters */}

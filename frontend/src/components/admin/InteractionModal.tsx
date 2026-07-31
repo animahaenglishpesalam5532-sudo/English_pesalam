@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { Modal } from '@/components/ui/Modal'
 import toast from 'react-hot-toast'
-import { getRecentByPhone, type Category, type CallType, type InteractionItem, type EntryProducts, type RecentByPhone } from '@/app/actions/sales'
+import { getRecentByPhone, getProductPrices, type Category, type CallType, type InteractionItem, type EntryProducts, type RecentByPhone } from '@/app/actions/sales'
 
 const CATEGORY_LABEL: Record<Category, string> = {
   general: 'General',
@@ -51,6 +51,30 @@ export function nowLocal(): string {
   return local.toISOString().slice(0, 16)
 }
 
+// --------------------------------- client-side price cache (5-min TTL)
+// Keeps prices fresh without hitting the server on every item click.
+let _priceCache: Record<string, number> | null = null
+let _priceCacheAt = 0
+const PRICE_CACHE_TTL = 60 * 60 * 1000 // 1 hour
+
+async function getClientPrices(): Promise<Record<string, number>> {
+  const now = Date.now()
+  if (_priceCache && now - _priceCacheAt < PRICE_CACHE_TTL) return _priceCache
+  try {
+    const fresh = await getProductPrices()
+    _priceCache = fresh
+    _priceCacheAt = now
+    return fresh
+  } catch {
+    return _priceCache ?? {}
+  }
+}
+
+/** Call this after an admin saves/updates a product price to force an immediate cache refresh. */
+export function bustClientPriceCache() {
+  _priceCacheAt = 0 // Expires the cache — next modal open will re-fetch
+}
+
 type ProductGroup = { type: InteractionItem['type']; label: string; list: { id: string; title: string }[] }
 
 export function InteractionModal({
@@ -78,6 +102,7 @@ export function InteractionModal({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [recent, setRecent] = useState<RecentByPhone[]>([])
   const [recentLoading, setRecentLoading] = useState(false)
+  const amountManuallyEdited = useRef(false)
 
   const groups: ProductGroup[] = useMemo(() => {
     switch (category) {
@@ -95,12 +120,36 @@ export function InteractionModal({
     }
   }, [category, products])
 
+  // Build a price lookup map from products prop (fetched server-side at page load)
+  const propPriceMap = useMemo<Record<string, number>>(() => {
+    const map: Record<string, number> = {}
+    for (const b of products.books) if (b.price != null) map[b.id] = b.price
+    for (const p of products.pdfs) if (p.price != null) map[p.id] = p.price
+    for (const p of products.ppts) if (p.price != null) map[p.id] = p.price
+    for (const v of products.videoCourses) if (v.price != null) map[v.id] = v.price
+    // Online Class Settings price — one price for all online class purchases
+    if (products.onlineClassPrice != null) map['__online_class_price__'] = products.onlineClassPrice
+    return map
+  }, [products])
+
+  // Live price map: starts from prop, refreshed from server cache in background
+  const [livePrice, setLivePrice] = useState<Record<string, number>>(propPriceMap)
+  useEffect(() => { setLivePrice(propPriceMap) }, [propPriceMap])
+  useEffect(() => {
+    getClientPrices().then((fresh) => {
+      if (Object.keys(fresh).length > 0) setLivePrice(fresh)
+    })
+  }, [])
+
   const toggleItem = (type: InteractionItem['type'], id: string, itemTitle: string) => {
     setItems((prev) => {
       const exists = prev.find((i) => i.type === type && i.id === id)
-      if (exists) return prev.filter((i) => !(i.type === type && i.id === id))
-      return [...prev, { type, id, title: itemTitle }]
+      return exists
+        ? prev.filter((i) => !(i.type === type && i.id === id))
+        : [...prev, { type, id, title: itemTitle }]
     })
+    // Reset manual-edit flag so price auto-fills on next selection change
+    amountManuallyEdited.current = false
   }
 
   const isSelected = (type: InteractionItem['type'], id: string) =>
@@ -143,6 +192,34 @@ export function InteractionModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, phoneCountry, mode])
 
+  // Auto-fill amount from prices when callType switches to 'purchase' or items change
+  useEffect(() => {
+    if (callType !== 'purchase') return
+    if (amountManuallyEdited.current) return
+    if (items.length === 0) return
+    let total: number
+    if (category === 'video_course') {
+      // Online Class uses a single flat price from Settings, not per-item pricing
+      total = livePrice['__online_class_price__'] ?? 0
+    } else {
+      total = items.reduce((sum, item) => sum + (livePrice[item.id] ?? 0), 0)
+    }
+    if (total > 0) setAmount(String(total))
+  }, [callType, items, livePrice, category])
+
+  // When user manually edits the amount, stop auto-filling
+  const handleAmountChange = (val: string) => {
+    amountManuallyEdited.current = true
+    setAmount(val)
+  }
+
+  // Reset the manual-edit flag when callType changes (so switching back to purchase re-fills)
+  useEffect(() => {
+    if (callType !== 'purchase') {
+      amountManuallyEdited.current = false
+    }
+  }, [callType])
+
   const validate = () => {
     const e: Record<string, string> = {}
     const national = nationalDigits(phone)
@@ -169,7 +246,7 @@ export function InteractionModal({
       toast.error(res.error)
       return
     }
-    toast.success(mode === 'edit' ? 'Details successfully edited' : 'Call saved successfully')
+    toast.success(mode === 'edit' ? 'Details successfully edited' : 'Record saved successfully')
     onClose()
   }
 
@@ -236,9 +313,8 @@ export function InteractionModal({
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span
-                          className={`inline-flex px-1.5 py-0.5 rounded-full font-medium capitalize ${
-                            r.call_type === 'purchase' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                          }`}
+                          className={`inline-flex px-1.5 py-0.5 rounded-full font-medium capitalize ${r.call_type === 'purchase' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                            }`}
                         >
                           {r.call_type === 'purchase' ? 'Purchased' : 'Enquiry'}
                         </span>
@@ -303,18 +379,38 @@ export function InteractionModal({
         {/* Amount (purchase only) */}
         {callType === 'purchase' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)
+              {items.length > 0 && (() => {
+                const suggested = category === 'video_course'
+                  ? (livePrice['__online_class_price__'] ?? 0)
+                  : items.reduce((s, i) => s + (livePrice[i.id] ?? 0), 0)
+                const current = parseFloat(amount)
+                if (suggested > 0 && (!amount || current !== suggested)) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => { amountManuallyEdited.current = false; setAmount(String(suggested)) }}
+                      className="ml-2 text-xs font-normal text-blue-600 hover:underline"
+                    >
+                      Use suggested ₹{suggested.toLocaleString('en-IN')}
+                    </button>
+                  )
+                }
+                return null
+              })()}
+            </label>
             <input
               type="number"
               min="0"
               step="0.01"
               className={`${inputBase} ${errors.amount ? errBorder : okBorder}`}
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="Enter purchase amount"
             />
             {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
           </div>
+
         )}
 
         {/* Notes */}

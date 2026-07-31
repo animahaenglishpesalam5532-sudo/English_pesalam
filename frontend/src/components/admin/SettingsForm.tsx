@@ -7,6 +7,7 @@ import { setSetting } from '@/app/actions/settings'
 import { uploadImage } from '@/app/actions/blog'
 import toast from 'react-hot-toast'
 import { Loader2, Upload, X, Link as LinkIcon } from 'lucide-react'
+import { bustClientPriceCache } from '@/components/admin/InteractionModal'
 
 const settingsSchema = Yup.object().shape({
   logo_type: Yup.string().oneOf(['text', 'image']).required('Logo type is required'),
@@ -114,6 +115,7 @@ export default function SettingsForm({ initialValues }: SettingsFormProps) {
             ])
 
             toast.success('Settings saved successfully!')
+            bustClientPriceCache() // Bust price cache so online_class_price updates immediately
             window.location.reload()
           } catch {
             toast.error('Failed to save settings.')

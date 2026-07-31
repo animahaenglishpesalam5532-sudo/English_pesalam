@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from 'react-hot-toast'
 import { uploadImage } from '@/app/actions/blog'
+import { bustClientPriceCache } from '@/components/admin/InteractionModal'
 
 interface PPTData {
   id: string
@@ -150,6 +151,7 @@ export default function PPTManager() {
         if (error) throw error
         toast.success('PPT created successfully')
       }
+      bustClientPriceCache()
       
       setIsModalOpen(false)
       fetchPPTs()
@@ -173,6 +175,7 @@ export default function PPTManager() {
       if (error) throw error
       toast.success('PPT deleted')
       fetchPPTs()
+      bustClientPriceCache()
     } catch (error: any) {
       toast.error('Error deleting: ' + error.message)
     }

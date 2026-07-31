@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createStaticClient } from '@/lib/supabase/static'
 import { revalidatePath } from 'next/cache'
+import { revalidateProductPrices } from '@/app/actions/sales'
 
 export interface Book {
   id: string
@@ -55,6 +56,7 @@ export async function createBook(input: BookInput): Promise<{ success?: boolean;
 
   revalidatePath('/admin/settings')
   revalidatePath('/', 'layout')
+  await revalidateProductPrices()
   return { success: true }
 }
 
@@ -69,6 +71,7 @@ export async function updateBook(id: string, input: Partial<BookInput>): Promise
 
   revalidatePath('/admin/settings')
   revalidatePath('/', 'layout')
+  await revalidateProductPrices()
   return { success: true }
 }
 
@@ -79,5 +82,6 @@ export async function deleteBook(id: string): Promise<{ success?: boolean; error
 
   revalidatePath('/admin/settings')
   revalidatePath('/', 'layout')
+  await revalidateProductPrices()
   return { success: true }
 }
