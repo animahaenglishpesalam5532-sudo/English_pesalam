@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: SITE_NAME,
     short_name: 'EP',
     description: SITE_DESCRIPTION,
-    start_url: '/',
+    start_url: '/admin',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#22c55e',
