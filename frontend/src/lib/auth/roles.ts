@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type Role = 'admin' | 'staff'
+export type Role = 'admin' | 'staff' | 'delivery'
+
+/** Landing page for each role after login / when bounced off a forbidden route. */
+export const HOME_BY_ROLE: Record<Role, string> = {
+  admin: '/admin/dashboard',
+  staff: '/admin/sales-entry',
+  delivery: '/admin/book-tracking',
+}
 
 export interface CurrentUser {
   id: string
@@ -50,6 +57,15 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 export async function requireAdmin(): Promise<CurrentUser> {
   const user = await getCurrentUser()
   if (!user || user.role !== 'admin' || !user.isActive) {
+    throw new Error('Not authorized')
+  }
+  return user
+}
+
+/** Admins and delivery people may use the book tracking module. */
+export async function requireDelivery(): Promise<CurrentUser> {
+  const user = await getCurrentUser()
+  if (!user || !user.isActive || (user.role !== 'admin' && user.role !== 'delivery')) {
     throw new Error('Not authorized')
   }
   return user

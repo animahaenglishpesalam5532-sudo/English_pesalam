@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { HOME_BY_ROLE, type Role } from '@/lib/auth/roles'
+import { toLoginEmail } from '@/lib/auth/loginIdentifier'
 import { redirect } from 'next/navigation'
 
 export async function login(formData: FormData) {
@@ -10,9 +12,7 @@ export async function login(formData: FormData) {
 
   // Staff log in with a bare username (e.g. "salesperson"); map it to the
   // internal login email. Admins keep using their full email address.
-  const email = identifier.includes('@')
-    ? identifier
-    : `${identifier.toLowerCase()}@englishpesalam.com`
+  const email = toLoginEmail(identifier)
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -23,15 +23,15 @@ export async function login(formData: FormData) {
     return { error: 'Invalid login credentials' }
   }
 
-  // Route by role: staff go to the data-entry screen, admins to the dashboard
+  // Route by role: each role lands on its own home screen
   const { data: profile } = await supabase
     .from('profiles')
     .select('role, is_active')
     .eq('id', data.user.id)
     .single()
 
-  const isAdmin = profile?.is_active && profile.role === 'admin'
-  redirect(isAdmin ? '/admin/dashboard' : '/admin/sales-entry')
+  const role = profile?.is_active ? (profile.role as Role) : null
+  redirect(role ? HOME_BY_ROLE[role] : '/admin/sales-entry')
 }
 
 export async function logout() {

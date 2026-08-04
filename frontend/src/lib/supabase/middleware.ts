@@ -44,7 +44,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // For signed-in users, resolve role to gate staff vs admin areas
+  // For signed-in users, resolve role to gate the staff / delivery areas
   let role: string | null = null
   if (user) {
     const { data: profile } = await supabase
@@ -55,18 +55,35 @@ export async function updateSession(request: NextRequest) {
     role = profile?.is_active ? profile.role : null
   }
 
-  // Staff may only access the sales-entry and their own records screens inside /admin
-  const staffAllowed = pathname === '/admin/sales-entry' || pathname === '/admin/my-records'
-  if (isProtectedRoute && user && role !== 'admin' && !staffAllowed) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin/sales-entry'
-    return NextResponse.redirect(url)
+  // Non-admin roles are limited to their own screens inside /admin.
+  // Kept in sync with HOME_BY_ROLE in src/lib/auth/roles.ts (duplicated here
+  // because middleware cannot import the server-only auth module).
+  const ROLE_ROUTES: Record<string, string[]> = {
+    staff: ['/admin/sales-entry', '/admin/my-records'],
+    delivery: ['/admin/book-tracking'],
+  }
+  const ROLE_HOME: Record<string, string> = {
+    admin: '/admin/dashboard',
+    staff: '/admin/sales-entry',
+    delivery: '/admin/book-tracking',
+  }
+  // Unknown / inactive roles fall back to the salesperson screen, which renders
+  // an "account not activated" notice instead of bouncing between routes.
+  const home = ROLE_HOME[role ?? ''] ?? '/admin/sales-entry'
+
+  if (isProtectedRoute && user && role !== 'admin') {
+    const allowed = ROLE_ROUTES[role ?? ''] ?? ['/admin/sales-entry']
+    if (!allowed.includes(pathname)) {
+      const url = request.nextUrl.clone()
+      url.pathname = home
+      return NextResponse.redirect(url)
+    }
   }
 
   // Redirect authenticated user away from the login page
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = role === 'admin' ? '/admin/dashboard' : '/admin/sales-entry'
+    url.pathname = home
     return NextResponse.redirect(url)
   }
 

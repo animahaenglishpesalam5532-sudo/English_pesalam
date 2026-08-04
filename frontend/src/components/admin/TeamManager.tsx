@@ -2,15 +2,28 @@
 
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import { UserPlus, ShieldCheck, User, Power, Trash2, KeyRound } from 'lucide-react'
+import { UserPlus, ShieldCheck, User, Power, Trash2, KeyRound, Truck } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { ASSIGNABLE_ROLES, ROLE_BADGE, ROLE_LABEL } from '@/lib/auth/roleLabels'
+import {
+  toLoginEmail,
+  toLoginIdentifier,
+  validateLoginIdentifier,
+} from '@/lib/auth/loginIdentifier'
 import {
   createStaff,
   setMemberActive,
   deleteStaff,
   resetMemberPassword,
+  type AssignableRole,
   type Member,
 } from '@/app/actions/team'
+
+const ROLE_ICON: Record<Member['role'], React.ElementType> = {
+  admin: ShieldCheck,
+  staff: User,
+  delivery: Truck,
+}
 
 export default function TeamManager({ initialMembers }: { initialMembers: Member[] }) {
   const [members, setMembers] = useState<Member[]>(initialMembers)
@@ -24,6 +37,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<AssignableRole>('staff')
   const [creating, setCreating] = useState(false)
 
   const [newPassword, setNewPassword] = useState('')
@@ -31,22 +45,24 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fullName.trim()) return toast.error('Name is required')
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast.error('Enter a valid email')
-    if (password.length < 6) return toast.error('Password must be at least 6 characters')
+    if (!fullName?.trim()) return toast.error('Name is required')
+    const identifierError = validateLoginIdentifier(email)
+    if (identifierError) return toast.error(identifierError)
+    if (password?.length < 6) return toast.error('Password must be at least 6 characters')
     setCreating(true)
-    const res = await createStaff({ email, password, fullName })
+    const res = await createStaff({ email, password, fullName, role })
     setCreating(false)
-    if (res.error) return toast.error(res.error)
-    toast.success('Staff member created')
+    const id = res?.id
+    if (res?.error || !id) return toast.error(res?.error ?? 'Could not create user')
+    toast.success(`${ROLE_LABEL[role]} created`)
     // optimistic add
     setMembers((prev) => [
       ...prev,
       {
-        id: `temp-${Date.now()}`,
-        email: email.trim().toLowerCase(),
-        full_name: fullName.trim(),
-        role: 'staff',
+        id,
+        email: toLoginEmail(email),
+        full_name: fullName?.trim(),
+        role,
         is_active: true,
         created_at: new Date().toISOString(),
       },
@@ -54,6 +70,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
     setFullName('')
     setEmail('')
     setPassword('')
+    setRole('staff')
     setShowCreate(false)
   }
 
@@ -101,13 +118,13 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage salesperson (staff) logins.</p>
+          <p className="mt-1 text-sm text-gray-500">Manage salesperson and delivery person logins.</p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
         >
-          <UserPlus className="w-4 h-4" /> Add Staff
+          <UserPlus className="w-4 h-4" /> Add Member
         </button>
       </div>
 
@@ -117,7 +134,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Login</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -136,16 +153,21 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {m.full_name || '—'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{m.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {toLoginIdentifier(m?.email)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          m.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                        }`}
-                      >
-                        {m.role === 'admin' ? <ShieldCheck className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                        {m.role}
-                      </span>
+                      {(() => {
+                        const RoleIcon = ROLE_ICON[m.role]
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[m.role]}`}
+                          >
+                            <RoleIcon className="w-3 h-3" />
+                            {ROLE_LABEL[m.role]}
+                          </span>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -157,7 +179,7 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      {m.role === 'staff' ? (
+                      {m.role !== 'admin' ? (
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setResetFor(m)}
@@ -196,20 +218,52 @@ export default function TeamManager({ initialMembers }: { initialMembers: Member
       </div>
 
       {/* Create modal */}
-      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Add Staff Member">
+      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Add Team Member">
         <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {ASSIGNABLE_ROLES.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 transition-colors ${
+                    role === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                    checked={role === opt.value}
+                    onChange={() => setRole(opt.value)}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-gray-900">{opt.label}</span>
+                    <span className="block text-xs text-gray-500">{opt.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
             <input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Priya" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@example.com" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username or email</label>
+            <input
+              className={inputCls}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. deliveryperson"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input className={inputCls} type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
-            <p className="mt-1 text-xs text-gray-400">Share these credentials with the salesperson.</p>
+            <p className="mt-1 text-xs text-gray-400">
+              Share these credentials with the {ROLE_LABEL[role].toLowerCase()}.
+            </p>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => setShowCreate(false)} className="flex-1 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">

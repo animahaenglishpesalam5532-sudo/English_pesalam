@@ -3,12 +3,12 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown, SquarePlay } from 'lucide-react'
+import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown, SquarePlay, Truck } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import ThemeProvider from './ThemeProvider'
 import ThemeToggle from './ThemeToggle'
-
-type Role = 'admin' | 'staff'
+import { ROLE_LABEL } from '@/lib/auth/roleLabels'
+import type { Role } from '@/lib/auth/roles'
 
 type NavLink = { name: string; href: string; icon: React.ElementType }
 type NavGroup = { title: string; links: NavLink[] }
@@ -27,6 +27,10 @@ const adminGroups: NavGroup[] = [
       { name: 'Records', href: '/admin/records', icon: FileText },
       { name: 'Team', href: '/admin/team', icon: UserCog },
     ],
+  },
+  {
+    title: 'Delivery',
+    links: [{ name: 'Book Tracking', href: '/admin/book-tracking', icon: Truck }],
   },
   {
     title: 'Content',
@@ -64,6 +68,19 @@ const staffGroups: NavGroup[] = [
   },
 ]
 
+const deliveryGroups: NavGroup[] = [
+  {
+    title: 'Delivery',
+    links: [{ name: 'Book Tracking', href: '/admin/book-tracking', icon: Truck }],
+  },
+]
+
+const groupsByRole: Record<Role, NavGroup[]> = {
+  admin: adminGroups,
+  staff: staffGroups,
+  delivery: deliveryGroups,
+}
+
 export default function AdminLayout({
   children,
   role = 'admin',
@@ -77,7 +94,8 @@ export default function AdminLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-  const groups = role === 'admin' ? adminGroups : staffGroups
+  const groups = groupsByRole[role] ?? staffGroups
+  const homeHref = groups[0]?.links[0]?.href ?? '/admin/dashboard'
   const avatarInitial = (userName || role).charAt(0).toUpperCase()
 
   const toggleGroup = (title: string) =>
@@ -102,7 +120,7 @@ export default function AdminLayout({
       >
         <div className="flex items-center justify-center h-14 shrink-0 border-b border-gray-200">
           <Link
-            href="/admin/dashboard"
+            href={homeHref}
             className="text-xl font-black bg-gradient-to-r from-brand-green to-brand-blue bg-clip-text text-transparent hover:opacity-80 transition-opacity tracking-tight"
           >
             English Pesalam
@@ -176,7 +194,7 @@ export default function AdminLayout({
             <ThemeToggle />
             <div className="hidden sm:flex flex-col items-end leading-tight">
               {userName && <span className="text-sm font-medium text-gray-900">{userName}</span>}
-              <span className="text-xs text-gray-500 capitalize">{role}</span>
+              <span className="text-xs text-gray-500">{ROLE_LABEL[role] ?? role}</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
               {avatarInitial}
