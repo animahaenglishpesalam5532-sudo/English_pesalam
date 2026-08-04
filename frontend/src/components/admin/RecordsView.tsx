@@ -7,6 +7,7 @@ import CustomerDrilldown from './CustomerDrilldown'
 import RecordsTabs from './RecordsTabs'
 import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
+import { itemsText } from '@/lib/sales/items'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
   updateInteraction,
@@ -17,7 +18,6 @@ import {
   type EntryProducts,
   type Category,
   type CallType,
-  type InteractionItem,
 } from '@/app/actions/sales'
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -41,10 +41,6 @@ function productOptions(products: EntryProducts, cats: Category[]): { id: string
 
 function fmtMoney(n: number) {
   return `₹${Number(n).toLocaleString('en-IN')}`
-}
-// Product list with quantity shown for items bought in bulk (e.g. "Book × 2").
-function itemsText(items: InteractionItem[]) {
-  return items.map((i) => (i.qty && i.qty > 1 ? `${i.title} × ${i.qty}` : i.title)).join(', ')
 }
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {

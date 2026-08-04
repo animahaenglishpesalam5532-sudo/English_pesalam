@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Phone, ShoppingCart, MessageSquare, History } from 'lucide-react'
+import { itemsText } from '@/lib/sales/items'
 import { getCustomerTimeline, type CustomerTimeline, type Category } from '@/app/actions/sales'
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -88,8 +89,8 @@ export default function CustomerDrilldown({
                       <span className="text-[11px] text-gray-400">{fmtDate(it.call_at)}</span>
                     </div>
 
-                    {it.items.length > 0 && (
-                      <p className="mt-1 text-xs text-gray-600">{it.items.map((i) => i.title).join(', ')}</p>
+                    {it.items?.length > 0 && (
+                      <p className="mt-1 text-xs text-gray-600">{itemsText(it?.items)}</p>
                     )}
                     {it.notes && <p className="mt-1 text-xs text-gray-500 italic">“{it.notes}”</p>}
                     <p className="mt-1 text-[11px] text-gray-400">By {it.staff_name || 'Unknown'}</p>

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/roles'
 import { revalidatePath } from 'next/cache'
+import { itemsText } from '@/lib/sales/items'
 
 // ------------------------------------------------------------------ types
 
@@ -214,9 +215,7 @@ export async function getInteractionForEdit(
   }
 }
 
-function itemsLabel(items: InteractionItem[]): string {
-  return (items ?? []).map((i) => (i.qty && i.qty > 1 ? `${i.title} × ${i.qty}` : i.title)).join(', ') || '—'
-}
+const itemsLabel = (items: InteractionItem[]): string => itemsText(items, '—')
 
 export async function updateInteraction(
   id: string,

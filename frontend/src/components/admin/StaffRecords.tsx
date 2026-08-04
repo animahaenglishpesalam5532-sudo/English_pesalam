@@ -7,6 +7,7 @@ import { Pencil, Search, PhoneCall } from 'lucide-react'
 import CustomerDrilldown from './CustomerDrilldown'
 import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
+import { itemsText } from '@/lib/sales/items'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
   updateInteraction,
@@ -268,8 +269,11 @@ export default function StaffRecords({ rows, total, products, filters }: Props) 
                           {r.call_type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={r.items.map((i) => i.title).join(', ')}>
-                        {r.items.length ? r.items.map((i) => i.title).join(', ') : '—'}
+                      <td
+                        className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate"
+                        title={itemsText(r?.items)}
+                      >
+                        {itemsText(r?.items, '—')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
                         {r.amount != null ? fmtMoney(r.amount) : '—'}
