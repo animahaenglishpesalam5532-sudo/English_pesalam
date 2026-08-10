@@ -44,9 +44,14 @@ export function BookTrackingFilters({
           <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
           <input
             type="date"
-            className={FILTER_INPUT}
+            className={`${FILTER_INPUT} cursor-pointer`}
             value={from}
             max={to || undefined}
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker?.()
+              } catch {}
+            }}
             onChange={(e) => onFrom(e.target.value)}
           />
         </div>
@@ -54,9 +59,14 @@ export function BookTrackingFilters({
           <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
           <input
             type="date"
-            className={FILTER_INPUT}
+            className={`${FILTER_INPUT} cursor-pointer`}
             value={to}
             min={from || undefined}
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker?.()
+              } catch {}
+            }}
             onChange={(e) => onTo(e.target.value)}
           />
         </div>

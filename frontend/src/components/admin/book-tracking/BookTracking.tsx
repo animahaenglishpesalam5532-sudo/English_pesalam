@@ -14,7 +14,6 @@ import { CARD } from './styles'
 import {
   createBookTracking,
   deleteBookTracking,
-  getNextSerial,
   updateBookTracking,
   type BookOption,
   type BookTrackingInput,
@@ -31,12 +30,10 @@ export default function BookTracking({ books, canDelete }: Props) {
   const list = useBookTrackingList()
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<BookTrackingRecord | null>(null)
-  const [nextSerial, setNextSerial] = useState<number | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<BookTrackingRecord | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const openCreate = async () => {
-    setNextSerial(await getNextSerial())
+  const openCreate = () => {
     setShowCreate(true)
   }
 
@@ -135,7 +132,6 @@ export default function BookTracking({ books, canDelete }: Props) {
           onClose={() => setShowCreate(false)}
           books={books}
           mode="create"
-          nextSerial={nextSerial}
           onSubmit={handleCreate}
         />
       )}
@@ -153,7 +149,7 @@ export default function BookTracking({ books, canDelete }: Props) {
             phone: editing.phone,
             trackingNumber: editing.tracking_number,
             items: editing.items,
-            serialNo: editing.serial_no,
+            createdAt: editing.created_at,
           }}
           onSubmit={handleUpdate}
         />
@@ -167,8 +163,8 @@ export default function BookTracking({ books, canDelete }: Props) {
         onConfirm={handleDelete}
         message={
           <>
-            Delete record <span className="font-semibold text-gray-900">#{confirmDelete?.serial_no}</span>{' '}
-            for <span className="font-semibold text-gray-900">{confirmDelete?.name}</span>? This cannot
+            Delete record for{' '}
+            <span className="font-semibold text-gray-900">{confirmDelete?.name}</span>? This cannot
             be undone.
           </>
         }

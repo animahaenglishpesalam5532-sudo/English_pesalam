@@ -6,7 +6,7 @@ import { RowActions } from './RowActions'
 import { booksLabel, formatDate } from '@/lib/bookTracking/format'
 import type { BookTrackingRecord } from '@/app/actions/bookTracking'
 
-const HEADERS = ['S.No', 'WhatsApp ID', 'Name', 'Phone', 'Tracking No.', 'Books', 'Date', '']
+const HEADERS = ['Date', 'WhatsApp ID', 'Name', 'Phone', 'Tracking No.', 'Books', '']
 
 interface Props {
   rows: BookTrackingRecord[]
@@ -56,7 +56,9 @@ export function BookTrackingTable({
             ) : (
               rows?.map((r) => (
                 <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">#{r.serial_no}</td>
+                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                    {formatDate(r.created_at)}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{r.whatsapp_id}</td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">{r.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{r.phone}</td>
@@ -66,9 +68,6 @@ export function BookTrackingTable({
                     title={booksLabel(r.items)}
                   >
                     {booksLabel(r.items)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {formatDate(r.created_at)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <RowActions

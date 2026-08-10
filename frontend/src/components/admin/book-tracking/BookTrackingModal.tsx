@@ -16,8 +16,17 @@ import { BookPicker } from './BookPicker'
 import { fieldClass } from './styles'
 import type { BookOption, BookTrackingInput, TrackedBook } from '@/app/actions/bookTracking'
 
-export interface BookTrackingModalInitial extends Partial<BookTrackingInput> {
-  serialNo?: number
+export interface BookTrackingModalInitial extends Partial<BookTrackingInput> {}
+
+function toLocalDateString(iso?: string): string {
+  const d = iso ? new Date(iso) : new Date()
+  if (isNaN(d.getTime())) {
+    const fallback = new Date()
+    const local = new Date(fallback.getTime() - fallback.getTimezoneOffset() * 60000)
+    return local.toISOString().slice(0, 10)
+  }
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
 }
 
 interface Props {
@@ -25,8 +34,6 @@ interface Props {
   onClose: () => void
   books: BookOption[]
   mode: 'create' | 'edit'
-  /** Serial the next saved record will get — shown as a hint when creating. */
-  nextSerial?: number | null
   initial?: BookTrackingModalInitial
   onSubmit: (values: BookTrackingInput) => Promise<{ error?: string } | void>
 }
@@ -36,10 +43,10 @@ export function BookTrackingModal({
   onClose,
   books,
   mode,
-  nextSerial,
   initial,
   onSubmit,
 }: Props) {
+  const [date, setDate] = useState(() => toLocalDateString(initial?.createdAt))
   const [whatsappId, setWhatsappId] = useState(initial?.whatsappId ?? '')
   const [name, setName] = useState(initial?.name ?? '')
   const [phone, setPhone] = useState(toInputPhone(initial?.phone))
@@ -51,6 +58,7 @@ export function BookTrackingModal({
 
   const validate = () => {
     const e: Record<string, string> = {}
+    if (!date?.trim()) e.date = 'Date is required'
     if (!whatsappId?.trim()) e.whatsappId = 'WhatsApp ID is required'
     if (!name?.trim()) e.name = 'Name is required'
 
@@ -77,6 +85,7 @@ export function BookTrackingModal({
       phone: toStoredPhone(phone, phoneCountry),
       trackingNumber: trackingNumber?.trim(),
       items,
+      createdAt: date,
     })
     setSubmitting(false)
     if (res && 'error' in res && res.error) {
@@ -87,8 +96,6 @@ export function BookTrackingModal({
     onClose()
   }
 
-  const serial = mode === 'edit' ? initial?.serialNo : nextSerial
-
   return (
     <Modal
       isOpen={isOpen}
@@ -96,10 +103,22 @@ export function BookTrackingModal({
       title={mode === 'edit' ? 'Edit Delivery Record' : 'New Delivery Record'}
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-        <p className="text-xs text-gray-400">
-          Serial no. {serial != null ? `#${serial}` : '—'}
-          {mode === 'create' && ' · assigned automatically'}
-        </p>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+          <input
+            type="date"
+            className={`${fieldClass(!!errors.date)} cursor-pointer`}
+            value={date}
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker?.()
+              } catch {}
+            }}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp ID</label>

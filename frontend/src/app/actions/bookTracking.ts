@@ -17,7 +17,6 @@ export interface TrackedBook {
 
 export interface BookTrackingRecord {
   id: string
-  serial_no: number
   whatsapp_id: string
   name: string
   phone: string
@@ -32,6 +31,7 @@ export interface BookTrackingInput {
   phone: string
   trackingNumber: string
   items: TrackedBook[]
+  createdAt?: string
 }
 
 export interface BookTrackingFilters {
@@ -57,19 +57,6 @@ export async function getBookOptions(): Promise<BookOption[]> {
   return (data ?? [])?.map((b) => ({ id: b.id, title: b.title_1 }))
 }
 
-/** Serial number the next saved record will receive (shown as a hint). */
-export async function getNextSerial(): Promise<number | null> {
-  try {
-    await requireDelivery()
-  } catch {
-    return null
-  }
-  const supabase = await createClient()
-  const { data, error } = await supabase.rpc('next_book_tracking_serial')
-  if (error || data == null) return null
-  return Number(data)
-}
-
 export async function getBookTrackingPage(
   filters: BookTrackingFilters
 ): Promise<BookTrackingPage> {
@@ -86,10 +73,10 @@ export async function getBookTrackingPage(
 
   let query = supabase
     .from('book_tracking')
-    .select('id, serial_no, whatsapp_id, name, phone, tracking_number, items, created_at', {
+    .select('id, whatsapp_id, name, phone, tracking_number, items, created_at', {
       count: 'exact',
     })
-    .order('serial_no', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (filters.from) query = query.gte('created_at', `${filters.from}T00:00:00`)
   if (filters.to) query = query.lte('created_at', `${filters.to}T23:59:59`)
@@ -111,7 +98,6 @@ export async function getBookTrackingPage(
   return {
     rows: (data ?? []).map((d) => ({
       id: d.id,
-      serial_no: Number(d.serial_no),
       whatsapp_id: d.whatsapp_id,
       name: d.name,
       phone: d.phone,
@@ -128,6 +114,9 @@ function validate(input: BookTrackingInput): string | null {
   if (!input.name?.trim()) return 'Name is required'
   if (!input.phone?.trim()) return 'Phone number is required'
   if (!input.trackingNumber?.trim()) return 'Tracking number is required'
+  if (input.createdAt && isNaN(new Date(input.createdAt).getTime())) {
+    return 'Invalid date'
+  }
   if (!input.items?.length) return 'Select at least one book'
   if (input.items?.some((i) => !Number.isInteger(i.qty) || i.qty < 1)) {
     return 'Minimum quantity should be 1'
@@ -148,6 +137,12 @@ export async function createBookTracking(
   const invalid = validate(input)
   if (invalid) return { error: invalid }
 
+  let createdAt: string | undefined
+  if (input.createdAt?.trim()) {
+    const trimmed = input.createdAt.trim()
+    createdAt = trimmed.includes('T') ? trimmed : `${trimmed}T12:00:00.000Z`
+  }
+
   const supabase = await createClient()
   const { error } = await supabase.from('book_tracking').insert({
     whatsapp_id: input.whatsappId?.trim(),
@@ -156,6 +151,7 @@ export async function createBookTracking(
     tracking_number: input.trackingNumber?.trim(),
     items: input.items,
     created_by: user?.id,
+    ...(createdAt ? { created_at: createdAt } : {}),
   })
   if (error) return { error: error.message }
 
@@ -176,6 +172,12 @@ export async function updateBookTracking(
   const invalid = validate(input)
   if (invalid) return { error: invalid }
 
+  let createdAt: string | undefined
+  if (input.createdAt?.trim()) {
+    const trimmed = input.createdAt.trim()
+    createdAt = trimmed.includes('T') ? trimmed : `${trimmed}T12:00:00.000Z`
+  }
+
   const supabase = await createClient()
   const { error } = await supabase
     .from('book_tracking')
@@ -185,6 +187,7 @@ export async function updateBookTracking(
       phone: input.phone?.trim(),
       tracking_number: input.trackingNumber?.trim(),
       items: input.items,
+      ...(createdAt ? { created_at: createdAt } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

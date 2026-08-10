@@ -64,7 +64,7 @@ export function BookTrackingCards({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-xs text-gray-400">
-                #{r.serial_no} · {formatDate(r.created_at)}
+                {formatDate(r.created_at)}
               </p>
               <p className="mt-0.5 text-sm font-semibold text-gray-900 truncate">{r.name}</p>
               <p className="text-sm text-gray-600">{r.phone}</p>
