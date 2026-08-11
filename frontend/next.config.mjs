@@ -8,7 +8,9 @@ const nextConfig = {
         // at our own domain and bounce the customer to WhatsApp from here.
         // Handled by Vercel's edge routing layer — no serverless invocation.
         source: '/buy',
-        destination: 'https://wa.me/919345639627',
+        // %25 -> Next decodes the destination once, so this reaches the
+        // browser as a properly encoded %20 rather than a raw space.
+        destination: 'https://wa.me/919345639627?text=I%2520want%2520to%2520buy%2520Book%25202',
         permanent: false,
       },
     ]

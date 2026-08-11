@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import crypto from 'crypto'
 import { whatsappConfig } from '@/lib/whatsapp/config'
+import { sendCtaUrl } from '@/lib/whatsapp/client'
+import { AUTO_REPLY_CARD, claimAutoReply, markMessageSeen } from '@/lib/whatsapp/autoReply'
 
 // Meta calls the webhook from its own servers, so this route must run on the
 // Node.js runtime (needs `crypto`) and never be statically cached.
@@ -98,11 +100,17 @@ function handleEvent(payload: WhatsAppWebhookPayload) {
 
       for (const message of value.messages ?? []) {
         console.log('[whatsapp-webhook] incoming message', {
-          from: message.from,
-          type: message.type,
-          text: message.text?.body,
+          from: message?.from,
+          type: message?.type,
+          text: message?.text?.body,
         })
-        // TODO: persist to Supabase / trigger auto-reply here.
+
+        // Only inbound customer messages land in `messages`, so our own
+        // outbound sends can never trigger this and cause a reply loop.
+        if (!markMessageSeen(message?.id)) continue
+        if (!claimAutoReply(message?.from)) continue
+
+        queueAutoReply(message?.from)
       }
 
       for (const status of value.statuses ?? []) {
@@ -115,6 +123,24 @@ function handleEvent(payload: WhatsAppWebhookPayload) {
       }
     }
   }
+}
+
+/**
+ * Sends the canned reply after the 200 has already gone back to Meta.
+ * Meta disables webhooks that answer slowly, so this must not block.
+ */
+function queueAutoReply(to?: string) {
+  if (!to) return
+
+  after(async () => {
+    const result = await sendCtaUrl(to, AUTO_REPLY_CARD)
+
+    if (result?.ok) {
+      console.log('[whatsapp-webhook] auto-reply sent', { to, id: result?.messageId })
+    } else {
+      console.error('[whatsapp-webhook] auto-reply failed', { to, error: result?.error })
+    }
+  })
 }
 
 // ── Minimal payload types (only the fields we touch) ────────────────────────
