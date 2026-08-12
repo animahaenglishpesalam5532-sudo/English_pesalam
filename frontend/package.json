@@ -28,6 +28,7 @@
     "react-hot-toast": "^2.6.0",
     "react-international-phone": "^4.8.0",
     "recharts": "^3.9.2",
+    "xlsx": "^0.18.5",
     "yup": "^1.7.1"
   },
   "devDependencies": {

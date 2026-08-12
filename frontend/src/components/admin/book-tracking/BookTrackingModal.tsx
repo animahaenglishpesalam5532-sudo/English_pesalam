@@ -14,7 +14,12 @@ import {
 } from '@/lib/bookTracking/phone'
 import { BookPicker } from './BookPicker'
 import { fieldClass } from './styles'
-import type { BookOption, BookTrackingInput, TrackedBook } from '@/app/actions/bookTracking'
+import { COURIER_OPTIONS } from '@/lib/bookTracking/constants'
+import {
+  type BookOption,
+  type BookTrackingInput,
+  type TrackedBook,
+} from '@/app/actions/bookTracking'
 
 export interface BookTrackingModalInitial extends Partial<BookTrackingInput> {}
 
@@ -51,6 +56,7 @@ export function BookTrackingModal({
   const [name, setName] = useState(initial?.name ?? '')
   const [phone, setPhone] = useState(toInputPhone(initial?.phone))
   const [phoneCountry, setPhoneCountry] = useState<PhoneCountry>(DEFAULT_PHONE_COUNTRY)
+  const [courierName, setCourierName] = useState(initial?.courierName ?? '')
   const [trackingNumber, setTrackingNumber] = useState(initial?.trackingNumber ?? '')
   const [items, setItems] = useState<TrackedBook[]>(initial?.items ?? [])
   const [submitting, setSubmitting] = useState(false)
@@ -83,6 +89,7 @@ export function BookTrackingModal({
       whatsappId: whatsappId?.trim(),
       name: name?.trim(),
       phone: toStoredPhone(phone, phoneCountry),
+      courierName: courierName?.trim() || null,
       trackingNumber: trackingNumber?.trim(),
       items,
       createdAt: date,
@@ -101,6 +108,7 @@ export function BookTrackingModal({
       isOpen={isOpen}
       onClose={onClose}
       title={mode === 'edit' ? 'Edit Delivery Record' : 'New Delivery Record'}
+      closeOnBackdropClick={false}
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
 
@@ -157,6 +165,24 @@ export function BookTrackingModal({
             placeholder="e.g. 9876543210"
           />
           {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Courier Name <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+          </label>
+          <select
+            className={fieldClass(false)}
+            value={courierName}
+            onChange={(e) => setCourierName(e.target.value)}
+          >
+            <option value="">Select courier (optional)</option>
+            {COURIER_OPTIONS.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

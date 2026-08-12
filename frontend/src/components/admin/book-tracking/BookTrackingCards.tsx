@@ -79,6 +79,7 @@ export function BookTrackingCards({
           </div>
           <dl className="mt-3 space-y-1 text-sm">
             <Row label="WhatsApp ID" value={r.whatsapp_id} />
+            {r.courier_name && <Row label="Courier" value={r.courier_name} />}
             <Row label="Tracking no." value={r.tracking_number} />
             <Row label="Books" value={booksLabel(r.items)} />
           </dl>

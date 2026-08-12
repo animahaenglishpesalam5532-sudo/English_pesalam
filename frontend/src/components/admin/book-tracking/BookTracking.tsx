@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Plus } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { Pagination } from '../TableUI'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { BookTrackingFilters } from './BookTrackingFilters'
 import { BookTrackingTable } from './BookTrackingTable'
 import { BookTrackingCards } from './BookTrackingCards'
 import { BookTrackingModal } from './BookTrackingModal'
+import { BookTrackingImportModal } from './BookTrackingImportModal'
 import { useBookTrackingList } from './useBookTrackingList'
 import { CARD } from './styles'
 import {
@@ -22,13 +23,14 @@ import {
 
 interface Props {
   books: BookOption[]
-  /** Only admins get the delete action. */
+  /** Admins and delivery personnel get the delete action. */
   canDelete: boolean
 }
 
 export default function BookTracking({ books, canDelete }: Props) {
   const list = useBookTrackingList()
   const [showCreate, setShowCreate] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editing, setEditing] = useState<BookTrackingRecord | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<BookTrackingRecord | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -81,20 +83,32 @@ export default function BookTracking({ books, canDelete }: Props) {
             Book delivery records and tracking numbers.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Add Record
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowImport(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Upload className="w-4 h-4" /> Import Records
+          </button>
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add Record
+          </button>
+        </div>
       </div>
 
       <BookTrackingFilters
         search={list.search}
+        whatsappId={list.whatsappId}
+        courierName={list.courierName}
         from={list.from}
         to={list.to}
         filtersActive={list.filtersActive}
         onSearch={list.setSearch}
+        onWhatsappId={list.setWhatsappId}
+        onCourierName={list.setCourierName}
         onFrom={list.setFrom}
         onTo={list.setTo}
         onClear={list.clearFilters}
@@ -107,6 +121,9 @@ export default function BookTracking({ books, canDelete }: Props) {
           filtersActive={list.filtersActive}
           canDelete={canDelete}
           deletingId={deleting ? (confirmDelete?.id ?? null) : null}
+          sortBy={list.sortBy}
+          sortOrder={list.sortOrder}
+          onToggleSort={list.toggleSort}
           onEdit={setEditing}
           onDelete={setConfirmDelete}
         />
@@ -125,6 +142,14 @@ export default function BookTracking({ books, canDelete }: Props) {
         />
         <div className={CARD}>{pagination}</div>
       </div>
+
+      {showImport && (
+        <BookTrackingImportModal
+          books={books}
+          onClose={() => setShowImport(false)}
+          onImported={list.reload}
+        />
+      )}
 
       {showCreate && (
         <BookTrackingModal
@@ -147,6 +172,7 @@ export default function BookTracking({ books, canDelete }: Props) {
             whatsappId: editing.whatsapp_id,
             name: editing.name,
             phone: editing.phone,
+            courierName: editing.courier_name ?? '',
             trackingNumber: editing.tracking_number,
             items: editing.items,
             createdAt: editing.created_at,

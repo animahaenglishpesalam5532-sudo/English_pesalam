@@ -8,9 +8,16 @@ interface ModalProps {
   onClose: () => void
   title: string
   children: React.ReactNode
+  closeOnBackdropClick?: boolean
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  closeOnBackdropClick = true,
+}: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -29,7 +36,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={closeOnBackdropClick ? onClose : undefined}
       />
       
       {/* Modal */}

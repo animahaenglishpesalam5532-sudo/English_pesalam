@@ -19,7 +19,7 @@ export default async function BookTrackingPage() {
 
   return (
     <AdminLayout role={user.role} userName={user.fullName ?? user.email}>
-      <BookTracking books={books} canDelete={user.role === 'admin'} />
+      <BookTracking books={books} canDelete={user.role === 'admin' || user.role === 'delivery'} />
     </AdminLayout>
   )
 }

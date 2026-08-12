@@ -6,7 +6,7 @@ import type { BookTrackingRecord } from '@/app/actions/bookTracking'
 
 interface Props {
   row: BookTrackingRecord
-  /** Admins may remove records; delivery members may not. */
+  /** Admins and delivery personnel may remove records. */
   canDelete: boolean
   deleting: boolean
   onEdit: (row: BookTrackingRecord) => void
