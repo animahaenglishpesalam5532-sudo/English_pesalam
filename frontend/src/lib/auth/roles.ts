@@ -70,3 +70,16 @@ export async function requireDelivery(): Promise<CurrentUser> {
   }
   return user
 }
+
+/** Admins, delivery, and salesperson (staff) may VIEW book tracking records. */
+export async function requireDeliveryOrStaff(): Promise<CurrentUser> {
+  const user = await getCurrentUser()
+  if (
+    !user ||
+    !user.isActive ||
+    (user.role !== 'admin' && user.role !== 'delivery' && user.role !== 'staff')
+  ) {
+    throw new Error('Not authorized')
+  }
+  return user
+}

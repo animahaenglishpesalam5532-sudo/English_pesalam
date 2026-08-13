@@ -25,9 +25,11 @@ interface Props {
   books: BookOption[]
   /** Admins and delivery personnel get the delete action. */
   canDelete: boolean
+  /** Salespersons (staff) can view but not add/import/delete records. */
+  canWrite: boolean
 }
 
-export default function BookTracking({ books, canDelete }: Props) {
+export default function BookTracking({ books, canDelete, canWrite }: Props) {
   const list = useBookTrackingList()
   const [showCreate, setShowCreate] = useState(false)
   const [showImport, setShowImport] = useState(false)
@@ -84,18 +86,22 @@ export default function BookTracking({ books, canDelete }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowImport(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <Upload className="w-4 h-4" /> Import Records
-          </button>
-          <button
-            onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add Record
-          </button>
+          {canWrite && (
+            <>
+              <button
+                onClick={() => setShowImport(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Upload className="w-4 h-4" /> Import Records
+              </button>
+              <button
+                onClick={openCreate}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" /> Add Record
+              </button>
+            </>
+          )}
         </div>
       </div>
 

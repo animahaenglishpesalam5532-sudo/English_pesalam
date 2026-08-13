@@ -13,13 +13,15 @@ export default async function BookTrackingPage() {
 
   if (!user.isActive) return <AccountNotActivated email={user.email} />
 
-  if (user.role !== 'admin' && user.role !== 'delivery') redirect('/admin/sales-entry')
+  if (user.role !== 'admin' && user.role !== 'delivery' && user.role !== 'staff') redirect('/admin/sales-entry')
 
   const books = await getBookOptions()
 
+  const canWrite = user.role === 'admin' || user.role === 'delivery'
+
   return (
     <AdminLayout role={user.role} userName={user.fullName ?? user.email}>
-      <BookTracking books={books} canDelete={user.role === 'admin' || user.role === 'delivery'} />
+      <BookTracking books={books} canDelete={canWrite} canWrite={canWrite} />
     </AdminLayout>
   )
 }

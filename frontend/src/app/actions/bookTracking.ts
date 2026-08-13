@@ -1,7 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { requireDelivery } from '@/lib/auth/roles'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireDelivery, requireDeliveryOrStaff } from '@/lib/auth/roles'
 import { revalidatePath } from 'next/cache'
 
 export interface BookOption {
@@ -86,12 +87,12 @@ export async function getBookTrackingPage(
   filters: BookTrackingFilters
 ): Promise<BookTrackingPage> {
   try {
-    await requireDelivery()
+    await requireDeliveryOrStaff()
   } catch {
     return { rows: [], total: 0 }
   }
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 25
   const page = filters.page && filters.page > 0 ? filters.page : 1
   const from = (page - 1) * pageSize

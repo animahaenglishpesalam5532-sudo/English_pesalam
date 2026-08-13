@@ -66,6 +66,10 @@ const staffGroups: NavGroup[] = [
       { name: 'Records', href: '/admin/my-records', icon: Receipt },
     ],
   },
+  {
+    title: 'Delivery',
+    links: [{ name: 'Book Tracking', href: '/admin/book-tracking', icon: Truck }],
+  },
 ]
 
 const deliveryGroups: NavGroup[] = [

@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
   // Kept in sync with HOME_BY_ROLE in src/lib/auth/roles.ts (duplicated here
   // because middleware cannot import the server-only auth module).
   const ROLE_ROUTES: Record<string, string[]> = {
-    staff: ['/admin/sales-entry', '/admin/my-records'],
+    staff: ['/admin/sales-entry', '/admin/my-records', '/admin/book-tracking'],
     delivery: ['/admin/book-tracking'],
   }
   const ROLE_HOME: Record<string, string> = {
