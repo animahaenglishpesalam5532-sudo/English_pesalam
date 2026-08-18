@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown, SquarePlay, Truck } from 'lucide-react'
+import { LayoutDashboard, FileText, LogOut, Menu, X, Users, Settings, QrCode, Presentation, Video, BarChart3, HelpCircle, Sparkles, Info, PhoneCall, Receipt, UserCog, ChevronDown, SquarePlay, Truck, MessageCircle } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
 import ThemeProvider from './ThemeProvider'
 import ThemeToggle from './ThemeToggle'
@@ -31,6 +31,10 @@ const adminGroups: NavGroup[] = [
   {
     title: 'Delivery',
     links: [{ name: 'Book Tracking', href: '/admin/book-tracking', icon: Truck }],
+  },
+  {
+    title: 'Messaging',
+    links: [{ name: 'WhatsApp', href: '/admin/whatsapp', icon: MessageCircle }],
   },
   {
     title: 'Content',
