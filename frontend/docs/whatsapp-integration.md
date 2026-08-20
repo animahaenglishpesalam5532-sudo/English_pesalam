@@ -67,8 +67,12 @@ Two things worth remembering:
 
 - The redirect lives in `next.config.mjs`, **not** an API route. Vercel serves it from the
   edge routing layer, so no serverless function is invoked or billed.
-- Next decodes the destination once, so the query text must be **double-encoded**
-  (`%2520`, not `%20`) to reach the browser correctly.
+- Encode the prefilled text **exactly once** (`%20`). `next dev` decodes the destination one
+  extra time, so a raw space shows up in the local `Location` header — that's expected and
+  browsers re-encode it. Vercel does *not* decode, so `%2520` would reach the customer's chat
+  box as literal `%20` characters.
+
+`/online-class` works the same way, pointing at the enquiry number +91 63805 13228.
 
 ### Graph API client — `src/lib/whatsapp/client.ts`
 
@@ -130,7 +134,10 @@ window.
 **`wa.me` is banned in template buttons** ("Direct links to WhatsApp aren't allowed for
 buttons") but is allowed in template **body text** and in interactive `cta_url` messages.
 
-**Next.js decodes redirect destinations once** — see the `%2520` note above.
+**`next dev` and Vercel decode redirect destinations differently.** Dev decodes the
+destination once; Vercel passes it through verbatim. Encode for Vercel (single `%20`) — the
+raw space you see locally with `curl -D -` is harmless. Getting this backwards puts literal
+`%20` in the customer's chat box, which is only visible on a real phone, not in the headers.
 
 **Webhooks need THREE things, and the dashboard only prompts for two:**
 
