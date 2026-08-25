@@ -139,10 +139,15 @@ export function missingVariables(
   return missing
 }
 
-/** Builds the `components` array the Cloud API expects for this template. */
+/**
+ * Builds the `components` array the Cloud API expects for this template.
+ * `headerMediaId` comes from resolveHeaderMediaId() and is server-side only —
+ * the client preview calls this without it.
+ */
 export function buildTemplateComponents(
   template: WhatsAppTemplate,
-  variables: TemplateVariables
+  variables: TemplateVariables,
+  headerMediaId?: string
 ): Record<string, unknown>[] {
   const components: Record<string, unknown>[] = []
   const format = headerFormat(template)
@@ -159,13 +164,17 @@ export function buildTemplateComponents(
       })
     }
   } else if (format === 'IMAGE' || format === 'VIDEO' || format === 'DOCUMENT') {
-    // The Cloud API always wants a media parameter, so reuse the template's asset.
+    // The Cloud API always wants a media parameter. Prefer an uploaded media ID:
+    // Meta will not reliably download the scontent handle it hands out with the
+    // template, which fails the send with (#131053) Media upload error.
+    const kind = format.toLowerCase()
     const link = templateHeaderMedia(template)
-    if (link) {
-      const kind = format.toLowerCase()
+    const media = headerMediaId ? { id: headerMediaId } : link ? { link } : null
+
+    if (media) {
       components.push({
         type: 'header',
-        parameters: [{ type: kind, [kind]: { link } }],
+        parameters: [{ type: kind, [kind]: media }],
       })
     }
   }

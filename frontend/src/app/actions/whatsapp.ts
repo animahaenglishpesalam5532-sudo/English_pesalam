@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/auth/roles'
 import { sendTemplate } from '@/lib/whatsapp/client'
 import { normalizePhone, DEFAULT_COUNTRY_CODE } from '@/lib/whatsapp/phone'
 import { MAX_RECIPIENTS } from '@/lib/whatsapp/limits'
+import { resolveHeaderMediaId } from '@/lib/whatsapp/media'
 import type { MessageStatus } from '@/lib/whatsapp/status'
 import { fetchTemplates } from '@/lib/whatsapp/templatesApi'
 import {
@@ -140,7 +141,9 @@ export async function sendTemplateMessages(
     return { error: `Send to at most ${MAX_RECIPIENTS} numbers at a time` }
   }
 
-  const components = buildTemplateComponents(template, input.variables)
+  // Uploaded once for the whole batch, not per recipient.
+  const headerMediaId = await resolveHeaderMediaId(template)
+  const components = buildTemplateComponents(template, input.variables, headerMediaId)
   const bodyPreview = renderBodyPreview(template, input.variables)
   const batchId = randomUUID()
 
