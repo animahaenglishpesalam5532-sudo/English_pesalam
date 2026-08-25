@@ -75,33 +75,55 @@ export async function getRecipientContacts(
   return { contacts, truncated: rows.length >= 5000 }
 }
 
+/** Numbers to warn about in the recipient picker, both all-time. */
+export interface RecipientHistory {
+  /** Already received `templateName` — a duplicate send. */
+  sent: string[]
+  /**
+   * A send to this number has failed and nothing has ever reached it since.
+   * Not scoped to the template: the usual cause is Meta's per-recipient
+   * marketing frequency cap (131049), which follows the person rather than the
+   * template, and re-sending only pushes the number further down.
+   */
+  failed: string[]
+}
+
 /**
- * Every number that has already successfully received `templateName` — all
- * time, any campaign. Used to flag duplicates in the recipient picker.
+ * Send history for the numbers the admin is about to pick from — all time,
+ * any campaign.
  */
-export async function getSentPhonesForTemplate(templateName: string): Promise<string[]> {
+export async function getRecipientHistory(templateName: string): Promise<RecipientHistory> {
   try {
     await requireAdmin()
   } catch {
-    return []
+    return { sent: [], failed: [] }
   }
-  if (!templateName) return []
 
   const supabase = createAdminClient()
-  const phones = new Set<string>()
+  const sent = new Set<string>()
+  const failed = new Set<string>()
+  // Confirmed by the status webhook to have actually arrived, so whatever
+  // caused an older failure has cleared.
+  const reached = new Set<string>()
 
   // PostgREST caps each response at 1000 rows, so page until a short page.
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('whatsapp_messages')
-      .select('to_phone')
-      .eq('template_name', templateName)
-      .in('status', SENT_STATUSES)
+      .select('to_phone, template_name, status')
       .range(from, from + 999)
     if (error) break
-    for (const r of data ?? []) phones.add(r.to_phone)
+    for (const r of data ?? []) {
+      if (r.status === 'failed') failed.add(r.to_phone)
+      if (r.status === 'delivered' || r.status === 'read') reached.add(r.to_phone)
+      if (r.template_name === templateName && SENT_STATUSES.includes(r.status)) {
+        sent.add(r.to_phone)
+      }
+    }
     if ((data?.length ?? 0) < 1000) break
   }
 
-  return Array.from(phones)
+  for (const phone of reached) failed.delete(phone)
+
+  return { sent: Array.from(sent), failed: Array.from(failed) }
 }

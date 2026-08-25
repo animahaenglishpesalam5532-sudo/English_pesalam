@@ -9,6 +9,7 @@ import { TemplateVariablesForm } from './TemplateVariables'
 import { PhoneNumbersInput } from './PhoneNumbersInput'
 import { CampaignSelect } from './campaigns/CampaignSelect'
 import { RecipientPickerModal } from './recipients/RecipientPickerModal'
+import { useRecipientHistory } from './useRecipientHistory'
 import { CARD } from './styles'
 import { DEFAULT_COUNTRY_CODE, normalizePhone } from '@/lib/whatsapp/phone'
 import { MAX_RECIPIENTS } from '@/lib/whatsapp/limits'
@@ -47,6 +48,11 @@ export function SendTemplateCard({
   const [campaignId, setCampaignId] = useState('')
   const [sending, setSending] = useState(false)
   const [failures, setFailures] = useState<{ phone: string; error: string }[]>([])
+
+  // Shared by the picker and the typed-in list so both flag the same numbers.
+  const { sentPhones, failedPhones, reload: reloadHistory } = useRecipientHistory(
+    selected?.name ?? ''
+  )
 
   // Manual entries and picked contacts share one cap; the server dedupes too.
   const { manualCount, recipientCount, customerIds } = useMemo(() => {
@@ -113,6 +119,7 @@ export function SendTemplateCard({
       setPhones([])
       setPicked([])
     }
+    reloadHistory()
     onSent()
   }
 
@@ -206,6 +213,7 @@ export function SendTemplateCard({
           <PhoneNumbersInput
             phones={phones}
             countryCode={countryCode}
+            failedPhones={failedPhones}
             onChange={setPhones}
             onCountryCode={setCountryCode}
           />
@@ -259,7 +267,8 @@ export function SendTemplateCard({
         open={pickerOpen}
         products={products}
         countryCode={countryCode}
-        templateName={selected?.name ?? ''}
+        sentPhones={sentPhones}
+        failedPhones={failedPhones}
         maxSelectable={Math.max(0, MAX_RECIPIENTS - manualCount)}
         initialSelection={picked}
         onClose={() => setPickerOpen(false)}

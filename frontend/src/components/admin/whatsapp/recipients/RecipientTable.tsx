@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, XCircle } from 'lucide-react'
 import { formatPhone } from '@/lib/whatsapp/phone'
 import type { Category } from '@/app/actions/sales'
 import type { RecipientContact } from '@/app/actions/whatsappRecipients'
@@ -18,6 +18,8 @@ export interface RecipientRow {
   /** E.164 digits, or null when the stored number cannot be dialled. */
   phone: string | null
   alreadySent: boolean
+  /** A previous send to this number failed and nothing has reached it since. */
+  previouslyFailed: boolean
 }
 
 function fmtDate(iso: string) {
@@ -60,17 +62,20 @@ export function RecipientTable({ rows, selected, loading, capReached, onToggle }
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100">
-        {rows.map(({ contact, phone, alreadySent }) => {
+        {rows.map(({ contact, phone, alreadySent, previouslyFailed }) => {
           const isSelected = selected.has(contact.customerId)
           const unreachable = !phone
           const blocked = unreachable || (capReached && !isSelected)
+          const tint = alreadySent
+            ? 'bg-red-50 hover:bg-red-100'
+            : previouslyFailed
+              ? 'bg-orange-50 hover:bg-orange-100'
+              : 'hover:bg-gray-50'
           return (
             <tr
               key={contact.customerId}
               onClick={() => !blocked && onToggle(contact.customerId)}
-              className={`${blocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
-                alreadySent ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'
-              }`}
+              className={`${blocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${tint}`}
             >
               <td className="px-3 py-2.5">
                 <input
@@ -87,6 +92,14 @@ export function RecipientTable({ rows, selected, loading, capReached, onToggle }
                 {alreadySent && (
                   <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
                     <AlertCircle className="h-3 w-3" /> Already sent
+                  </span>
+                )}
+                {previouslyFailed && (
+                  <span
+                    title="An earlier message to this number failed. Sending again usually fails too."
+                    className="ml-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-700"
+                  >
+                    <XCircle className="h-3 w-3" /> Failed before
                   </span>
                 )}
               </td>

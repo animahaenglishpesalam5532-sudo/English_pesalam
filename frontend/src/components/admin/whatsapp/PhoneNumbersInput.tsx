@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, XCircle } from 'lucide-react'
 import { formatPhone, normalizePhone, splitPhoneInput } from '@/lib/whatsapp/phone'
 import { LABEL } from './styles'
 
 interface Props {
   phones: string[]
   countryCode: string
+  /** E.164 numbers an earlier send failed for — flagged as the admin types. */
+  failedPhones: Set<string>
   onChange: (phones: string[]) => void
   onCountryCode: (code: string) => void
 }
@@ -16,7 +18,13 @@ interface Props {
  * Tag-style entry for many recipients: type a number and press Enter (or
  * comma / space), or paste a whole list at once.
  */
-export function PhoneNumbersInput({ phones, countryCode, onChange, onCountryCode }: Props) {
+export function PhoneNumbersInput({
+  phones,
+  countryCode,
+  failedPhones,
+  onChange,
+  onCountryCode,
+}: Props) {
   const [draft, setDraft] = useState('')
 
   const commit = (raw: string) => {
@@ -41,6 +49,10 @@ export function PhoneNumbersInput({ phones, countryCode, onChange, onCountryCode
   }
 
   const invalidCount = phones.filter((p) => !normalizePhone(p, countryCode)).length
+  const failedCount = phones.filter((p) => {
+    const n = normalizePhone(p, countryCode)
+    return !!n && failedPhones.has(n)
+  }).length
 
   return (
     <div>
@@ -62,16 +74,26 @@ export function PhoneNumbersInput({ phones, countryCode, onChange, onCountryCode
       <div className="flex flex-wrap gap-1.5 rounded-lg border border-gray-300 p-2 focus-within:ring-2 focus-within:ring-blue-500">
         {phones.map((phone, i) => {
           const normalized = normalizePhone(phone, countryCode)
+          const failed = !!normalized && failedPhones.has(normalized)
           return (
             <span
               key={`${phone}-${i}`}
-              title={normalized ? undefined : 'Invalid number — include the country code'}
+              title={
+                !normalized
+                  ? 'Invalid number — include the country code'
+                  : failed
+                    ? 'An earlier message to this number failed. Sending again usually fails too.'
+                    : undefined
+              }
               className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium ${
-                normalized
-                  ? 'border-blue-200 bg-blue-50 text-blue-800'
-                  : 'border-red-200 bg-red-50 text-red-700'
+                !normalized
+                  ? 'border-red-200 bg-red-50 text-red-700'
+                  : failed
+                    ? 'border-orange-200 bg-orange-50 text-orange-700'
+                    : 'border-blue-200 bg-blue-50 text-blue-800'
               }`}
             >
+              {failed && <XCircle className="h-3 w-3" />}
               {normalized ? formatPhone(normalized) : phone}
               <button
                 type="button"
@@ -100,6 +122,14 @@ export function PhoneNumbersInput({ phones, countryCode, onChange, onCountryCode
           className="min-w-[180px] flex-1 border-0 px-1 py-1 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
         />
       </div>
+
+      {failedCount > 0 && (
+        <p className="mt-1.5 text-xs text-orange-700">
+          {failedCount} of these numbers {failedCount === 1 ? 'has' : 'have'} been messaged before
+          and the send failed — usually Meta&apos;s per-recipient marketing cap. Sending again tends
+          to fail too and hurts your number&apos;s quality rating.
+        </p>
+      )}
 
       <div className="mt-1.5 flex items-center justify-between text-xs">
         <span className={invalidCount ? 'text-red-600' : 'text-gray-400'}>

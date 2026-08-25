@@ -6,11 +6,7 @@ import { AlertTriangle, X } from 'lucide-react'
 import { RecipientFilters } from './RecipientFilters'
 import { RecipientTable, type RecipientRow } from './RecipientTable'
 import { normalizePhone } from '@/lib/whatsapp/phone'
-import {
-  getRecipientContacts,
-  getSentPhonesForTemplate,
-  type RecipientContact,
-} from '@/app/actions/whatsappRecipients'
+import { getRecipientContacts, type RecipientContact } from '@/app/actions/whatsappRecipients'
 import type { EntryProducts, RegisterFilters } from '@/app/actions/sales'
 
 const DEFAULT_FILTERS: RegisterFilters = {
@@ -27,8 +23,10 @@ interface Props {
   open: boolean
   products: EntryProducts
   countryCode: string
-  /** Template being sent — drives the "already sent" flag. */
-  templateName: string
+  /** Numbers that already received this template — the duplicate flag. */
+  sentPhones: Set<string>
+  /** Numbers an earlier send failed for — left unticked by default. */
+  failedPhones: Set<string>
   /** How many more recipients fit before the per-send cap. */
   maxSelectable: number
   /** Previously picked contacts, so reopening shows what is already chosen. */
@@ -41,7 +39,8 @@ export function RecipientPickerModal({
   open,
   products,
   countryCode,
-  templateName,
+  sentPhones,
+  failedPhones,
   maxSelectable,
   initialSelection,
   onClose,
@@ -50,7 +49,6 @@ export function RecipientPickerModal({
   const [filters, setFilters] = useState<RegisterFilters>(DEFAULT_FILTERS)
   const [contacts, setContacts] = useState<RecipientContact[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [sentPhones, setSentPhones] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [truncated, setTruncated] = useState(false)
 
@@ -63,29 +61,18 @@ export function RecipientPickerModal({
     setTruncated(false)
   }, [open, initialSelection])
 
-  // Duplicate check is all-time and campaign-agnostic: has this number ever
-  // successfully received this template?
-  useEffect(() => {
-    if (!open || !templateName) {
-      setSentPhones(new Set())
-      return
-    }
-    let active = true
-    getSentPhonesForTemplate(templateName).then((phones) => {
-      if (active) setSentPhones(new Set(phones))
-    })
-    return () => {
-      active = false
-    }
-  }, [open, templateName])
-
   const rows: RecipientRow[] = useMemo(
     () =>
       contacts.map((contact) => {
         const phone = normalizePhone(contact.phone, countryCode)
-        return { contact, phone, alreadySent: !!phone && sentPhones.has(phone) }
+        return {
+          contact,
+          phone,
+          alreadySent: !!phone && sentPhones.has(phone),
+          previouslyFailed: !!phone && failedPhones.has(phone),
+        }
       }),
-    [contacts, countryCode, sentPhones]
+    [contacts, countryCode, sentPhones, failedPhones]
   )
 
   const apply = async () => {
@@ -96,11 +83,14 @@ export function RecipientPickerModal({
     setTruncated(res.truncated)
 
     // Pre-tick the first `maxSelectable` reachable contacts; the admin unticks
-    // whoever they don't want (duplicates are flagged in red).
+    // whoever they don't want (duplicates are flagged in red). Numbers a send
+    // has already failed for are left unticked — re-sending to them is what
+    // makes Meta's per-recipient cap worse — but they stay tickable.
     const next = new Set<string>()
     for (const c of res.contacts) {
       if (next.size >= maxSelectable) break
-      if (normalizePhone(c.phone, countryCode)) next.add(c.customerId)
+      const phone = normalizePhone(c.phone, countryCode)
+      if (phone && !failedPhones.has(phone)) next.add(c.customerId)
     }
     setSelected(next)
 
@@ -122,6 +112,10 @@ export function RecipientPickerModal({
     [contacts, selected]
   )
   const alreadySentSelected = rows.filter((r) => r.alreadySent && selected.has(r.contact.customerId)).length
+  const failedSelected = rows.filter(
+    (r) => r.previouslyFailed && selected.has(r.contact.customerId)
+  ).length
+  const failedInList = rows.filter((r) => r.previouslyFailed).length
 
   if (!open) return null
 
@@ -163,6 +157,18 @@ export function RecipientPickerModal({
           </div>
         )}
 
+        {failedInList > 0 && (
+          <div className="flex items-start gap-2 border-b border-orange-100 bg-orange-50 px-5 py-2 text-xs text-orange-700">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              {failedInList} contact{failedInList === 1 ? ' has' : 's have'} been messaged before and
+              the send failed — usually Meta&apos;s per-recipient marketing cap. They are left
+              unticked because sending again tends to fail too and hurts your number&apos;s quality
+              rating. Tick them only if you know something has changed.
+            </span>
+          </div>
+        )}
+
         <div className="flex-1 overflow-auto">
           <RecipientTable
             rows={rows}
@@ -182,6 +188,9 @@ export function RecipientPickerModal({
               <span className="ml-2 text-red-600">
                 {alreadySentSelected} already received this template
               </span>
+            )}
+            {failedSelected > 0 && (
+              <span className="ml-2 text-orange-700">{failedSelected} failed previously</span>
             )}
           </div>
           <div className="flex gap-2">
