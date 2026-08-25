@@ -3,6 +3,16 @@ import crypto from 'crypto'
 import { whatsappConfig } from '@/lib/whatsapp/config'
 import { sendCtaUrl } from '@/lib/whatsapp/client'
 import { AUTO_REPLY_CARD, claimAutoReply, markMessageSeen } from '@/lib/whatsapp/autoReply'
+import { isMessageStatus, outranks } from '@/lib/whatsapp/status'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+interface StatusEvent {
+  id: string
+  status: string
+  timestamp: string
+  recipient_id: string
+  errors?: Array<{ code?: number; title?: string; message?: string }>
+}
 
 // Meta calls the webhook from its own servers, so this route must run on the
 // Node.js runtime (needs `crypto`) and never be statically cached.
@@ -65,6 +75,46 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * Writes Meta's real delivery outcome onto the logged message. Without this the
+ * admin log would keep claiming "sent" for messages Meta accepted and then
+ * dropped, which is exactly what a marketing frequency cap looks like.
+ */
+async function recordStatus(status: StatusEvent) {
+  if (!status?.id || !isMessageStatus(status.status)) return
+
+  const next = status.status
+  const supabase = createAdminClient()
+
+  const { data: existing } = await supabase
+    .from('whatsapp_messages')
+    .select('id, status')
+    .eq('message_id', status.id)
+    .maybeSingle()
+
+  // Sends made from another environment (or before logging existed) have no row.
+  if (!existing) return
+  if (isMessageStatus(existing.status) && !outranks(next, existing.status)) return
+
+  const failure = status.errors?.[0]
+  const error = failure
+    ? [failure.code ? `(#${failure.code})` : '', failure.title, failure.message]
+        .filter(Boolean)
+        .join(' ')
+    : null
+
+  const { error: writeError } = await supabase
+    .from('whatsapp_messages')
+    .update({ status: next, ...(error ? { error } : {}) })
+    .eq('id', existing.id)
+
+  // Most likely cause is migration 010 not having been run, which would
+  // otherwise fail the status check constraint without a trace.
+  if (writeError) {
+    console.error('[whatsapp-webhook] could not save status', next, writeError.message)
+  }
+}
+
+/**
  * Validates the X-Hub-Signature-256 header using the App Secret.
  * Skipped only if WHATSAPP_APP_SECRET is not configured yet (dev convenience).
  */
@@ -118,8 +168,10 @@ function handleEvent(payload: WhatsAppWebhookPayload) {
           id: status.id,
           status: status.status,
           recipient: status.recipient_id,
+          error: status.errors?.[0]?.title,
         })
-        // TODO: update message delivery status in Supabase here.
+
+        after(recordStatus(status))
       }
     }
   }
@@ -160,12 +212,7 @@ interface WhatsAppWebhookPayload {
           type: string
           text?: { body: string }
         }>
-        statuses?: Array<{
-          id: string
-          status: string
-          timestamp: string
-          recipient_id: string
-        }>
+        statuses?: StatusEvent[]
       }
     }>
   }>

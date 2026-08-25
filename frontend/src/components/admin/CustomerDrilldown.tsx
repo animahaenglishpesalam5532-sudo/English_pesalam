@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
-import { Phone, ShoppingCart, MessageSquare, History } from 'lucide-react'
+import { Phone, ShoppingCart, MessageSquare, History, Send } from 'lucide-react'
 import { itemsText } from '@/lib/sales/items'
 import { getCustomerTimeline, type CustomerTimeline, type Category } from '@/app/actions/sales'
 
@@ -61,6 +61,39 @@ export default function CustomerDrilldown({
               <Stat label="Purchases" value={data.totals.purchases} icon={ShoppingCart} color="text-emerald-600 bg-emerald-50" />
               <Stat label="Spent" value={fmtMoney(data.totals.revenue)} icon={ShoppingCart} color="text-purple-600 bg-purple-50" />
             </div>
+
+            {/* WhatsApp broadcasts received */}
+            {data.messages?.length > 0 && (
+              <div className="mb-5 rounded-lg border border-green-100 bg-green-50/50 p-3">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-green-800">
+                  <Send className="h-3.5 w-3.5" /> WhatsApp messages ({data.messages.length})
+                </p>
+                <ul className="space-y-1.5">
+                  {data.messages.map((m) => (
+                    <li key={m.id} className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className="text-gray-400">{fmtDate(m.created_at)}</span>
+                      <span className="font-medium text-gray-900">{m.template_name}</span>
+                      {m.campaign_name && (
+                        <span className="rounded-full bg-white px-2 py-0.5 text-gray-600 border border-gray-200">
+                          {m.campaign_name}
+                        </span>
+                      )}
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-medium ${
+                          m.status === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : m.status === 'sent'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                        }`}
+                      >
+                        {m.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Timeline */}
             <ol className="relative border-l border-gray-200 ml-2 space-y-5">

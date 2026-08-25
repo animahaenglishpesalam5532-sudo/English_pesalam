@@ -124,8 +124,32 @@ html.dark .admin-scope .hover\:bg-blue-50:hover { background-color: rgba(59, 130
 html.dark .admin-scope .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.16); }
 
 /* Keep accent text bright enough on dark */
-html.dark .admin-scope .text-blue-700 { color: #93c5fd; }
 html.dark .admin-scope .text-blue-600 { color: #60a5fa; }
+html.dark .admin-scope .text-blue-700,
+html.dark .admin-scope .text-blue-800,
+html.dark .admin-scope .text-blue-900 { color: #93c5fd; }
+html.dark .admin-scope .text-sky-600 { color: #38bdf8; }
+html.dark .admin-scope .text-red-600 { color: #f87171; }
+html.dark .admin-scope .text-red-700,
+html.dark .admin-scope .text-red-800,
+html.dark .admin-scope .text-red-900 { color: #fca5a5; }
+html.dark .admin-scope .text-emerald-600 { color: #34d399; }
+html.dark .admin-scope .text-emerald-700,
+html.dark .admin-scope .text-emerald-800 { color: #6ee7b7; }
+html.dark .admin-scope .text-green-600 { color: #4ade80; }
+html.dark .admin-scope .text-green-700,
+html.dark .admin-scope .text-green-800 { color: #86efac; }
+html.dark .admin-scope .text-amber-600 { color: #fbbf24; }
+html.dark .admin-scope .text-amber-700,
+html.dark .admin-scope .text-amber-800,
+html.dark .admin-scope .text-yellow-800 { color: #fcd34d; }
+html.dark .admin-scope .text-orange-700 { color: #fdba74; }
+html.dark .admin-scope .text-purple-600 { color: #c084fc; }
+html.dark .admin-scope .text-purple-700,
+html.dark .admin-scope .text-purple-800 { color: #d8b4fe; }
+html.dark .admin-scope .text-indigo-600 { color: #818cf8; }
+html.dark .admin-scope .text-indigo-700,
+html.dark .admin-scope .text-indigo-900 { color: #a5b4fc; }
 
 @layer base {
   /* Automatically center and responsive-scale all embedded media inside WYSIWYG editor and public blog view */

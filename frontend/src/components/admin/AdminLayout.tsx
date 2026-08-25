@@ -32,6 +32,10 @@ const adminGroups: NavGroup[] = [
     title: 'Delivery',
     links: [{ name: 'Book Tracking', href: '/admin/book-tracking', icon: Truck }],
   },
+  // Messaging / WhatsApp is intentionally absent: a broadcast sends real
+  // marketing messages to real customers, so /admin/whatsapp is reached by
+  // typing the URL rather than by anyone browsing the sidebar. The page itself
+  // is still admin-gated — removing the link is convenience, not access control.
   {
     title: 'Content',
     links: [

@@ -11,6 +11,8 @@ export const whatsappConfig = {
   accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
   // The Phone Number ID (not the phone number) from the WhatsApp setup.
   phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
+  // WhatsApp Business Account ID — required to list message templates.
+  wabaId: process.env.WHATSAPP_WABA_ID ?? '',
   // Graph API version to target.
   graphApiVersion: process.env.WHATSAPP_GRAPH_API_VERSION ?? 'v21.0',
 }

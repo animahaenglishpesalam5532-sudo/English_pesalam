@@ -61,6 +61,30 @@ export async function sendCtaUrl(to: string, message: CtaUrlMessage): Promise<Se
   })
 }
 
+/**
+ * Sends a pre-approved message template. This is the only way to reach a
+ * customer outside the 24h customer service window.
+ *
+ * `components` carries the filled-in {{n}} placeholders — omit it for
+ * templates that have none.
+ */
+export async function sendTemplate(
+  to: string,
+  name: string,
+  language: string,
+  components?: Record<string, unknown>[]
+): Promise<SendResult> {
+  return send({
+    to,
+    type: 'template',
+    template: {
+      name,
+      language: { code: language },
+      ...(components?.length ? { components } : {}),
+    },
+  })
+}
+
 /** Shared POST to the messages endpoint. */
 async function send(payload: Record<string, unknown>): Promise<SendResult> {
   const { accessToken, phoneNumberId } = whatsappConfig
