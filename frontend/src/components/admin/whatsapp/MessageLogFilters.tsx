@@ -3,15 +3,16 @@
 import React from 'react'
 import { Search } from 'lucide-react'
 import { CARD, FILTER_INPUT, LABEL } from './styles'
+import type { MessageStatus } from '@/lib/whatsapp/status'
 
 interface Props {
   search: string
-  status: '' | 'sent' | 'failed'
+  status: '' | MessageStatus
   from: string
   to: string
   filtersActive: boolean
   onSearch: (v: string) => void
-  onStatus: (v: '' | 'sent' | 'failed') => void
+  onStatus: (v: '' | MessageStatus) => void
   onFrom: (v: string) => void
   onTo: (v: string) => void
   onClear: () => void
@@ -50,10 +51,12 @@ export function MessageLogFilters({
           <select
             className={FILTER_INPUT}
             value={status}
-            onChange={(e) => onStatus(e.target.value as '' | 'sent' | 'failed')}
+            onChange={(e) => onStatus(e.target.value as '' | MessageStatus)}
           >
             <option value="">All</option>
-            <option value="sent">Sent</option>
+            <option value="sent">Sent (not yet delivered)</option>
+            <option value="delivered">Delivered</option>
+            <option value="read">Read</option>
             <option value="failed">Failed</option>
           </select>
         </div>

@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/roles'
 import { sendTemplate } from '@/lib/whatsapp/client'
 import { normalizePhone, DEFAULT_COUNTRY_CODE } from '@/lib/whatsapp/phone'
+import { MAX_RECIPIENTS } from '@/lib/whatsapp/limits'
+import type { MessageStatus } from '@/lib/whatsapp/status'
 import { fetchTemplates } from '@/lib/whatsapp/templatesApi'
 import {
   buildTemplateComponents,
@@ -15,8 +17,7 @@ import {
   type WhatsAppTemplate,
 } from '@/lib/whatsapp/templates'
 
-/** Meta throttles hard on bursts, so keep a batch modest and the fan-out small. */
-const MAX_RECIPIENTS = 200
+/** Keep the fan-out small — Meta throttles hard on bursts. */
 const CONCURRENCY = 5
 
 export interface TemplateListResult {
@@ -31,6 +32,13 @@ export interface SendTemplateInput {
   /** Raw entries as typed by the admin; normalised server-side. */
   phones: string[]
   countryCode?: string
+  /** Every send is filed under a campaign. */
+  campaignId: string
+  /**
+   * Normalised phone -> customer id, for recipients picked from the records.
+   * Lets the customer drilldown show what that customer was sent.
+   */
+  customerIds?: Record<string, string>
 }
 
 export interface SendTemplateResult {
@@ -47,18 +55,20 @@ export interface WhatsAppMessageRecord {
   template_name: string
   template_language: string
   body_preview: string | null
-  status: 'sent' | 'failed'
+  status: MessageStatus
   message_id: string | null
   error: string | null
   created_at: string
+  campaign_name: string | null
 }
 
 export interface WhatsAppMessageFilters {
   from?: string // yyyy-mm-dd, inclusive
   to?: string // yyyy-mm-dd, inclusive
   search?: string // phone number / template name
-  status?: 'sent' | 'failed'
+  status?: MessageStatus
   templateName?: string
+  campaignId?: string
   page?: number // 1-based
   pageSize?: number
 }
@@ -93,6 +103,16 @@ export async function sendTemplateMessages(
   } catch {
     return { error: 'Not authorized' }
   }
+
+  if (!input?.campaignId) return { error: 'Select a campaign before sending' }
+
+  const supabase = createAdminClient()
+  const { data: campaign } = await supabase
+    .from('whatsapp_campaigns')
+    .select('id')
+    .eq('id', input.campaignId)
+    .maybeSingle()
+  if (!campaign) return { error: 'Campaign not found — refresh the page' }
 
   const { templates, error: templatesError } = await fetchTemplates()
   if (templatesError && !templates?.length) return { error: templatesError }
@@ -141,6 +161,8 @@ export async function sendTemplateMessages(
         status: res.ok ? 'sent' : 'failed',
         message_id: res.messageId ?? null,
         error: res.error ?? null,
+        campaign_id: input.campaignId,
+        customer_id: input.customerIds?.[phone] ?? null,
         sent_by: user.id,
       }
     }
@@ -148,7 +170,6 @@ export async function sendTemplateMessages(
 
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, phones.length) }, worker))
 
-  const supabase = createAdminClient()
   await supabase.from('whatsapp_messages').insert(rows)
 
   const failures = rows
@@ -156,6 +177,7 @@ export async function sendTemplateMessages(
     .map((r) => ({ phone: String(r.to_phone), error: String(r.error ?? 'Send failed') }))
 
   revalidatePath('/admin/whatsapp')
+  revalidatePath('/admin/whatsapp/campaigns')
   return { sent: rows.length - failures.length, failed: failures.length, failures }
 }
 
@@ -176,7 +198,7 @@ export async function getWhatsappMessagesPage(
   let query = supabase
     .from('whatsapp_messages')
     .select(
-      'id, to_phone, template_name, template_language, body_preview, status, message_id, error, created_at',
+      'id, to_phone, template_name, template_language, body_preview, status, message_id, error, created_at, whatsapp_campaigns(name)',
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
@@ -185,6 +207,7 @@ export async function getWhatsappMessagesPage(
   if (filters.to) query = query.lte('created_at', `${filters.to}T23:59:59`)
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.templateName) query = query.eq('template_name', filters.templateName)
+  if (filters.campaignId) query = query.eq('campaign_id', filters.campaignId)
 
   const search = filters.search?.trim()
   if (search) {
@@ -198,5 +221,11 @@ export async function getWhatsappMessagesPage(
   const { data, count, error } = await query.range(offset, offset + pageSize - 1)
   if (error) return { rows: [], total: 0 }
 
-  return { rows: (data ?? []) as WhatsAppMessageRecord[], total: count ?? 0 }
+  const rows = (data ?? []).map((d: any) => {
+    const { whatsapp_campaigns, ...rest } = d
+    const campaign = Array.isArray(whatsapp_campaigns) ? whatsapp_campaigns[0] : whatsapp_campaigns
+    return { ...rest, campaign_name: campaign?.name ?? null } as WhatsAppMessageRecord
+  })
+
+  return { rows, total: count ?? 0 }
 }

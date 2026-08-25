@@ -46,6 +46,7 @@ export function MessageLogCards({ rows, loading, filtersActive }: Props) {
           </div>
           <p className="mt-1 text-xs text-gray-500">
             {r.template_name} · {r.template_language}
+            {r.campaign_name && <span className="text-gray-400"> · {r.campaign_name}</span>}
           </p>
           {r.body_preview && (
             <p className="mt-2 text-sm text-gray-600 line-clamp-3">{r.body_preview}</p>

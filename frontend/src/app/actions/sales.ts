@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/roles'
 import { revalidatePath } from 'next/cache'
 import { itemsText } from '@/lib/sales/items'
+import { normalizePhone } from '@/lib/whatsapp/phone'
+import type { MessageStatus } from '@/lib/whatsapp/status'
 
 // ------------------------------------------------------------------ types
 
@@ -767,6 +769,15 @@ export interface CustomerTimeline {
     staff_name: string | null
     edits: { field: string; old_value: string | null; new_value: string | null; edited_at: string }[]
   }[]
+  /** Template broadcasts this customer received. Admin-only (RLS), empty otherwise. */
+  messages: {
+    id: string
+    template_name: string
+    body_preview: string | null
+    status: MessageStatus
+    created_at: string
+    campaign_name: string | null
+  }[]
   totals: { calls: number; inquiries: number; purchases: number; revenue: number }
 }
 
@@ -805,6 +816,30 @@ export async function getCustomerTimeline(customerId: string): Promise<CustomerT
     }
   })
 
+  // WhatsApp broadcasts: matched by customer id (picked from the records) or by
+  // the number itself (typed in by hand), so both routes show up here.
+  const normalized = normalizePhone(customer.phone)
+  let messagesQuery = supabase
+    .from('whatsapp_messages')
+    .select('id, template_name, body_preview, status, created_at, whatsapp_campaigns(name)')
+    .order('created_at', { ascending: false })
+  messagesQuery = normalized
+    ? messagesQuery.or(`customer_id.eq.${customerId},to_phone.eq.${normalized}`)
+    : messagesQuery.eq('customer_id', customerId)
+
+  const { data: messageRows } = await messagesQuery
+  const messages = (messageRows ?? []).map((m: any) => {
+    const campaign = Array.isArray(m.whatsapp_campaigns) ? m.whatsapp_campaigns[0] : m.whatsapp_campaigns
+    return {
+      id: m.id,
+      template_name: m.template_name,
+      body_preview: m.body_preview,
+      status: m.status as MessageStatus,
+      created_at: m.created_at,
+      campaign_name: campaign?.name ?? null,
+    }
+  })
+
   const totals = interactions.reduce(
     (acc, i) => {
       acc.calls += 1
@@ -821,6 +856,7 @@ export async function getCustomerTimeline(customerId: string): Promise<CustomerT
   return {
     customer,
     interactions,
+    messages,
     totals,
   }
 }

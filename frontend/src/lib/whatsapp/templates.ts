@@ -17,6 +17,8 @@ export interface TemplateComponent {
   format?: HeaderFormat
   text?: string
   buttons?: TemplateButton[]
+  /** Meta's sample values; for media headers this is the template's own asset. */
+  example?: { header_handle?: string[] }
 }
 
 export interface WhatsAppTemplate {
@@ -34,8 +36,6 @@ export interface TemplateVariables {
   header: string[]
   /** Values for the {{n}} placeholders in the body. */
   body: string[]
-  /** Public https URL for an IMAGE / VIDEO / DOCUMENT header. */
-  headerMediaUrl?: string
   /** Button position (as a string index) -> value for a dynamic URL suffix. */
   buttonUrls: Record<string, string>
 }
@@ -43,7 +43,6 @@ export interface TemplateVariables {
 export const EMPTY_VARIABLES: TemplateVariables = {
   header: [],
   body: [],
-  headerMediaUrl: '',
   buttonUrls: {},
 }
 
@@ -76,6 +75,18 @@ export function findComponent(
 export function headerFormat(template: WhatsAppTemplate | null | undefined): HeaderFormat | null {
   const header = findComponent(template, 'HEADER')
   return header ? ((header.format ?? 'TEXT') as HeaderFormat) : null
+}
+
+/**
+ * The image/video/document the template itself was approved with. The Cloud API
+ * always wants a media parameter for a media header, so this is the default the
+ * admin gets unless they type an override URL. Meta re-signs this URL on every
+ * template fetch, so it is fresh at send time.
+ */
+export function templateHeaderMedia(
+  template: WhatsAppTemplate | null | undefined
+): string | undefined {
+  return findComponent(template, 'HEADER')?.example?.header_handle?.[0]
 }
 
 /** Buttons whose URL ends in a {{1}} suffix, paired with their position. */
@@ -111,8 +122,9 @@ export function missingVariables(
     for (let i = 0; i < needed; i++) {
       if (!variables?.header?.[i]?.trim()) missing.push(`Header {{${i + 1}}}`)
     }
-  } else if (format && format !== 'LOCATION' && !variables?.headerMediaUrl?.trim()) {
-    missing.push(`${format.toLowerCase()} header URL`)
+  } else if (format && format !== 'LOCATION' && !templateHeaderMedia(template)) {
+    // Nothing the admin can fix here — the template itself is missing its asset.
+    missing.push(`${format.toLowerCase()} header media on the template`)
   }
 
   const bodyNeeded = placeholderCount(findComponent(template, 'BODY')?.text)
@@ -147,11 +159,15 @@ export function buildTemplateComponents(
       })
     }
   } else if (format === 'IMAGE' || format === 'VIDEO' || format === 'DOCUMENT') {
-    const kind = format.toLowerCase()
-    components.push({
-      type: 'header',
-      parameters: [{ type: kind, [kind]: { link: variables?.headerMediaUrl?.trim() } }],
-    })
+    // The Cloud API always wants a media parameter, so reuse the template's asset.
+    const link = templateHeaderMedia(template)
+    if (link) {
+      const kind = format.toLowerCase()
+      components.push({
+        type: 'header',
+        parameters: [{ type: kind, [kind]: { link } }],
+      })
+    }
   }
 
   const bodyNeeded = placeholderCount(findComponent(template, 'BODY')?.text)

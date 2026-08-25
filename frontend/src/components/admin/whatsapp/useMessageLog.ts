@@ -5,6 +5,7 @@ import {
   getWhatsappMessagesPage,
   type WhatsAppMessageRecord,
 } from '@/app/actions/whatsapp'
+import type { MessageStatus } from '@/lib/whatsapp/status'
 
 export interface MessageLogState {
   rows: WhatsAppMessageRecord[]
@@ -15,14 +16,14 @@ export interface MessageLogState {
   from: string
   to: string
   search: string
-  status: '' | 'sent' | 'failed'
+  status: '' | MessageStatus
   filtersActive: boolean
   setPage: (p: number) => void
   setPageSize: (n: number) => void
   setFrom: (v: string) => void
   setTo: (v: string) => void
   setSearch: (v: string) => void
-  setStatus: (v: '' | 'sent' | 'failed') => void
+  setStatus: (v: '' | MessageStatus) => void
   clearFilters: () => void
   reload: () => Promise<void>
 }
@@ -39,7 +40,7 @@ export function useMessageLog(): MessageLogState {
   const [to, setTo] = useState('')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [status, setStatus] = useState<'' | 'sent' | 'failed'>('')
+  const [status, setStatus] = useState<'' | MessageStatus>('')
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350)

@@ -5,21 +5,27 @@ import { TableSkeleton } from '../TableUI'
 import { formatDateTime } from '@/lib/whatsapp/format'
 import { formatPhone } from '@/lib/whatsapp/phone'
 import type { WhatsAppMessageRecord } from '@/app/actions/whatsapp'
+import type { MessageStatus } from '@/lib/whatsapp/status'
 
-const TOTAL_COLS = 5
+const TOTAL_COLS = 6
+
+// 'Sent' only means Meta accepted it — the phone may still never see it, so it
+// is deliberately styled as pending rather than as a success.
+const STATUS_STYLES: Record<MessageStatus, { label: string; className: string }> = {
+  sent: { label: 'Sent', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  delivered: { label: 'Delivered', className: 'bg-green-50 text-green-700 border-green-200' },
+  read: { label: 'Read', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  failed: { label: 'Failed', className: 'bg-red-50 text-red-700 border-red-200' },
+}
 
 export function StatusBadge({ row }: { row: WhatsAppMessageRecord }) {
-  const sent = row.status === 'sent'
+  const style = STATUS_STYLES[row.status] ?? STATUS_STYLES.failed
   return (
     <span
-      title={row.error ?? undefined}
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-        sent
-          ? 'bg-green-50 text-green-700 border-green-200'
-          : 'bg-red-50 text-red-700 border-red-200'
-      }`}
+      title={row.error ?? (row.status === 'sent' ? 'Accepted by Meta, not yet delivered' : undefined)}
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${style.className}`}
     >
-      {sent ? 'Sent' : 'Failed'}
+      {style.label}
     </span>
   )
 }
@@ -37,7 +43,7 @@ export function MessageLogTable({ rows, loading, filtersActive }: Props) {
       <table className="min-w-full divide-y divide-gray-100">
         <thead className="bg-gray-50">
           <tr>
-            {['Date & Time', 'To', 'Template', 'Message', 'Status'].map((label) => (
+            {['Date & Time', 'To', 'Campaign', 'Template', 'Message', 'Status'].map((label) => (
               <th
                 key={label}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
@@ -65,6 +71,9 @@ export function MessageLogTable({ rows, loading, filtersActive }: Props) {
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
                     {formatPhone(r.to_phone)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                    {r.campaign_name || '—'}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                     {r.template_name}

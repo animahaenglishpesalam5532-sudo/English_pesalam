@@ -8,6 +8,7 @@ import RecordsTabs from './RecordsTabs'
 import DateField from './DateField'
 import { TableSkeleton, Pagination } from './TableUI'
 import { itemsText } from '@/lib/sales/items'
+import { productOptions } from '@/lib/sales/productOptions'
 import { InteractionModal, type EntryFormValues } from './InteractionModal'
 import {
   updateInteraction,
@@ -25,18 +26,6 @@ const CATEGORY_LABEL: Record<Category, string> = {
   book: 'Book',
   pdf_ppt: 'PDF & PPT',
   video_course: 'Online Class',
-}
-
-// Products belonging to the selected categories, for the item-level filter.
-function productOptions(products: EntryProducts, cats: Category[]): { id: string; label: string }[] {
-  const out: { id: string; label: string }[] = []
-  if (cats.includes('book')) products.books.forEach((b) => out.push({ id: b.id, label: b.title }))
-  if (cats.includes('pdf_ppt')) {
-    products.pdfs.forEach((p) => out.push({ id: p.id, label: `PDF · ${p.title}` }))
-    products.ppts.forEach((p) => out.push({ id: p.id, label: `PPT · ${p.title}` }))
-  }
-  if (cats.includes('video_course')) products.videoCourses.forEach((v) => out.push({ id: v.id, label: v.title }))
-  return out
 }
 
 function fmtMoney(n: number) {

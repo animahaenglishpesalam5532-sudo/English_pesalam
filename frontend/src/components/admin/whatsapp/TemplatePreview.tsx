@@ -6,6 +6,7 @@ import {
   fillPlaceholders,
   findComponent,
   headerFormat,
+  templateHeaderMedia,
   type TemplateVariables,
   type WhatsAppTemplate,
 } from '@/lib/whatsapp/templates'
@@ -22,6 +23,7 @@ export function TemplatePreview({ template, variables }: Props) {
   const body = findComponent(template, 'BODY')
   const footer = findComponent(template, 'FOOTER')
   const buttons = findComponent(template, 'BUTTONS')?.buttons ?? []
+  const mediaUrl = templateHeaderMedia(template)
 
   return (
     <div className="rounded-lg bg-[#e5ddd5] p-4">
@@ -32,7 +34,16 @@ export function TemplatePreview({ template, variables }: Props) {
           </p>
         )}
 
-        {format && format !== 'TEXT' && (
+        {format === 'IMAGE' && mediaUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={mediaUrl}
+            alt=""
+            className="mb-2 w-full rounded object-cover"
+          />
+        )}
+
+        {format && format !== 'TEXT' && !(format === 'IMAGE' && mediaUrl) && (
           <div className="mb-2 flex h-24 items-center justify-center rounded bg-gray-100 text-xs font-medium uppercase tracking-wider text-gray-400">
             {format}
           </div>
