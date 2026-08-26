@@ -124,9 +124,9 @@ function sortQuizzes(quizzes: Quiz[]): Quiz[] {
   })
 }
 
-export async function getQuizzes(): Promise<Quiz[]> {
+export async function getQuizzes(useStatic: boolean = false): Promise<Quiz[]> {
   try {
-    const value = await getSetting('quizzes')
+    const value = await getSetting('quizzes', useStatic)
     if (!value) return sortQuizzes(DEFAULT_QUIZZES)
     const parsed = JSON.parse(value) as Quiz[]
     return parsed.length === 0 ? sortQuizzes(DEFAULT_QUIZZES) : sortQuizzes(parsed)

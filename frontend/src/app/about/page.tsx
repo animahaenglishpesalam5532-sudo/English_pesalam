@@ -3,36 +3,61 @@ import { GlassHeader } from "@/components/GlassHeader";
 import { Footer } from "@/components/Footer";
 import { AmbientBackground } from "@/components/AmbientBackground";
 import { AboutContent } from "@/components/AboutContent";
-import { getSetting } from '@/app/actions/settings';
+import { getSettings } from '@/app/actions/settings';
 
 export const metadata = {
   title: "About Us - English Pesalam",
   description: "Learn about English Pesalam's mission to make English learning simple and practical for everyone.",
 };
 
-export const revalidate = 0;
+export const revalidate = 3600;
+
+const SETTING_KEYS = [
+  'about_tagline',
+  'about_title',
+  'about_description_1',
+  'about_description_2',
+  'about_description_3',
+  'about_description_4',
+  'about_trainer_name',
+  'about_trainer_title',
+  'about_trainer_bio_1',
+  'about_trainer_bio_2',
+  'about_trainer_bio_3',
+  'about_vision_statement',
+  'about_vision_desc_1',
+  'about_vision_desc_2',
+  'about_vision_desc_3',
+  'about_what_we_teach',
+  'about_why_english_pesalam',
+  'about_what_you_will_get',
+  'about_our_impact',
+];
 
 export default async function AboutPage() {
-  // Fetch About page settings with default fallbacks
-  const tagline = await getSetting('about_tagline') || 'Learn Easy • Speak Confidently • Grow Successfully';
-  const title = await getSetting('about_title') || 'About English Pesalam';
+  // Single static (cookie-free) query keeps this page ISR-cacheable. Admin
+  // saves call revalidatePath('/', 'layout'), so edits appear immediately.
+  const settings = await getSettings(SETTING_KEYS, true);
 
-  const description1 = await getSetting('about_description_1') || 'English தெரிந்தும் பேச முடியாமல் தவிக்கும் தமிழ் பேசும் மக்களுக்காக உருவாக்கப்பட்ட practical Spoken English learning platform தான் English Pesalam.';
-  const description2 = await getSetting('about_description_2') || 'நிறைய பேருக்கு English words தெரியும். Grammar-ம் கொஞ்சம் தெரியும். ஆனாலும் யாரிடமாவது English பேச வேண்டிய நேரம் வந்தால் பயம், hesitation, confidence இல்லாமை காரணமாக பேச முடியாமல் நின்றுவிடுகிறார்கள்.';
-  const description3 = await getSetting('about_description_3') || 'அந்த பயத்தை remove பண்ணி, simple Tamil explanation மூலமாக daily life English-ஐ step-by-step கற்றுக்கொடுக்க English Pesalam உருவாக்கப்பட்டது.';
-  const description4 = await getSetting('about_description_4') || 'தமிழ் பேசும் மக்கள் English-ஐ கஷ்டமான subject மாதிரி இல்லாமல், நாள் தோறும் பேசக்கூடிய ஒரு simple communication skill ஆக கற்றுக்கொள்ள வேண்டும்.';
+  const tagline = settings?.about_tagline || 'Learn Easy • Speak Confidently • Grow Successfully';
+  const title = settings?.about_title || 'About English Pesalam';
 
-  const trainerName = await getSetting('about_trainer_name') || 'Maha JC';
-  const trainerTitle = await getSetting('about_trainer_title') || 'Founder & Spoken English Trainer';
+  const description1 = settings?.about_description_1 || 'English தெரிந்தும் பேச முடியாமல் தவிக்கும் தமிழ் பேசும் மக்களுக்காக உருவாக்கப்பட்ட practical Spoken English learning platform தான் English Pesalam.';
+  const description2 = settings?.about_description_2 || 'நிறைய பேருக்கு English words தெரியும். Grammar-ம் கொஞ்சம் தெரியும். ஆனாலும் யாரிடமாவது English பேச வேண்டிய நேரம் வந்தால் பயம், hesitation, confidence இல்லாமை காரணமாக பேச முடியாமல் நின்றுவிடுகிறார்கள்.';
+  const description3 = settings?.about_description_3 || 'அந்த பயத்தை remove பண்ணி, simple Tamil explanation மூலமாக daily life English-ஐ step-by-step கற்றுக்கொடுக்க English Pesalam உருவாக்கப்பட்டது.';
+  const description4 = settings?.about_description_4 || 'தமிழ் பேசும் மக்கள் English-ஐ கஷ்டமான subject மாதிரி இல்லாமல், நாள் தோறும் பேசக்கூடிய ஒரு simple communication skill ஆக கற்றுக்கொள்ள வேண்டும்.';
 
-  const trainerBio1 = await getSetting('about_trainer_bio_1') || 'நான் Maha JC, English Pesalam மூலம் தமிழ் பேசும் மக்களுக்கு Spoken English-ஐ simple-ஆவும் practical-ஆவும் கற்றுக்கொடுத்து வருகிறேன்.';
-  const trainerBio2 = await getSetting('about_trainer_bio_2') || 'என்னுடைய teaching style என்னவென்றால், கஷ்டமான grammar rules-ஐ மட்டும் சொல்லாமல், real life-ல் எப்படி English பேச வேண்டும் என்பதை Tamil explanation மூலமாக step-by-step கற்றுக்கொடுப்பது.';
-  const trainerBio3 = await getSetting('about_trainer_bio_3') || 'School students, college students, job seekers, working people, homemakers — யாராக இருந்தாலும், “நானும் English பேச முடியும்” என்ற confidence உருவாக்குவதே English Pesalam-ன் முக்கிய நோக்கம்.';
+  const trainerName = settings?.about_trainer_name || 'Maha JC';
+  const trainerTitle = settings?.about_trainer_title || 'Founder & Spoken English Trainer';
 
-  const visionStatement = await getSetting('about_vision_statement') || 'Every Tamil learner should speak English with confidence.';
-  const visionDesc1 = await getSetting('about_vision_desc_1') || 'பல பேருக்கு English பேசணும் என்ற ஆசை இருக்கும். ஆனால் fear, hesitation, confidence இல்லாமை காரணமாக அவர்கள் பேச முயற்சி செய்யாமல் நிறுத்திக் கொள்கிறார்கள்.';
-  const visionDesc2 = await getSetting('about_vision_desc_2') || 'அந்த fear-ஐ remove பண்ணி, “English நாமும் பேசலாம்” என்ற நம்பிக்கையை உருவாக்குவதே English Pesalam-ன் vision.';
-  const visionDesc3 = await getSetting('about_vision_desc_3') || 'English Pesalam என்பது வெறும் YouTube channel மட்டும் அல்ல. இது தமிழ் பேசும் மக்களுக்கு English confidence கொடுக்கும் ஒரு learning family.';
+  const trainerBio1 = settings?.about_trainer_bio_1 || 'நான் Maha JC, English Pesalam மூலம் தமிழ் பேசும் மக்களுக்கு Spoken English-ஐ simple-ஆவும் practical-ஆவும் கற்றுக்கொடுத்து வருகிறேன்.';
+  const trainerBio2 = settings?.about_trainer_bio_2 || 'என்னுடைய teaching style என்னவென்றால், கஷ்டமான grammar rules-ஐ மட்டும் சொல்லாமல், real life-ல் எப்படி English பேச வேண்டும் என்பதை Tamil explanation மூலமாக step-by-step கற்றுக்கொடுப்பது.';
+  const trainerBio3 = settings?.about_trainer_bio_3 || 'School students, college students, job seekers, working people, homemakers — யாராக இருந்தாலும், “நானும் English பேச முடியும்” என்ற confidence உருவாக்குவதே English Pesalam-ன் முக்கிய நோக்கம்.';
+
+  const visionStatement = settings?.about_vision_statement || 'Every Tamil learner should speak English with confidence.';
+  const visionDesc1 = settings?.about_vision_desc_1 || 'பல பேருக்கு English பேசணும் என்ற ஆசை இருக்கும். ஆனால் fear, hesitation, confidence இல்லாமை காரணமாக அவர்கள் பேச முயற்சி செய்யாமல் நிறுத்திக் கொள்கிறார்கள்.';
+  const visionDesc2 = settings?.about_vision_desc_2 || 'அந்த fear-ஐ remove பண்ணி, “English நாமும் பேசலாம்” என்ற நம்பிக்கையை உருவாக்குவதே English Pesalam-ன் vision.';
+  const visionDesc3 = settings?.about_vision_desc_3 || 'English Pesalam என்பது வெறும் YouTube channel மட்டும் அல்ல. இது தமிழ் பேசும் மக்களுக்கு English confidence கொடுக்கும் ஒரு learning family.';
 
   // Default values for arrays (stored as JSON string)
   const defaultWhatWeTeach = [
@@ -73,10 +98,10 @@ export default async function AboutPage() {
     { val: "100%", label: "Tamil-to-English Focus", desc: "தமிழ் பேசும் மக்களுக்கு English easy-ஆ புரிய வேண்டும் என்பதற்காக உருவாக்கப்பட்ட focused learning platform." }
   ];
 
-  const whatWeTeach = await getSetting('about_what_we_teach') || JSON.stringify(defaultWhatWeTeach);
-  const whyEnglishPesalam = await getSetting('about_why_english_pesalam') || JSON.stringify(defaultWhyEnglishPesalam);
-  const whatYouWillGet = await getSetting('about_what_you_will_get') || JSON.stringify(defaultWhatYouWillGet);
-  const ourImpact = await getSetting('about_our_impact') || JSON.stringify(defaultOurImpact);
+  const whatWeTeach = settings?.about_what_we_teach || JSON.stringify(defaultWhatWeTeach);
+  const whyEnglishPesalam = settings?.about_why_english_pesalam || JSON.stringify(defaultWhyEnglishPesalam);
+  const whatYouWillGet = settings?.about_what_you_will_get || JSON.stringify(defaultWhatYouWillGet);
+  const ourImpact = settings?.about_our_impact || JSON.stringify(defaultOurImpact);
 
   return (
     <div className="relative min-h-screen">

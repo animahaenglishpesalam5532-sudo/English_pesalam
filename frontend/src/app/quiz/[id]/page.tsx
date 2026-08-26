@@ -7,7 +7,9 @@ import { Footer } from "@/components/Footer"
 import { AmbientBackground } from "@/components/AmbientBackground"
 import { Breadcrumbs } from "@/components/Breadcrumbs"
 
-export const revalidate = 0 // No caching for live quiz edits
+// Cached, but saveQuizzes() calls revalidatePath('/', 'layout'), so admin
+// edits go live immediately instead of re-querying on every visit.
+export const revalidate = 3600
 
 interface PageProps {
   params: Promise<{
@@ -17,7 +19,7 @@ interface PageProps {
 
 export default async function QuizPage({ params }: PageProps) {
   const { id } = await params
-  const quizzes = await getQuizzes()
+  const quizzes = await getQuizzes(true)
   const quiz = quizzes.find(q => q.id === id)
   
   if (!quiz) {

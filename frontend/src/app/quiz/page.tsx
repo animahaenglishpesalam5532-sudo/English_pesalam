@@ -7,10 +7,12 @@ import { getQuizzes } from "@/app/actions/quiz"
 import { Brain, ArrowRight, HelpCircle, GraduationCap } from "lucide-react"
 import Link from 'next/link'
 
-export const revalidate = 0 // Dynamic/No caching for live admin quiz updates
+// Cached, but saveQuizzes() calls revalidatePath('/quiz'), so admin edits go
+// live immediately instead of every visitor paying for a fresh query.
+export const revalidate = 3600
 
 export default async function QuizListPage() {
-  const quizzes = await getQuizzes()
+  const quizzes = await getQuizzes(true)
 
   return (
     <div className="relative min-h-screen">
