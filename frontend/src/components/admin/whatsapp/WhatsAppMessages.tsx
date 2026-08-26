@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ChevronRight, Megaphone } from 'lucide-react'
+import { ChevronRight, Megaphone, MessagesSquare } from 'lucide-react'
 import { Pagination } from '../TableUI'
 import { SendTemplateCard } from './SendTemplateCard'
 import { MessageLogFilters } from './MessageLogFilters'
@@ -49,6 +49,23 @@ export default function WhatsAppMessages({
           sent.
         </p>
       </div>
+
+      <Link
+        href="/admin/whatsapp/inbox"
+        className={`${CARD} mb-3 flex items-center gap-4 p-4 transition-colors hover:border-gray-200 hover:bg-gray-50`}
+      >
+        <span className="rounded-lg bg-emerald-50 p-2.5 text-emerald-600">
+          <MessagesSquare className="h-5 w-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block text-sm font-semibold text-gray-900">Inbox</span>
+          <span className="block text-xs text-gray-500">
+            Read and reply to customers who have answered — free text while their 24-hour window
+            is open
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+      </Link>
 
       <Link
         href="/admin/whatsapp/campaigns"

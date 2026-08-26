@@ -62,6 +62,21 @@ export async function requireAdmin(): Promise<CurrentUser> {
   return user
 }
 
+/**
+ * Admins and salespeople may read and reply in the WhatsApp inbox.
+ *
+ * Deliberately named for the one feature it guards: every inbox action runs on
+ * the service-role client, which bypasses RLS entirely, so this call is the
+ * only thing standing between a logged-in user and every customer conversation.
+ */
+export async function requireInboxAccess(): Promise<CurrentUser> {
+  const user = await getCurrentUser()
+  if (!user || !user.isActive || (user.role !== 'admin' && user.role !== 'staff')) {
+    throw new Error('Not authorized')
+  }
+  return user
+}
+
 /** Admins and delivery people may use the book tracking module. */
 export async function requireDelivery(): Promise<CurrentUser> {
   const user = await getCurrentUser()

@@ -8,6 +8,7 @@ import { sendTemplate } from '@/lib/whatsapp/client'
 import { normalizePhone, DEFAULT_COUNTRY_CODE } from '@/lib/whatsapp/phone'
 import { MAX_RECIPIENTS } from '@/lib/whatsapp/limits'
 import { resolveHeaderMediaId } from '@/lib/whatsapp/media'
+import { recordMessages } from '@/lib/whatsapp/conversations'
 import type { MessageStatus } from '@/lib/whatsapp/status'
 import { fetchTemplates } from '@/lib/whatsapp/templatesApi'
 import {
@@ -174,6 +175,31 @@ export async function sendTemplateMessages(
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, phones.length) }, worker))
 
   await supabase.from('whatsapp_messages').insert(rows)
+
+  // Mirror the same sends into the inbox thread, so a customer who replies has
+  // the template that prompted them sitting above their answer. Wrapped because
+  // a thread-write failure must never turn a successful broadcast into an error
+  // — whatsapp_messages above is the record of truth for the campaign log.
+  try {
+    await recordMessages(
+      rows.map((r) => ({
+        phone: String(r.to_phone),
+        direction: 'outbound' as const,
+        origin: 'broadcast' as const,
+        messageId: (r.message_id as string | null) ?? null,
+        type: 'template',
+        body: (r.body_preview as string | null) ?? null,
+        status: String(r.status),
+        error: (r.error as string | null) ?? null,
+        templateName: template.name,
+        templateLanguage: template.language,
+        sentBy: user.id,
+        customerId: (r.customer_id as string | null) ?? null,
+      }))
+    )
+  } catch (err) {
+    console.error('[whatsapp] broadcast recorded but not threaded', err)
+  }
 
   const failures = rows
     .filter((r) => r.status === 'failed')

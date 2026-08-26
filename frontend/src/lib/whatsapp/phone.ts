@@ -38,6 +38,23 @@ export function normalizePhone(raw: string, countryCode = DEFAULT_COUNTRY_CODE):
   return digits
 }
 
+/**
+ * The forms a WhatsApp number might take in `customers.phone`.
+ *
+ * The sales register stores Indian numbers as bare 10 digits and everything
+ * else as `+E.164` (see InteractionModal), whereas WhatsApp always hands us
+ * full digits with no '+'. Matching a conversation to a customer therefore has
+ * to try all three shapes.
+ */
+export function customerPhoneCandidates(digits: string): string[] {
+  const clean = (digits ?? '').replace(/\D/g, '')
+  if (!clean) return []
+
+  const candidates = new Set<string>([clean, `+${clean}`])
+  if (clean.length > 10) candidates.add(clean.slice(-10))
+  return Array.from(candidates)
+}
+
 /** `919345639627` -> `+91 9345639627` for display. */
 export function formatPhone(digits: string): string {
   if (!digits) return ''

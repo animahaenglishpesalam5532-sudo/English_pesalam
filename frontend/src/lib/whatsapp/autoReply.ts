@@ -1,5 +1,9 @@
-// Decides whether an inbound WhatsApp message should get the canned reply,
-// and holds the reply copy itself.
+// The canned card sent to a customer the first time they message us.
+//
+// Both guards this file used to hold — "have I seen this message id?" and
+// "have I already replied to this number today?" — now live in the database
+// (migration 012). The in-memory versions were per serverless instance, so on
+// Vercel they silently stopped working after every cold start.
 
 import type { CtaUrlMessage } from './client'
 
@@ -15,50 +19,11 @@ export const AUTO_REPLY_CARD: CtaUrlMessage = {
   buttonUrl: `https://wa.me/${SALES_WHATSAPP_NUMBER}?text=${encodeURIComponent(PREFILLED_ENQUIRY)}`,
 }
 
-/** Don't re-send the same blurb to a customer who keeps chatting. */
-const REPLY_COOLDOWN_MS = 24 * 60 * 60 * 1000
-
-/**
- * Meta re-delivers a webhook event if we are slow to answer, so the same
- * message id can arrive twice. Remember recent ids to stay idempotent.
- */
-const SEEN_MESSAGE_LIMIT = 500
-
-const lastRepliedAt = new Map<string, number>()
-const seenMessageIds = new Set<string>()
-
-/** True the first time a given message id is seen, false on redelivery. */
-export function markMessageSeen(messageId?: string): boolean {
-  if (!messageId) return true
-  if (seenMessageIds.has(messageId)) return false
-
-  seenMessageIds.add(messageId)
-
-  // Bounded set — drop the oldest entries once it grows past the limit.
-  if (seenMessageIds.size > SEEN_MESSAGE_LIMIT) {
-    const oldest = seenMessageIds.values().next().value
-    if (oldest) seenMessageIds.delete(oldest)
-  }
-
-  return true
-}
-
-/**
- * True when this sender is due an auto-reply. Records the send immediately so
- * concurrent invocations in the same instance can't double-fire.
- *
- * Note: state is per serverless instance, so on Vercel a customer may
- * occasionally get the reply more than once per day across cold starts.
- * Move this to Supabase if exactly-once matters.
- */
-export function claimAutoReply(from?: string): boolean {
-  if (!from) return false
-
-  const now = Date.now()
-  const previous = lastRepliedAt.get(from)
-
-  if (previous && now - previous < REPLY_COOLDOWN_MS) return false
-
-  lastRepliedAt.set(from, now)
-  return true
-}
+/** How the card reads in the inbox thread, where buttons cannot be rendered. */
+export const AUTO_REPLY_PREVIEW = [
+  AUTO_REPLY_CARD.header,
+  AUTO_REPLY_CARD.body,
+  `[${AUTO_REPLY_CARD.buttonText}] ${AUTO_REPLY_CARD.buttonUrl}`,
+]
+  .filter(Boolean)
+  .join('\n\n')
