@@ -45,8 +45,10 @@ export function TemplateSendModal({ open, sending, onClose, onSend }: Props) {
   const missing = selected ? missingVariables(selected, variables) : []
 
   return (
+    // A bottom sheet on phones, a centred dialog from sm up. dvh so the sheet
+    // shrinks instead of hiding its own Send button when the keyboard opens.
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-t-xl bg-white sm:max-w-lg sm:rounded-xl">
+      <div className="flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-xl bg-white sm:max-h-[90dvh] sm:max-w-lg sm:rounded-xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h2 className="text-sm font-semibold text-gray-900">Send a template</h2>
           <button
@@ -76,7 +78,7 @@ export function TemplateSendModal({ open, sending, onClose, onSend }: Props) {
                   setSelectedKey(e.target.value)
                   setVariables(EMPTY_VARIABLES)
                 }}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:py-2 sm:text-sm"
               >
                 <option value="">Choose an approved template…</option>
                 {templates.map((t) => (
@@ -115,14 +117,16 @@ export function TemplateSendModal({ open, sending, onClose, onSend }: Props) {
             type="button"
             disabled={!selected || sending || missing.length > 0}
             onClick={() => selected && onSend(selected, variables)}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-w-0 items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 shrink-0" />
             )}
-            {missing.length ? `Fill in: ${missing.join(', ')}` : 'Send'}
+            <span className="truncate">
+              {missing.length ? `Fill in: ${missing.join(', ')}` : 'Send'}
+            </span>
           </button>
         </div>
       </div>

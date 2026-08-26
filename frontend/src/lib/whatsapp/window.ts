@@ -18,14 +18,21 @@ export function windowExpiresAt(lastInboundAt: string | null | undefined): Date 
   return new Date(at + WINDOW_MS)
 }
 
-/** Milliseconds left before free-form replies stop working. 0 once closed. */
+/**
+ * Milliseconds left before free-form replies stop working. 0 once closed.
+ *
+ * Guaranteed to return a finite number: callers gate the composer on this, and
+ * a NaN leaking out reads as "not closed" in every `<= 0` comparison, which
+ * would offer a reply box for a window that has actually shut.
+ */
 export function windowRemainingMs(
   lastInboundAt: string | null | undefined,
   now: Date = new Date()
 ): number {
   const expires = windowExpiresAt(lastInboundAt)
   if (!expires) return 0
-  return Math.max(0, expires.getTime() - now.getTime())
+  const left = expires.getTime() - now.getTime()
+  return Number.isFinite(left) ? Math.max(0, left) : 0
 }
 
 export function isWindowOpen(
@@ -37,7 +44,9 @@ export function isWindowOpen(
 
 /** `5h 12m` / `48m` / `30s` — for the composer banner. */
 export function formatWindowRemaining(ms: number): string {
-  if (ms <= 0) return ''
+  // `!(ms > 0)` rather than `ms <= 0`: NaN fails every comparison, and falling
+  // through with one produces the literal string "NaNs".
+  if (!(ms > 0)) return ''
   const totalMinutes = Math.floor(ms / 60000)
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60

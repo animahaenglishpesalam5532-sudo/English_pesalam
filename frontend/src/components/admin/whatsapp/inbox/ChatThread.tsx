@@ -5,8 +5,8 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 import { MessageBubble } from './MessageBubble'
 import { WindowBanner } from './WindowBanner'
 import { ChatComposer } from './ChatComposer'
+import { useWindowCountdown } from './useWindowCountdown'
 import { formatPhone } from '@/lib/whatsapp/phone'
-import { isWindowOpen } from '@/lib/whatsapp/window'
 import type { ConversationSummary, ThreadMessage } from '@/app/actions/whatsappInbox'
 
 interface Props {
@@ -48,26 +48,35 @@ export function ChatThread({
   onOpenTemplates,
   onBack,
 }: Props) {
-  const endRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const newestId = messages[messages.length - 1]?.id ?? ''
 
-  // Jump to the newest message whenever the thread changes or one is sent.
+  // Keyed on the newest message rather than the count, so "Load older" prepends
+  // without yanking the view back to the bottom. scrollTop rather than
+  // scrollIntoView because the latter walks up to the nearest scrollable
+  // ancestor and can drag the whole page on mobile.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
-  }, [conversation.id, messages.length])
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [conversation.id, newestId])
 
   const title =
     conversation?.customerName || conversation?.profileName || formatPhone(conversation?.phone)
-  const canReply = isWindowOpen(conversation?.lastInboundAt) && !windowClosed
+  // One clock for the banner and the composer, so the reply box is disabled at
+  // the exact moment the countdown reaches zero.
+  const remaining = useWindowCountdown(conversation?.lastInboundAt)
+  const canReply = remaining > 0 && !windowClosed
 
   let lastDay = ''
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <button
           type="button"
           onClick={onBack}
-          className="-ml-1 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 md:hidden"
+          aria-label="Back to conversations"
+          className="-ml-1 shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 md:hidden"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -80,9 +89,12 @@ export function ChatThread({
         </div>
       </div>
 
-      <WindowBanner lastInboundAt={conversation?.lastInboundAt} forcedClosed={windowClosed} />
+      <WindowBanner remaining={remaining} forcedClosed={windowClosed} />
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-gray-50 px-4 py-4">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-gray-50 px-3 py-3 sm:px-4 sm:py-4"
+      >
         {loading && (
           <div className="flex justify-center py-6">
             <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
@@ -122,8 +134,6 @@ export function ChatThread({
             </React.Fragment>
           )
         })}
-
-        <div ref={endRef} />
       </div>
 
       {error && (

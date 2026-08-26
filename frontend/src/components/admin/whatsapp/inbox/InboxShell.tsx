@@ -53,43 +53,50 @@ export default function InboxShell({ initialConversations }: Props) {
   )
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] min-h-0 flex-col">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/admin/whatsapp"
-              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <h1 className="truncate text-xl font-bold text-gray-900">Inbox</h1>
+    // AdminLayout is h-screen with a 4rem header and 1.5rem of padding around
+    // <main>, so 7rem is exactly what is left. dvh rather than vh because on
+    // mobile Safari 100vh includes the collapsing address bar, which would push
+    // the composer below the fold.
+    <div className="flex h-[calc(100dvh-7rem)] min-h-0 flex-col">
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <Link
+            href="/admin/whatsapp"
+            className="shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold text-gray-900 sm:text-xl">Inbox</h1>
+            <p className="mt-0.5 hidden text-sm text-gray-500 lg:block">
+              Customers who have replied to you. New messages arrive in the background — press
+              Refresh to pull them in.
+            </p>
           </div>
-          <p className="mt-1 hidden text-sm text-gray-500 sm:block">
-            Customers who have replied to you. New messages arrive in the background — press
-            Refresh to pull them in.
-          </p>
         </div>
 
         <button
           type="button"
           onClick={inbox.refreshAll}
           disabled={inbox.refreshing}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
+          aria-label="Refresh conversations"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60 sm:px-3"
         >
           <RefreshCw className={`h-4 w-4 ${inbox.refreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
       {/* Mobile: one pane at a time, swapped by selection — not two rendered
-          copies, which would run every effect twice. */}
-      <div className={`${CARD} min-h-0 flex-1 overflow-hidden md:hidden`}>
+          copies, which would run every effect twice. Bled to the screen edges
+          with -mx-6 to cancel <main>'s padding; 48px of side gutter on a phone
+          is the difference between a readable bubble and a cramped one. */}
+      <div className="-mx-6 min-h-0 flex-1 overflow-hidden border-y border-gray-100 bg-white md:hidden">
         {inbox.selectedId ? thread : list}
       </div>
 
       <div className={`${CARD} hidden min-h-0 flex-1 overflow-hidden md:flex`}>
-        <div className="w-80 shrink-0 border-r border-gray-100">{list}</div>
+        <div className="w-72 shrink-0 border-r border-gray-100 lg:w-80">{list}</div>
         <div className="min-w-0 flex-1">{thread}</div>
       </div>
 

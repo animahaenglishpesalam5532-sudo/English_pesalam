@@ -3,7 +3,6 @@
 import React from 'react'
 import { Search, MessageSquare } from 'lucide-react'
 import { ConversationListItem } from './ConversationListItem'
-import { FILTER_INPUT } from '../styles'
 import type { ConversationSummary } from '@/app/actions/whatsappInbox'
 
 interface Props {
@@ -26,11 +25,13 @@ export function ConversationList({
       <div className="border-b border-gray-100 p-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          {/* text-base below sm: iOS zooms the whole page in on any focused
+              input smaller than 16px, and never zooms back out. */}
           <input
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search name or number"
-            className={`${FILTER_INPUT} pl-9`}
+            className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:text-sm"
           />
         </div>
       </div>
