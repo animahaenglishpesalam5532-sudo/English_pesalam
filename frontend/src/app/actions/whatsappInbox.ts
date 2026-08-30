@@ -47,6 +47,8 @@ export interface ThreadMessage {
   messageId: string | null
   type: string
   body: string | null
+  /** Meta's media ID, played through /api/whatsapp/media. Expires — see 012. */
+  mediaId: string | null
   mediaFilename: string | null
   status: string | null
   error: string | null
@@ -165,6 +167,7 @@ interface ThreadRow {
   message_id: string | null
   type: string
   body: string | null
+  media_id: string | null
   media_filename: string | null
   status: string | null
   error: string | null
@@ -182,6 +185,7 @@ function toThreadMessage(row: ThreadRow): ThreadMessage {
     messageId: row.message_id,
     type: row.type,
     body: row.body,
+    mediaId: row.media_id,
     mediaFilename: row.media_filename,
     status: row.status,
     error: row.error,
@@ -219,7 +223,7 @@ export async function getConversationThread(input: {
   let query = supabase
     .from('whatsapp_conversation_messages')
     .select(
-      'id, direction, origin, message_id, type, body, media_filename, status, error, template_name, sent_at, profiles:sent_by(full_name)'
+      'id, direction, origin, message_id, type, body, media_id, media_filename, status, error, template_name, sent_at, profiles:sent_by(full_name)'
     )
     .eq('conversation_id', input.conversationId)
     .order('sent_at', { ascending: false })
@@ -344,6 +348,7 @@ export async function sendChatText(input: {
       messageId: result.messageId ?? null,
       type: 'text',
       body,
+      mediaId: null,
       mediaFilename: null,
       status: 'sent',
       error: null,
@@ -481,6 +486,7 @@ export async function sendChatTemplate(input: {
       messageId: result.messageId ?? null,
       type: 'template',
       body: bodyPreview || null,
+      mediaId: null,
       mediaFilename: null,
       status: 'sent',
       error: null,

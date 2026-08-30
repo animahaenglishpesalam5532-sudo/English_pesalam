@@ -3,10 +3,14 @@
 import React from 'react'
 import { Check, CheckCheck, Clock, AlertTriangle } from 'lucide-react'
 import { mediaLabel } from '@/lib/whatsapp/preview'
+import { MediaMessage, type PlayableKind } from './MediaMessage'
 import type { ThreadMessage } from '@/app/actions/whatsappInbox'
 
 /** Media is stored as metadata only for now, so the body may be empty. */
 const TEXT_TYPES = new Set(['text', 'template', 'interactive', 'button'])
+
+/** Rendered inline via the media proxy; other types keep the text label. */
+const PLAYABLE = new Set(['audio', 'image'])
 
 const ORIGIN_CHIP: Record<string, string> = {
   broadcast: 'Campaign',
@@ -24,7 +28,11 @@ function StatusIcon({ status }: { status: string | null }) {
 export function MessageBubble({ message }: { message: ThreadMessage }) {
   const outbound = message?.direction === 'outbound'
   const chip = ORIGIN_CHIP[message?.origin]
-  const placeholder = TEXT_TYPES.has(message?.type) ? '' : mediaLabel(message?.type)
+  // Playable media gets the real thing; the label would only repeat itself.
+  const kind = PLAYABLE.has(message?.type) ? (message?.type as PlayableKind) : null
+  const mediaId = kind ? message?.mediaId : null
+  const placeholder =
+    TEXT_TYPES.has(message?.type) || mediaId ? '' : mediaLabel(message?.type)
 
   const time = new Date(message?.sentAt).toLocaleTimeString('en-IN', {
     hour: '2-digit',
@@ -51,6 +59,8 @@ export function MessageBubble({ message }: { message: ThreadMessage }) {
             {message?.mediaFilename ? ` ${message.mediaFilename}` : ''}
           </p>
         )}
+
+        {mediaId && kind && <MediaMessage mediaId={mediaId} kind={kind} />}
 
         {message?.body && (
           <p className="whitespace-pre-wrap break-words text-sm text-gray-800">{message.body}</p>
