@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ChevronRight, Megaphone, MessagesSquare } from 'lucide-react'
+import { ChevronRight, Megaphone, MessagesSquare, Settings } from 'lucide-react'
 import { Pagination } from '../TableUI'
 import { SendTemplateCard } from './SendTemplateCard'
 import { MessageLogFilters } from './MessageLogFilters'
@@ -69,7 +69,7 @@ export default function WhatsAppMessages({
 
       <Link
         href="/admin/whatsapp/campaigns"
-        className={`${CARD} mb-6 flex items-center gap-4 p-4 transition-colors hover:border-gray-200 hover:bg-gray-50`}
+        className={`${CARD} mb-3 flex items-center gap-4 p-4 transition-colors hover:border-gray-200 hover:bg-gray-50`}
       >
         <span className="rounded-lg bg-purple-50 p-2.5 text-purple-600">
           <Megaphone className="h-5 w-5" />
@@ -80,6 +80,22 @@ export default function WhatsAppMessages({
             {campaigns.length
               ? `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} — open to create one or see what each has sent`
               : 'Create your first campaign — every send has to be filed under one'}
+          </span>
+        </span>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+      </Link>
+
+      <Link
+        href="/admin/whatsapp/settings"
+        className={`${CARD} mb-6 flex items-center gap-4 p-4 transition-colors hover:border-gray-200 hover:bg-gray-50`}
+      >
+        <span className="rounded-lg bg-blue-50 p-2.5 text-blue-600">
+          <Settings className="h-5 w-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block text-sm font-semibold text-gray-900">Settings</span>
+          <span className="block text-xs text-gray-500">
+            Edit the auto-reply customers get the first time they message you
           </span>
         </span>
         <ChevronRight className="h-4 w-4 text-gray-400" />

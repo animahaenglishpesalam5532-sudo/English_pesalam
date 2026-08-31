@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import crypto from 'crypto'
 import { whatsappConfig } from '@/lib/whatsapp/config'
 import { sendText } from '@/lib/whatsapp/client'
-import { AUTO_REPLY_TEXT } from '@/lib/whatsapp/autoReply'
+import { getAutoReplyText } from '@/lib/whatsapp/autoReply'
 import { isMessageStatus, outranks, type MessageStatus } from '@/lib/whatsapp/status'
 import {
   claimAutoReply,
@@ -247,7 +247,9 @@ function queueAutoReply(to: string) {
     // Atomic 24h claim in the database, so two instances cannot both send.
     if (!(await claimAutoReply(to))) return
 
-    const result = await sendText(to, AUTO_REPLY_TEXT)
+    // Read after the claim, so an admin edit lands on the very next reply.
+    const body = await getAutoReplyText()
+    const result = await sendText(to, body)
 
     if (!result?.ok) {
       console.error('[whatsapp-webhook] auto-reply failed', { to, error: result?.error })
@@ -264,7 +266,7 @@ function queueAutoReply(to: string) {
         origin: 'auto_reply',
         messageId: result.messageId ?? null,
         type: 'text',
-        body: AUTO_REPLY_TEXT,
+        body,
         status: 'sent',
       },
     ])

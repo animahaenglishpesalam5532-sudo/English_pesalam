@@ -89,11 +89,21 @@ Any inbound customer message gets an instant text reply pointing at two numbers:
 book orders, one for PDF / online classes. Sent with `after()` so the webhook still
 returns 200 immediately.
 
+The text is editable at **`/admin/whatsapp/settings`** (admin only). It is stored in
+`settings.whatsapp_auto_reply_message` (seeded by migration 014) and read by
+`getAutoReplyText()` on every send, so a save takes effect on the next inbound message
+with no redeploy.
+
 Notes:
 
 - It is a plain **text** session message, not a template, so it needs no Meta approval and
   can be edited freely. A `cta_url` card was ruled out because it allows only one button
   and the reply routes to two numbers; WhatsApp linkifies the bare numbers itself.
+- The read must stay uncached and must use the **service-role** client: the webhook has no
+  user session, so the cookie-based client would be blocked by RLS and silently fall back
+  to `AUTO_REPLY_DEFAULT` forever.
+- A missing or blank settings row falls back to `AUTO_REPLY_DEFAULT`, so a bad edit or an
+  unrun migration can never leave the bot silent.
 - Only inbound messages appear under `value.messages`, so our own sends can't cause a loop.
 - Dedupe (`markMessageSeen`) and a 24h per-sender cooldown (`claimAutoReply`) are in-memory,
   so a cold start can occasionally allow a duplicate reply.
