@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import crypto from 'crypto'
 import { whatsappConfig } from '@/lib/whatsapp/config'
-import { sendCtaUrl } from '@/lib/whatsapp/client'
-import { AUTO_REPLY_CARD, AUTO_REPLY_PREVIEW } from '@/lib/whatsapp/autoReply'
+import { sendText } from '@/lib/whatsapp/client'
+import { AUTO_REPLY_TEXT } from '@/lib/whatsapp/autoReply'
 import { isMessageStatus, outranks, type MessageStatus } from '@/lib/whatsapp/status'
 import {
   claimAutoReply,
@@ -247,7 +247,7 @@ function queueAutoReply(to: string) {
     // Atomic 24h claim in the database, so two instances cannot both send.
     if (!(await claimAutoReply(to))) return
 
-    const result = await sendCtaUrl(to, AUTO_REPLY_CARD)
+    const result = await sendText(to, AUTO_REPLY_TEXT)
 
     if (!result?.ok) {
       console.error('[whatsapp-webhook] auto-reply failed', { to, error: result?.error })
@@ -263,8 +263,8 @@ function queueAutoReply(to: string) {
         direction: 'outbound',
         origin: 'auto_reply',
         messageId: result.messageId ?? null,
-        type: 'interactive',
-        body: AUTO_REPLY_PREVIEW,
+        type: 'text',
+        body: AUTO_REPLY_TEXT,
         status: 'sent',
       },
     ])

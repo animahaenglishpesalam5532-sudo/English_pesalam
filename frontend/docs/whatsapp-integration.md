@@ -85,14 +85,15 @@ Server-only wrapper over `POST /{PHONE_NUMBER_ID}/messages`:
 
 ### Auto-reply — `src/app/api/webhook/route.ts` + `src/lib/whatsapp/autoReply.ts`
 
-Any inbound customer message gets an instant interactive card (book promo + "Buy Now" button
-linking to the sales number with prefilled text). Sent with `after()` so the webhook still
+Any inbound customer message gets an instant text reply pointing at two numbers: one for
+book orders, one for PDF / online classes. Sent with `after()` so the webhook still
 returns 200 immediately.
 
 Notes:
 
-- `cta_url` interactive messages **do** allow `wa.me` links — the ban only applies to
-  templates — so the auto-reply uses an interactive card rather than a template.
+- It is a plain **text** session message, not a template, so it needs no Meta approval and
+  can be edited freely. A `cta_url` card was ruled out because it allows only one button
+  and the reply routes to two numbers; WhatsApp linkifies the bare numbers itself.
 - Only inbound messages appear under `value.messages`, so our own sends can't cause a loop.
 - Dedupe (`markMessageSeen`) and a 24h per-sender cooldown (`claimAutoReply`) are in-memory,
   so a cold start can occasionally allow a duplicate reply.

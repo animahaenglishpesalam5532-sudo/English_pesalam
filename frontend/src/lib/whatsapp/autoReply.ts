@@ -1,29 +1,20 @@
-// The canned card sent to a customer the first time they message us.
+// The canned reply sent to a customer the first time they message us.
 //
 // Both guards this file used to hold — "have I seen this message id?" and
 // "have I already replied to this number today?" — now live in the database
 // (migration 012). The in-memory versions were per serverless instance, so on
 // Vercel they silently stopped working after every cold start.
+//
+// Plain text rather than an interactive card: the reply routes to two different
+// numbers (books vs PDF/classes) and a `cta_url` card allows only one button.
+// WhatsApp turns bare phone numbers in text into tappable links on its own.
 
-import type { CtaUrlMessage } from './client'
+/** Books and enquiries. */
+const BOOK_ORDERS_NUMBER = '9345639627'
+/** PDF downloads and online classes. */
+const PDF_CLASSES_NUMBER = '6380513228'
 
-/** Sales number customers are handed off to — not the API sending number. */
-const SALES_WHATSAPP_NUMBER = '919345639627'
-const PREFILLED_ENQUIRY = 'I want to buy Book 2'
-
-export const AUTO_REPLY_CARD: CtaUrlMessage = {
-  header: 'Our new book 2 is out now!',
-  body: 'Learn spoken English the simple way — clear lessons, daily practice and real-life conversations.',
-  footer: 'English Pesalam',
-  buttonText: 'Buy Now',
-  buttonUrl: `https://wa.me/${SALES_WHATSAPP_NUMBER}?text=${encodeURIComponent(PREFILLED_ENQUIRY)}`,
-}
-
-/** How the card reads in the inbox thread, where buttons cannot be rendered. */
-export const AUTO_REPLY_PREVIEW = [
-  AUTO_REPLY_CARD.header,
-  AUTO_REPLY_CARD.body,
-  `[${AUTO_REPLY_CARD.buttonText}] ${AUTO_REPLY_CARD.buttonUrl}`,
-]
-  .filter(Boolean)
-  .join('\n\n')
+export const AUTO_REPLY_TEXT = [
+  `📚 Spoken English Book வாங்க வேண்டுமா? 👉 ${BOOK_ORDERS_NUMBER}`,
+  `📄 PDF / Online Class வேண்டுமா? 👉 ${PDF_CLASSES_NUMBER}`,
+].join('\n')
