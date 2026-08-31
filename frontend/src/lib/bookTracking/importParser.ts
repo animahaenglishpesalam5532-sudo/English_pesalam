@@ -45,42 +45,83 @@ function mapCourier(raw: string): string {
 function parseDate(raw: unknown): string {
   if (raw == null || raw === '') return ''
 
-  // xlsx cellDates:true returns Date objects for typed date cells
+  // 1. Excel serial number (e.g. 46265 for 31-Aug-2026)
+  if (
+    typeof raw === 'number' ||
+    (typeof raw === 'string' && !isNaN(Number(raw)) && Number(raw) > 1000 && Number(raw) < 100000)
+  ) {
+    const num = Number(raw)
+    try {
+      const parsed = XLSX.SSF.parse_date_code(num)
+      if (parsed && parsed.y && parsed.m && parsed.d) {
+        const y = parsed.y
+        const m = String(parsed.m).padStart(2, '0')
+        const d = String(parsed.d).padStart(2, '0')
+        return `${y}-${m}-${d}`
+      }
+    } catch {}
+  }
+
+  // 2. JS Date object (e.g. if passed directly)
   if (raw instanceof Date) {
     if (isNaN(raw.getTime())) return ''
-    const y = raw.getFullYear()
-    const m = String(raw.getMonth() + 1).padStart(2, '0')
-    const d = String(raw.getDate()).padStart(2, '0')
+    // Adjust by +12h to prevent timezone offset near midnight from shifting calendar date
+    const adjusted = new Date(raw.getTime() + 12 * 3600 * 1000)
+    const y = adjusted.getUTCFullYear()
+    const m = String(adjusted.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(adjusted.getUTCDate()).padStart(2, '0')
     return `${y}-${m}-${d}`
   }
 
   const str = String(raw).trim()
   if (!str) return ''
 
-  // DD/MM/YYYY
-  const dmy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (dmy) {
-    const [, dd, mm, yyyy] = dmy
-    const iso = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
-    if (!isNaN(new Date(iso).getTime())) return iso
-  }
-
-  // Excel serial number (40000–60000 covers ~2009–2064)
-  const num = Number(str)
-  if (!isNaN(num) && num > 40000 && num < 60000) {
-    // Excel's epoch is 30 Dec 1899; 86400000 ms/day
-    const date = new Date(new Date(1899, 11, 30).getTime() + num * 86400000)
-    if (!isNaN(date.getTime())) {
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      const d = String(date.getDate()).padStart(2, '0')
-      return `${y}-${m}-${d}`
+  // 3. YYYY-MM-DD or YYYY/MM/DD
+  const ymd = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/)
+  if (ymd) {
+    const [, yyyy, mm, dd] = ymd
+    const month = Number(mm)
+    const day = Number(dd)
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${yyyy}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     }
   }
 
-  // Generic ISO / parseable
+  // 4. DD/MM/YYYY, DD/MM/YY, MM/DD/YYYY, MM/DD/YY (delimiters / or -)
+  const dateMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
+  if (dateMatch) {
+    const [, p1, p2, p3] = dateMatch
+    const num1 = Number(p1)
+    const num2 = Number(p2)
+    const yyyy = p3.length === 2 ? (Number(p3) < 50 ? `20${p3}` : `19${p3}`) : p3
+
+    let day: number
+    let month: number
+
+    // If second number > 12, it must be MM/DD/YYYY (e.g. 8/31/2026)
+    if (num2 > 12 && num1 <= 12) {
+      month = num1
+      day = num2
+    } else {
+      // Default to DD/MM/YYYY
+      day = num1
+      month = num2
+    }
+
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${yyyy}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    }
+  }
+
+  // 5. Fallback ISO or standard parseable date string
   const d = new Date(str)
-  if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  if (!isNaN(d.getTime())) {
+    const adjusted = new Date(d.getTime() + 12 * 3600 * 1000)
+    const y = adjusted.getUTCFullYear()
+    const m = String(adjusted.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(adjusted.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
 
   return ''
 }
@@ -137,7 +178,7 @@ function matchBooks(
  *   const { parseImportFile } = await import('@/lib/bookTracking/importParser')
  */
 export function parseImportFile(buffer: ArrayBuffer, bookOptions: BookOption[]): ImportRow[] {
-  const wb = XLSX.read(buffer, { type: 'array', cellDates: true })
+  const wb = XLSX.read(buffer, { type: 'array', cellDates: false })
   const ws = wb.Sheets[wb.SheetNames[0]]
 
   const allRows: unknown[][] = XLSX.utils.sheet_to_json(ws, {
