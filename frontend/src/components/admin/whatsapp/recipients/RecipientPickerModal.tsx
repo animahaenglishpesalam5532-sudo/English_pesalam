@@ -51,6 +51,8 @@ export function RecipientPickerModal({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [truncated, setTruncated] = useState(false)
+  const [hideAlreadySent, setHideAlreadySent] = useState(true)
+  const [quickSelectCount, setQuickSelectCount] = useState(0)
 
   // Seed from the previous pick each time the popup opens.
   useEffect(() => {
@@ -59,6 +61,8 @@ export function RecipientPickerModal({
     setContacts(initialSelection)
     setSelected(new Set(initialSelection.map((c) => c.customerId)))
     setTruncated(false)
+    setHideAlreadySent(true)
+    setQuickSelectCount(0)
   }, [open, initialSelection])
 
   const rows: RecipientRow[] = useMemo(
@@ -75,6 +79,14 @@ export function RecipientPickerModal({
     [contacts, countryCode, sentPhones, failedPhones]
   )
 
+  /** Rows visible in the table — excludes already-sent & failed when the toggle is on. */
+  const visibleRows = useMemo(
+    () => (hideAlreadySent ? rows.filter((r) => !r.alreadySent && !r.previouslyFailed) : rows),
+    [rows, hideAlreadySent]
+  )
+
+  const hiddenInList = rows.filter((r) => r.alreadySent || r.previouslyFailed).length
+
   const apply = async () => {
     setLoading(true)
     const res = await getRecipientContacts(filters)
@@ -82,19 +94,24 @@ export function RecipientPickerModal({
     setContacts(res.contacts)
     setTruncated(res.truncated)
 
-    // Pre-tick the first `maxSelectable` reachable contacts; the admin unticks
-    // whoever they don't want (duplicates are flagged in red). Numbers a send
-    // has already failed for are left unticked — re-sending to them is what
-    // makes Meta's per-recipient cap worse — but they stay tickable.
-    const next = new Set<string>()
-    for (const c of res.contacts) {
-      if (next.size >= maxSelectable) break
-      const phone = normalizePhone(c.phone, countryCode)
-      if (phone && !failedPhones.has(phone)) next.add(c.customerId)
-    }
-    setSelected(next)
+    // Don't auto-select — leave the selection empty so the admin manually
+    // picks who they want to message.
+    setSelected(new Set())
 
     if (!res.contacts.length) toast('No contacts matched those filters')
+  }
+
+  /** Select the first N contacts from the visible list, up to the cap. */
+  const selectTopN = () => {
+    const n = Math.min(quickSelectCount, maxSelectable)
+    if (n <= 0) return
+    const next = new Set<string>()
+    for (const row of visibleRows) {
+      if (next.size >= n) break
+      if (row.phone) next.add(row.contact.customerId)
+    }
+    setSelected(next)
+    setQuickSelectCount(0)
   }
 
   const toggle = (customerId: string) => {
@@ -169,9 +186,94 @@ export function RecipientPickerModal({
           </div>
         )}
 
+        {/* Toolbar above the table — toggle + quick-select + clear */}
+        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 bg-gray-50 px-5 py-2">
+
+          {/* Hide already sent / failed toggle */}
+          <label className="flex cursor-pointer items-center gap-2 select-none">
+            <div
+              role="checkbox"
+              aria-checked={hideAlreadySent}
+              tabIndex={0}
+              onClick={() => setHideAlreadySent((v) => !v)}
+              onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && setHideAlreadySent((v) => !v)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                hideAlreadySent ? 'bg-blue-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  hideAlreadySent ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </div>
+            <span className="text-xs text-gray-700">
+              Hide already sent / failed
+              {hiddenInList > 0 && (
+                <span className="ml-1.5 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">
+                  {hiddenInList}
+                </span>
+              )}
+            </span>
+          </label>
+
+          {/* Divider */}
+          <span className="h-4 w-px bg-gray-300" />
+
+          {/* Quick-select first N contacts */}
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min={0}
+              max={maxSelectable}
+              value={quickSelectCount === 0 ? '' : quickSelectCount}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10)
+                setQuickSelectCount(isNaN(v) || v < 0 ? 0 : v)
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && selectTopN()}
+              placeholder="0"
+              className="w-16 rounded-md border border-gray-300 px-2 py-1 text-center text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={selectTopN}
+              disabled={quickSelectCount <= 0 || visibleRows.length === 0}
+              className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Select
+            </button>
+          </div>
+
+          {/* Spacer pushes clear-selection to the right */}
+          <span className="flex-1" />
+
+          {/* Clear selection — only shown when something is selected */}
+          {selected.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-600">
+                <span className="font-semibold text-gray-900">{selected.size}</span> selected
+                {alreadySentSelected > 0 && (
+                  <span className="ml-2 text-red-600">{alreadySentSelected} already sent</span>
+                )}
+                {failedSelected > 0 && (
+                  <span className="ml-2 text-orange-700">{failedSelected} failed</span>
+                )}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="flex-1 overflow-auto">
           <RecipientTable
-            rows={rows}
+            rows={visibleRows}
             selected={selected}
             loading={loading}
             capReached={selected.size >= maxSelectable}
@@ -183,7 +285,7 @@ export function RecipientPickerModal({
           <div className="text-sm text-gray-600">
             <span className="font-semibold text-gray-900">{selected.size}</span> of {contacts.length}{' '}
             selected
-            <span className="text-gray-400"> · max {maxSelectable}</span>
+            <span className="text-gray-400">· max {maxSelectable}</span>
             {alreadySentSelected > 0 && (
               <span className="ml-2 text-red-600">
                 {alreadySentSelected} already received this template
@@ -193,25 +295,16 @@ export function RecipientPickerModal({
               <span className="ml-2 text-orange-700">{failedSelected} failed previously</span>
             )}
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setSelected(new Set())}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Clear selection
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onConfirm(selectedContacts)
-                onClose()
-              }}
-              className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Use {selected.size} contact{selected.size === 1 ? '' : 's'}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm(selectedContacts)
+              onClose()
+            }}
+            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Use {selected.size} contact{selected.size === 1 ? '' : 's'}
+          </button>
         </div>
       </div>
     </div>

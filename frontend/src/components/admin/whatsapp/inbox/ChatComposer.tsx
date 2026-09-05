@@ -13,11 +13,28 @@ interface Props {
 
 export function ChatComposer({ canReply, sending, onSend, onOpenTemplates }: Props) {
   const [body, setBody] = useState('')
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+
+  // Auto-grow textarea as content grows, within min and max bounds
+  React.useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+    const minHeight = isMobile ? 80 : 96
+    const maxHeight = isMobile ? 208 : 288
+    const nextHeight = Math.min(Math.max(el.scrollHeight, minHeight), maxHeight)
+    el.style.height = `${nextHeight}px`
+  }, [body])
 
   const submit = async () => {
     const value = body.trim()
     if (!value || sending) return
     setBody('')
+    if (textareaRef.current) {
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+      textareaRef.current.style.height = `${isMobile ? 80 : 96}px`
+    }
     await onSend(value)
   }
 
@@ -39,18 +56,19 @@ export function ChatComposer({ canReply, sending, onSend, onOpenTemplates }: Pro
   }
 
   return (
-    <div className="flex items-end gap-2 border-t border-gray-100 px-3 py-2.5 sm:py-3">
+    <div className="flex items-end gap-2 border-t border-gray-100 bg-white px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
       <button
         type="button"
         onClick={onOpenTemplates}
         aria-label="Send an approved template instead"
         title="Send an approved template instead"
-        className="shrink-0 rounded-lg border border-gray-200 p-2.5 text-gray-500 transition-colors hover:bg-gray-50"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
       >
         <FileText className="h-4 w-4" />
       </button>
 
       <textarea
+        ref={textareaRef}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={(e) => {
@@ -62,11 +80,11 @@ export function ChatComposer({ canReply, sending, onSend, onOpenTemplates }: Pro
             submit()
           }
         }}
-        rows={1}
-        placeholder="Type a message"
+        rows={3}
+        placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
         // text-base below sm: anything smaller makes iOS zoom the page in on
         // focus and it never zooms back out.
-        className="max-h-28 min-h-[42px] flex-1 resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-base text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-h-32 sm:text-sm"
+        className="min-h-[80px] max-h-52 flex-1 resize-y rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:min-h-[96px] sm:max-h-72 sm:text-sm"
       />
 
       <button
@@ -74,7 +92,7 @@ export function ChatComposer({ canReply, sending, onSend, onOpenTemplates }: Pro
         onClick={submit}
         disabled={sending || !body.trim()}
         aria-label="Send message"
-        className="shrink-0 rounded-lg bg-emerald-600 p-2.5 text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Send className="h-4 w-4" />
       </button>
