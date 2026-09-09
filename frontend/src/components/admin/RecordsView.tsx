@@ -342,7 +342,9 @@ export default function RecordsView({ rows, total, staffOptions, products, filte
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span
                         className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          r.call_type === 'purchase' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                          r.call_type === 'purchase'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
                         }`}
                       >
                         {r.call_type}
