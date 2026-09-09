@@ -7,11 +7,11 @@ const nextConfig = {
         // Meta rejects wa.me links in template buttons, so we point the button
         // at our own domain and bounce the customer to WhatsApp from here.
         // Handled by Vercel's edge routing layer — no serverless invocation.
-        source: '/buy',
+        source: '/buy-book-2',
         // Encode spaces exactly once. Vercel's routing layer sends the
         // destination through verbatim, so double-encoding here would land in
         // the customer's chat box as literal "%20" text.
-        destination: 'https://wa.me/919345639627?text=I%20want%20to%20buy%20Book%202',
+        destination: 'https://wa.me/919345639627?text=I%20want%20to%20buy%20book%205750%2B%20ENGLISH%20WORDS%20%26%20PHRASES',
         permanent: false,
       },
       {
