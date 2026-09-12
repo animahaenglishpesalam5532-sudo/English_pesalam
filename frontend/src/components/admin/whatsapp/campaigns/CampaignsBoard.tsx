@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Megaphone, Plus, Search, X } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { ArrowLeft, Megaphone, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { CampaignFormModal } from './CampaignFormModal'
 import { useCampaigns } from './useCampaigns'
 import { Pagination } from '../../TableUI'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CARD, FILTER_INPUT } from '../styles'
-import type { CampaignWithStats } from '@/app/actions/whatsappCampaigns'
+import { deleteCampaign, type CampaignWithStats } from '@/app/actions/whatsappCampaigns'
 
 function fmtDate(value: string) {
   return new Date(value).toLocaleDateString('en-IN', {
@@ -26,7 +28,42 @@ function dateRange(c: CampaignWithStats) {
 
 export default function CampaignsBoard() {
   const list = useCampaigns()
-  const [creating, setCreating] = useState(false)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<CampaignWithStats | null>(null)
+  const [deleting, setDeleting] = useState<CampaignWithStats | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const openCreate = () => {
+    setEditing(null)
+    setFormOpen(true)
+  }
+
+  // Cards are links, so the action buttons must not navigate.
+  const openEdit = (e: React.MouseEvent, c: CampaignWithStats) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditing(c)
+    setFormOpen(true)
+  }
+
+  const openDelete = (e: React.MouseEvent, c: CampaignWithStats) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDeleting(c)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleting?.id) return
+    setBusy(true)
+    const res = await deleteCampaign(deleting.id)
+    setBusy(false)
+    if (res?.error) return toast.error(res.error)
+    toast.success('Campaign deleted')
+    setDeleting(null)
+    list.reload()
+  }
+
+  const deletingMessages = (deleting?.sent ?? 0) + (deleting?.failed ?? 0)
 
   return (
     <div>
@@ -46,7 +83,7 @@ export default function CampaignsBoard() {
         </div>
         <button
           type="button"
-          onClick={() => setCreating(true)}
+          onClick={openCreate}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" /> New campaign
@@ -103,9 +140,30 @@ export default function CampaignsBoard() {
             <Link
               key={c.id}
               href={`/admin/whatsapp/campaigns/${c.id}`}
-              className={`${CARD} block p-4 transition-shadow hover:shadow-md`}
+              className={`${CARD} relative block p-4 transition-shadow hover:shadow-md`}
             >
-              <h2 className="text-sm font-semibold text-gray-900">{c.name}</h2>
+              <div className="absolute right-3 top-3 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => openEdit(e, c)}
+                  title="Edit campaign"
+                  aria-label={`Edit ${c.name}`}
+                  className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => openDelete(e, c)}
+                  title="Delete campaign"
+                  aria-label={`Delete ${c.name}`}
+                  className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <h2 className="pr-16 text-sm font-semibold text-gray-900">{c.name}</h2>
               <p className="mt-0.5 text-xs text-gray-400">{dateRange(c)}</p>
               {c.description && (
                 <p className="mt-2 line-clamp-2 text-xs text-gray-600">{c.description}</p>
@@ -135,9 +193,31 @@ export default function CampaignsBoard() {
       </div>
 
       <CampaignFormModal
-        open={creating}
-        onClose={() => setCreating(false)}
-        onCreated={list.reload}
+        open={formOpen}
+        campaign={editing}
+        onClose={() => setFormOpen(false)}
+        onSaved={list.reload}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleting}
+        busy={busy}
+        title="Delete campaign"
+        message={
+          <>
+            <p>
+              Delete <strong>{deleting?.name}</strong>? This cannot be undone.
+            </p>
+            {deletingMessages > 0 && (
+              <p className="mt-2">
+                {deletingMessages} sent message{deletingMessages === 1 ? '' : 's'} will stay in the
+                history but will no longer be grouped under this campaign.
+              </p>
+            )}
+          </>
+        }
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
       />
     </div>
   )

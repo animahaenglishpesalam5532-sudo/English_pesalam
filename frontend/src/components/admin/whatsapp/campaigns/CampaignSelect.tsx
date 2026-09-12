@@ -57,7 +57,7 @@ export function CampaignSelect({ campaigns, value, onChange, onCampaignsChange }
       <CampaignFormModal
         open={creating}
         onClose={() => setCreating(false)}
-        onCreated={handleCreated}
+        onSaved={handleCreated}
       />
     </div>
   )

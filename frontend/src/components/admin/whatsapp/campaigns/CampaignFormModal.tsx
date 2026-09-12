@@ -1,45 +1,54 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Modal } from '@/components/ui/Modal'
 import DateField from '../../DateField'
 import { INPUT, LABEL } from '../styles'
-import { createCampaign } from '@/app/actions/whatsappCampaigns'
+import { createCampaign, updateCampaign, type Campaign } from '@/app/actions/whatsappCampaigns'
 
 interface Props {
   open: boolean
   onClose: () => void
-  onCreated: (campaignId: string) => void
+  /** Fired after a successful create or edit. */
+  onSaved: (campaignId: string) => void
+  /** Present -> edit mode, absent -> create mode. */
+  campaign?: Campaign | null
 }
 
-export function CampaignFormModal({ open, onClose, onCreated }: Props) {
+export function CampaignFormModal({ open, onClose, onSaved, campaign }: Props) {
+  const editing = !!campaign?.id
+
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [startsOn, setStartsOn] = useState('')
   const [endsOn, setEndsOn] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const reset = () => {
-    setName('')
-    setDescription('')
-    setStartsOn('')
-    setEndsOn('')
-  }
+  // Refill the form each time the modal is opened for a (different) campaign.
+  useEffect(() => {
+    if (!open) return
+    setName(campaign?.name ?? '')
+    setDescription(campaign?.description ?? '')
+    setStartsOn(campaign?.starts_on ?? '')
+    setEndsOn(campaign?.ends_on ?? '')
+  }, [open, campaign])
 
   const submit = async () => {
     setSaving(true)
-    const res = await createCampaign({ name, description, startsOn, endsOn })
+    const input = { name, description, startsOn, endsOn }
+    const res = editing
+      ? { ...(await updateCampaign(campaign!.id, input)), id: campaign!.id }
+      : await createCampaign(input)
     setSaving(false)
-    if (res.error) return toast.error(res.error)
-    toast.success('Campaign created')
-    reset()
-    onCreated(res.id!)
+    if (res?.error) return toast.error(res.error)
+    toast.success(editing ? 'Campaign updated' : 'Campaign created')
+    onSaved(res?.id ?? '')
     onClose()
   }
 
   return (
-    <Modal isOpen={open} onClose={onClose} title="New campaign">
+    <Modal isOpen={open} onClose={onClose} title={editing ? 'Edit campaign' : 'New campaign'}>
       <div className="space-y-4">
         <div>
           <label className={LABEL}>Campaign name</label>
@@ -87,10 +96,16 @@ export function CampaignFormModal({ open, onClose, onCreated }: Props) {
           <button
             type="button"
             onClick={submit}
-            disabled={saving || !name.trim()}
+            disabled={saving || !name?.trim()}
             className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? 'Creating…' : 'Create campaign'}
+            {saving
+              ? editing
+                ? 'Saving…'
+                : 'Creating…'
+              : editing
+                ? 'Save changes'
+                : 'Create campaign'}
           </button>
         </div>
       </div>

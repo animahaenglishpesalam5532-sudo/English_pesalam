@@ -139,23 +139,34 @@ function matchBooks(
 ): { items: TrackedBook[]; unmatched: string[] } {
   if (!rawBooks?.trim()) return { items: [], unmatched: [] }
 
-  // Split on commas that are not inside parentheses
+  // Commas between digits are thousand separators, not list separators
+  // (e.g. "5,750+ English Words & Phrases") – protect them before splitting.
+  const GUARD = '\u0000'
   const parts = rawBooks
-    .split(/,(?![^(]*\))/)
-    .map((s) => s.trim())
-    .filter(Boolean)
+    ?.replace(/(?<=\d),(?=\d)/g, GUARD)
+    ?.split(/,(?![^(]*\))/)
+    ?.map((s) => s?.split(GUARD)?.join(',')?.trim())
+    ?.filter(Boolean) ?? []
 
   const items: TrackedBook[] = []
   const unmatched: string[] = []
 
+  // Ignores punctuation/spacing so "5750 English Words" matches "5,750+ English Words & Phrases"
+  const squash = (s: string) => s?.toLowerCase()?.replace(/[^a-z0-9]/g, '') ?? ''
+
   for (const part of parts) {
-    const n = part.toLowerCase().replace(/\s+/g, ' ')
-    const match = bookOptions.find((b) => {
-      const bt = b.title.toLowerCase().replace(/\s+/g, ' ')
-      return bt === n || bt.includes(n) || n.includes(bt)
+    const n = part?.toLowerCase()?.replace(/\s+/g, ' ') ?? ''
+    const ns = squash(part)
+    const match = bookOptions?.find((b) => {
+      const bt = b?.title?.toLowerCase()?.replace(/\s+/g, ' ') ?? ''
+      const bs = squash(b?.title)
+      if (bt === n || bs === ns) return true
+      // Too short to fuzzy-match safely (would match almost any title)
+      if (ns?.length < 4) return false
+      return bs?.includes(ns) || ns?.includes(bs)
     })
     if (match) {
-      if (!items.some((i) => i.id === match.id)) {
+      if (!items?.some((i) => i?.id === match?.id)) {
         items.push({ id: match.id, title: match.title, qty })
       }
     } else {

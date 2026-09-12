@@ -180,6 +180,67 @@ export async function createCampaign(
   return { id: data.id }
 }
 
+export async function updateCampaign(
+  id: string,
+  input: CampaignInput
+): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Not authorized' }
+  }
+
+  if (!id) return { error: 'Campaign not found' }
+
+  const name = input?.name?.trim()
+  if (!name) return { error: 'Campaign name is required' }
+  if (input?.startsOn && input?.endsOn && input?.endsOn < input?.startsOn) {
+    return { error: 'End date cannot be before the start date' }
+  }
+
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('whatsapp_campaigns')
+    .update({
+      name,
+      description: input?.description?.trim() || null,
+      starts_on: input?.startsOn || null,
+      ends_on: input?.endsOn || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/whatsapp')
+  revalidatePath('/admin/whatsapp/campaigns')
+  revalidatePath(`/admin/whatsapp/campaigns/${id}`)
+  return {}
+}
+
+/**
+ * Deletes a campaign. Sent messages are never removed — the FK unlinks them
+ * (campaign_id -> null), so the send history stays intact but loses its
+ * campaign grouping.
+ */
+export async function deleteCampaign(id: string): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Not authorized' }
+  }
+
+  if (!id) return { error: 'Campaign not found' }
+
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('whatsapp_campaigns').delete().eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/whatsapp')
+  revalidatePath('/admin/whatsapp/campaigns')
+  return {}
+}
+
 export async function getCampaignDetail(id: string): Promise<CampaignDetail | null> {
   try {
     await requireAdmin()
