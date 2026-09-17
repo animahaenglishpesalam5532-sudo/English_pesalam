@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Plus, Upload } from 'lucide-react'
+import { Plus, Upload, Download } from 'lucide-react'
 import { Pagination } from '../TableUI'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { BookTrackingFilters } from './BookTrackingFilters'
@@ -40,6 +40,40 @@ export default function BookTracking({ books, canDelete, canWrite }: Props) {
   const openCreate = () => {
     setShowCreate(true)
   }
+
+  const downloadSample = useCallback(async () => {
+    const XLSX = await import('xlsx')
+
+    const headers = ['DATE', 'WHATSAPP ID', 'NAME', 'PHONE', 'COURIER', 'TRACKING NO', 'BOOKS']
+
+    const notesRow = [
+      '(dd/mm/yyyy)',
+      '(e.g. 91XXXXXXXXXX)',
+      '(Full name)',
+      '(10-digit mobile)',
+      '(e.g. DTDC / Indian Postal)',
+      '(Tracking number)',
+      'Separate multiple books with commas.\nFor per-book quantity: BookTitle * qty\n(e.g. "Book A * 1, Book B * 2")',
+    ]
+
+    const sampleRows = [
+      ['17/09/2026', '919876543210', 'Ravi Kumar',   '9876543210', 'DTDC',          'DTDC123456789', 'Book A * 1, Book B * 2'],
+      ['17/09/2026', '918765432109', 'Priya S',      '8765432109', 'Indian Postal', 'IP987654321IN', 'Book A * 3'],
+      ['18/09/2026', '917654321098', 'Anbu Selvan',  '7654321098', 'Professional',  'PRO456789012',  'Book B * 2, Book C * 1'],
+    ]
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, notesRow, ...sampleRows])
+    ws['!cols'] = [
+      { wch: 14 }, { wch: 18 }, { wch: 20 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 52 },
+    ]
+    const booksNoteCell = ws['G2']
+    if (booksNoteCell) booksNoteCell.s = { alignment: { wrapText: true } }
+    ws['!rows'] = [{ hpt: 20 }, { hpt: 60 }]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Book Tracking')
+    XLSX.writeFile(wb, 'book_tracking_sample.xlsx')
+  }, [])
 
   const handleCreate = async (values: BookTrackingInput) => {
     const res = await createBookTracking(values)
@@ -93,6 +127,12 @@ export default function BookTracking({ books, canDelete, canWrite }: Props) {
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Upload className="w-4 h-4" /> Import Records
+              </button>
+              <button
+                onClick={downloadSample}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4" /> Sample File
               </button>
               <button
                 onClick={openCreate}

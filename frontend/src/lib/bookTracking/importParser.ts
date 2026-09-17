@@ -132,6 +132,24 @@ function stripPhone(raw: string): string {
   return digits.length > 10 ? digits.slice(-10) : digits
 }
 
+/**
+ * Splits a raw book entry into the title portion and an optional inline
+ * quantity written as "* N" at the end (whitespace around * is flexible).
+ *
+ * Examples:
+ *   "5,750+ English Words & Phrases * 2"  →  { title: "5,750+ English Words & Phrases", qty: 2 }
+ *   "Tamil Grammar"                        →  { title: "Tamil Grammar", qty: null }  (fallback to row qty)
+ */
+function parseBookPart(raw: string): { title: string; inlineQty: number | null } {
+  // Match a trailing " * <number>" (e.g. " * 2" or "*3" or " * 10")
+  const m = raw.match(/^(.+?)\s*\*\s*(\d+)\s*$/)
+  if (m) {
+    const qty = Math.max(1, parseInt(m[2], 10))
+    return { title: m[1].trim(), inlineQty: qty }
+  }
+  return { title: raw.trim(), inlineQty: null }
+}
+
 function matchBooks(
   rawBooks: string,
   bookOptions: BookOption[],
@@ -155,8 +173,11 @@ function matchBooks(
   const squash = (s: string) => s?.toLowerCase()?.replace(/[^a-z0-9]/g, '') ?? ''
 
   for (const part of parts) {
-    const n = part?.toLowerCase()?.replace(/\s+/g, ' ') ?? ''
-    const ns = squash(part)
+    const { title, inlineQty } = parseBookPart(part)
+    const effectiveQty = inlineQty ?? qty
+
+    const n = title?.toLowerCase()?.replace(/\s+/g, ' ') ?? ''
+    const ns = squash(title)
     const match = bookOptions?.find((b) => {
       const bt = b?.title?.toLowerCase()?.replace(/\s+/g, ' ') ?? ''
       const bs = squash(b?.title)
@@ -167,10 +188,10 @@ function matchBooks(
     })
     if (match) {
       if (!items?.some((i) => i?.id === match?.id)) {
-        items.push({ id: match.id, title: match.title, qty })
+        items.push({ id: match.id, title: match.title, qty: effectiveQty })
       }
     } else {
-      unmatched.push(part)
+      unmatched.push(title)
     }
   }
 
@@ -219,14 +240,6 @@ export function parseImportFile(buffer: ArrayBuffer, bookOptions: BookOption[]):
   const trackingIdx = col('TRACKING NO')
   const courierIdx = col('COURIER')
   const booksIdx = col('BOOKS')
-  // Accept common header variants for quantity
-  const quantityIdx = [
-    col('QUANTITY'),
-    col('QTY'),
-    col('NO OF BOOKS'),
-    col('QUANTITY (NOS)'),
-    col('NOS'),
-  ].find((i) => i !== -1) ?? -1
 
   const results: ImportRow[] = []
 
@@ -243,14 +256,11 @@ export function parseImportFile(buffer: ArrayBuffer, bookOptions: BookOption[]):
     const rawCourier = String(row[courierIdx] ?? '').trim()
     const rawBooks = String(row[booksIdx] ?? '').trim()
 
-    // Parse quantity – fall back to 1 when column is absent or value is non-numeric
-    const rawQty = quantityIdx !== -1 ? String(row[quantityIdx] ?? '').trim() : ''
-    const qty = rawQty ? Math.max(1, Math.floor(Number(rawQty)) || 1) : 1
-
     const date = parseDate(rawDate)
     const phone = stripPhone(rawPhone)
     const courier = mapCourier(rawCourier)
-    const { items, unmatched } = matchBooks(rawBooks, bookOptions, qty)
+    // Default qty is 1; per-book quantities are specified via "Title * N" syntax
+    const { items, unmatched } = matchBooks(rawBooks, bookOptions, 1)
 
     const errors: string[] = []
     const warnings: string[] = []
