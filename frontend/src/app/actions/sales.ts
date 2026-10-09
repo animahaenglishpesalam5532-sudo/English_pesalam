@@ -445,13 +445,39 @@ export async function getRegisterRows(filters: RegisterFilters): Promise<Registe
     rows = rows.filter((r) => r.items.some((i) => wanted.has(i.id)))
   }
 
-  // Keep only records from customers who have NEVER purchased (pure leads).
+  // Keep only records from customers who have NEVER purchased within the
+  // currently-filtered category (and specific items, if selected).
+  // e.g. if category=book, someone who only bought an online class is still a
+  // "book lead" and should appear — only book buyers are excluded.
   if (filters.onlyLeads) {
-    const { data: purch } = await supabase
+    let purchQuery = supabase
       .from('interactions')
-      .select('customer_id')
+      .select('customer_id, items')
       .eq('call_type', 'purchase')
-    const buyerIds = new Set((purch ?? []).map((p: any) => p.customer_id))
+
+    // Scope to the same category when one is selected.
+    const activeCategory =
+      filters.categories?.length === 1
+        ? filters.categories[0]
+        : filters.category && filters.category !== 'all'
+          ? filters.category
+          : null
+    if (activeCategory) purchQuery = purchQuery.eq('category', activeCategory)
+
+    const { data: purch } = await purchQuery
+
+    // If specific items are selected, only count a purchase as disqualifying
+    // when it actually contains one of those items.
+    const wantedItems = filters.itemIds?.length ? new Set(filters.itemIds) : null
+
+    const buyerIds = new Set(
+      (purch ?? [])
+        .filter((p: any) => {
+          if (!wantedItems) return true
+          return ((p.items as InteractionItem[]) ?? []).some((i) => wantedItems.has(i.id))
+        })
+        .map((p: any) => p.customer_id)
+    )
     rows = rows.filter((r) => !buyerIds.has(r.customer_id))
   }
 

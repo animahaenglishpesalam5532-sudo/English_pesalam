@@ -182,7 +182,11 @@ export function RecipientFilters({ value, products, loading, onChange, onApply }
             checked={!!value.onlyLeads}
             onChange={(e) => onChange({ ...value, onlyLeads: e.target.checked })}
           />
-          Only leads (never purchased)
+          {value.category && value.category !== 'all'
+            ? value.itemIds && value.itemIds.length > 0
+              ? `Never purchased selected ${CATEGORY_LABEL[value.category as Category].toLowerCase()} item(s)`
+              : `Never purchased a ${CATEGORY_LABEL[value.category as Category].toLowerCase()}`
+            : 'Only leads (never purchased anything)'}
         </label>
         <button
           type="button"
